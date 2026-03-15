@@ -46,4 +46,15 @@ public class PlayerAP : MonoBehaviour
     {
         OnAPChanged?.Invoke(currentAP, maxAP);
     }
+    public void SetMaxAP(int newMaxAP, bool refillCurrent = true)
+    {
+        maxAP = Mathf.Max(1, newMaxAP);
+
+        if (refillCurrent)
+            currentAP = maxAP;
+        else
+            currentAP = Mathf.Min(currentAP, maxAP);
+
+        NotifyChanged();
+    }
 }

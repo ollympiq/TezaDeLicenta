@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(NavMeshAgent))]
 [RequireComponent(typeof(PlayerAP))]
@@ -8,6 +9,7 @@ public class PlayerNavMeshMover : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Camera mainCamera;
+    [SerializeField] private PlayerCombatController combatController;
 
     [Header("Movement")]
     [SerializeField] private LayerMask groundMask;
@@ -28,6 +30,9 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (mainCamera == null)
             mainCamera = Camera.main;
+
+        if (combatController == null)
+            combatController = GetComponent<PlayerCombatController>();
     }
 
     private void Update()
@@ -43,8 +48,22 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
+            if (IsPointerOverUI())
+                return;
+
+            if (combatController != null && combatController.IsTargetingBasicAttack)
+                return;
+
             TryMoveToMouse();
         }
+    }
+
+    private bool IsPointerOverUI()
+    {
+        if (EventSystem.current == null)
+            return false;
+
+        return EventSystem.current.IsPointerOverGameObject();
     }
 
     private void TryMoveToMouse()
