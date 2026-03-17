@@ -60,11 +60,11 @@ public class SkillTooltipUI : MonoBehaviour
             detailsText.text = BuildDetails(skill);
 
         panelRoot.gameObject.SetActive(true);
-        panelRoot.SetAsLastSibling();
 
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
 
+        panelRoot.SetAsLastSibling();
         UpdatePosition();
     }
 

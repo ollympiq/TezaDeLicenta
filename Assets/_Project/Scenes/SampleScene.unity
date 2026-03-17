@@ -788,6 +788,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 250899569}
+  - component: {fileID: 250899570}
   m_Layer: 5
   m_Name: OverlayUI
   m_TagString: Untagged
@@ -815,6 +816,25 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &250899570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 250899568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b420e7e971727264c82237f9b0583c90, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DamageNumberManager
+  rootCanvas: {fileID: 1066919248}
+  spawnRoot: {fileID: 250899569}
+  worldCamera: {fileID: 330585545}
+  damageNumberPrefab: {fileID: 6809678197110068538, guid: 0ab8c9a026875b246a01bd6d37177e17, type: 3}
+  normalDamageColor: {r: 1, g: 1, b: 1, a: 1}
+  criticalDamageColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  missColor: {r: 1, g: 0.35, b: 0.35, a: 1}
 --- !u!1 &277767341
 GameObject:
   m_ObjectHideFlags: 0
@@ -5046,7 +5066,7 @@ MonoBehaviour:
   constitution: 10
   dexterity: 10
   intelligence: 10
-  baseMaxHP: 100
+  baseMaxHP: 500
   hpPerConstitution: 10
   baseMaxAP: 6
   physicalPowerPerStrength: 5

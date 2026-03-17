@@ -59,7 +59,22 @@ public class CharacterBasicAttack : MonoBehaviour
         DamageResult result = DamageCalculator.ResolveAttack(attackerStats, targetStats, basicAttack);
 
         if (result.Hit)
+        {
             targetHealth.TakeDamage(result.FinalDamage);
+
+            if (DamageNumberManager.Instance != null)
+                DamageNumberManager.Instance.ShowDamage(
+                    result.FinalDamage,
+                    targetStats.transform,
+                    result.DamageType,
+                    result.WasCritical
+                );
+        }
+        else
+        {
+            if (DamageNumberManager.Instance != null)
+                DamageNumberManager.Instance.ShowMiss(targetStats.transform);
+        }
 
         Debug.Log(BuildCombatLog(targetStats.name, result, targetHealth));
         return true;

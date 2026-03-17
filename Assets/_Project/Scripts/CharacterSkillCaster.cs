@@ -185,7 +185,22 @@ public class CharacterSkillCaster : MonoBehaviour
             DamageResult result = DamageCalculator.ResolveSkill(casterStats, targetStats, skill);
 
             if (result.Hit)
+            {
                 targetHealth.TakeDamage(result.FinalDamage);
+
+                if (DamageNumberManager.Instance != null)
+                    DamageNumberManager.Instance.ShowDamage(
+                        result.FinalDamage,
+                        targetStats.transform,
+                        result.DamageType,
+                        result.WasCritical
+                    );
+            }
+            else
+            {
+                if (DamageNumberManager.Instance != null)
+                    DamageNumberManager.Instance.ShowMiss(targetStats.transform);
+            }
 
             Debug.Log(BuildCombatLog(skill, targetStats.name, result, targetHealth));
         }
