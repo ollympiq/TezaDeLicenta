@@ -1,0 +1,161 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class CharacterInventory : MonoBehaviour
+{
+    [SerializeField] private int capacity = 24;
+    [SerializeField] private List<ItemInstance> items = new List<ItemInstance>();
+
+    public event Action OnInventoryChanged;
+
+    public IReadOnlyList<ItemInstance> Items => items;
+    public int Capacity => capacity;
+
+    public bool AddItem(ItemDefinition definition, int amount = 1)
+    {
+        if (definition == null || amount <= 0)
+            return false;
+
+        bool changed = false;
+
+        while (amount > 0)
+        {
+            if (definition.Stackable)
+            {
+                ItemInstance existingStack = FindStack(definition);
+                if (existingStack != null && existingStack.StackCount < existingStack.MaxStack)
+                {
+                    int freeSpace = existingStack.MaxStack - existingStack.StackCount;
+                    int toAdd = Mathf.Min(freeSpace, amount);
+
+                    existingStack.AddToStack(toAdd);
+                    amount -= toAdd;
+                    changed = true;
+                    continue;
+                }
+            }
+
+            if (items.Count >= capacity)
+                break;
+
+            int stackAmount = definition.Stackable ? Mathf.Min(definition.MaxStack, amount) : 1;
+            items.Add(new ItemInstance(definition, stackAmount));
+            amount -= stackAmount;
+            changed = true;
+        }
+
+        if (changed)
+            OnInventoryChanged?.Invoke();
+
+        return amount == 0;
+    }
+
+    public bool AddItemInstance(ItemInstance instance)
+    {
+        if (instance == null || instance.Definition == null)
+            return false;
+
+        if (instance.CanStack)
+        {
+            ItemInstance existingStack = FindCompatibleStack(instance);
+            if (existingStack != null && existingStack.StackCount < existingStack.MaxStack)
+            {
+                int freeSpace = existingStack.MaxStack - existingStack.StackCount;
+                int toAdd = Mathf.Min(freeSpace, instance.StackCount);
+                existingStack.AddToStack(toAdd);
+                instance.RemoveFromStack(toAdd);
+
+                if (instance.StackCount <= 0)
+                {
+                    OnInventoryChanged?.Invoke();
+                    return true;
+                }
+            }
+        }
+
+        if (items.Count >= capacity)
+            return false;
+
+        items.Add(instance);
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    public ItemInstance TakeAt(int index)
+    {
+        if (index < 0 || index >= items.Count)
+            return null;
+
+        ItemInstance item = items[index];
+        items.RemoveAt(index);
+        OnInventoryChanged?.Invoke();
+        return item;
+    }
+
+    public bool RemoveAt(int index, int amount = 1)
+    {
+        if (index < 0 || index >= items.Count || amount <= 0)
+            return false;
+
+        ItemInstance item = items[index];
+
+        if (item.CanStack && item.StackCount > amount)
+        {
+            item.RemoveFromStack(amount);
+        }
+        else
+        {
+            items.RemoveAt(index);
+        }
+
+        OnInventoryChanged?.Invoke();
+        return true;
+    }
+
+    public bool UseAt(int index, GameObject user)
+    {
+        if (index < 0 || index >= items.Count || user == null)
+            return false;
+
+        ItemInstance item = items[index];
+        PotionDefinition potion = item.PotionDefinition;
+
+        if (potion == null)
+            return false;
+
+        CharacterHealth health = user.GetComponent<CharacterHealth>();
+        PlayerAP playerAP = user.GetComponent<PlayerAP>();
+
+        if (health != null && potion.HealAmount > 0)
+            health.Heal(potion.HealAmount);
+
+        if (playerAP != null && potion.RestoreAP > 0)
+            playerAP.RestoreAP(potion.RestoreAP);
+
+        RemoveAt(index, 1);
+        return true;
+    }
+
+    private ItemInstance FindStack(ItemDefinition definition)
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].Definition == definition && items[i].CanStack && items[i].StackCount < items[i].MaxStack)
+                return items[i];
+        }
+
+        return null;
+    }
+
+    private ItemInstance FindCompatibleStack(ItemInstance instance)
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].CanStackWith(instance) && items[i].StackCount < items[i].MaxStack)
+                return items[i];
+        }
+
+        return null;
+    }
+}

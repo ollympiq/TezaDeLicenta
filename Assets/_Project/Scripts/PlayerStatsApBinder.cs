@@ -13,6 +13,18 @@ public class PlayerStatsApBinder : MonoBehaviour
         playerAP = GetComponent<PlayerAP>();
     }
 
+    private void OnEnable()
+    {
+        if (stats != null)
+            stats.OnStatsChanged += ApplyStatsToAP;
+    }
+
+    private void OnDisable()
+    {
+        if (stats != null)
+            stats.OnStatsChanged -= ApplyStatsToAP;
+    }
+
     private void Start()
     {
         ApplyStatsToAP();
@@ -23,6 +35,6 @@ public class PlayerStatsApBinder : MonoBehaviour
         if (stats == null || playerAP == null)
             return;
 
-        playerAP.SetMaxAP(stats.MaxAP, true);
+        playerAP.SetMaxAP(stats.MaxAP, false);
     }
 }

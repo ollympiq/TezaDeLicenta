@@ -57,4 +57,12 @@ public class PlayerAP : MonoBehaviour
 
         NotifyChanged();
     }
+    public void RestoreAP(int amount)
+    {
+        if (amount <= 0)
+            return;
+
+        currentAP = Mathf.Clamp(currentAP + amount, 0, maxAP);
+        NotifyChanged();
+    }
 }

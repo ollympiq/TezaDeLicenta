@@ -315,7 +315,7 @@ MonoBehaviour:
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 512
+  m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -832,9 +832,15 @@ MonoBehaviour:
   spawnRoot: {fileID: 250899569}
   worldCamera: {fileID: 330585545}
   damageNumberPrefab: {fileID: 6809678197110068538, guid: 0ab8c9a026875b246a01bd6d37177e17, type: 3}
-  normalDamageColor: {r: 1, g: 1, b: 1, a: 1}
-  criticalDamageColor: {r: 1, g: 0.85, b: 0.2, a: 1}
+  physicalColor: {r: 0.95, g: 0.95, b: 0.95, a: 1}
+  fireColor: {r: 1, g: 0.45, b: 0.1, a: 1}
+  earthColor: {r: 0.68, g: 0.5, b: 0.22, a: 1}
+  windColor: {r: 0.6, g: 1, b: 0.75, a: 1}
+  lightningColor: {r: 0.8857178, g: 0.20714669, b: 0.8962264, a: 1}
+  iceColor: {r: 0.55, g: 0.85, b: 1, a: 1}
   missColor: {r: 1, g: 0.35, b: 0.35, a: 1}
+  normalScale: 1
+  criticalScale: 1.5
 --- !u!1 &277767341
 GameObject:
   m_ObjectHideFlags: 0
@@ -3328,6 +3334,8 @@ GameObject:
   - component: {fileID: 902157976}
   - component: {fileID: 902157977}
   - component: {fileID: 902157978}
+  - component: {fileID: 902157980}
+  - component: {fileID: 902157979}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -3517,32 +3525,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 171066c3c6af22a48ba38db4d4a69df8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  characterClass: 0
+  characterClass: 1
   level: 1
   strength: 10
   constitution: 10
   dexterity: 10
   intelligence: 10
   baseMaxHP: 50
-  hpPerConstitution: 10
   baseMaxAP: 6
+  baseArmor: 5
+  basePhysicalResistance: 0
+  baseFireResistance: 0
+  baseEarthResistance: 0
+  baseWindResistance: 0
+  baseLightningResistance: 0
+  baseIceResistance: 0
+  equipment: {fileID: 0}
   physicalPowerPerStrength: 5
   magicPowerPerIntelligence: 5
-  baseCritChance: 5
-  critChancePerDexterity: 0.5
-  baseInitiative: 10
-  initiativePerDexterity: 1
-  baseAccuracy: 80
+  hpPerConstitution: 10
+  armorPerStrength: 0.5
+  physicalResistancePerStrength: 0.3
+  allResistancePerConstitution: 0.25
   accuracyPerDexterity: 1
-  baseEvasion: 0
   evasionPerDexterity: 0.5
-  armor: 10
-  physicalResistance: 0
-  fireResistance: 0
-  earthResistance: 0
-  windResistance: 0
-  lightningResistance: 0
-  iceResistance: 0
+  critChancePerDexterity: 0.5
+  initiativePerDexterity: 1
+  elementalDamageBonusPerIntelligence: 0.5
+  meleeArmorBonus: 4
+  meleePhysicalResistanceBonus: 5
+  rangerAccuracyBonus: 5
+  rangerEvasionBonus: 5
+  rangerCritChanceBonus: 4
+  rangerInitiativeBonus: 5
+  mageMagicPowerBonus: 10
+  mageElementalDamageBonus: 5
 --- !u!114 &902157972
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3567,16 +3584,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: becab3fd4e5a2bd4692c95a4ca91094d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  basicAttack:
-    attackName: Basic Attack
-    damageType: 0
-    minDamage: 12
-    maxDamage: 18
-    powerScaling: 0.35
-    bonusAccuracy: 0
-    canCrit: 1
-    apCost: 2
-    range: 2.2
 --- !u!114 &902157975
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3658,6 +3665,65 @@ MonoBehaviour:
   skillTargetMask:
     serializedVersion: 2
     m_Bits: 128
+--- !u!114 &902157979
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902157962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c474ce86b2cc0947bb8a3da26f23949, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterInventory
+  capacity: 24
+  items: []
+--- !u!114 &902157980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902157962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63dcf16143e769645b5ce35ba3ff8743, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterEquipment
+  startingWeapon: {fileID: 0}
+  weaponItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  headItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  chestItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  handsItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  legsItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  feetItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  ringItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
+  amuletItem:
+    definition: {fileID: 0}
+    rarity: 0
+    stackCount: 0
 --- !u!1 &911678504
 GameObject:
   m_ObjectHideFlags: 0
@@ -4734,6 +4800,8 @@ GameObject:
   - component: {fileID: 1140139138}
   - component: {fileID: 1140139140}
   - component: {fileID: 1140139139}
+  - component: {fileID: 1140139142}
+  - component: {fileID: 1140139141}
   m_Layer: 5
   m_Name: StatsPanel
   m_TagString: Untagged
@@ -4776,7 +4844,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
   m_Color: {r: 0.20754719, g: 0.19873622, b: 0.19873622, a: 0.94509804}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -4800,6 +4868,46 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1140139137}
   m_CullTransparentMesh: 1
+--- !u!114 &1140139141
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140139137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 0
+  m_VerticalFit: 2
+--- !u!114 &1140139142
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1140139137}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 12
+    m_Right: 12
+    m_Top: 10
+    m_Bottom: 10
+  m_ChildAlignment: 0
+  m_Spacing: 4
+  m_ChildForceExpandWidth: 0
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1250002491
 GameObject:
   m_ObjectHideFlags: 0
@@ -5067,25 +5175,34 @@ MonoBehaviour:
   dexterity: 10
   intelligence: 10
   baseMaxHP: 500
-  hpPerConstitution: 10
   baseMaxAP: 6
+  baseArmor: 5
+  basePhysicalResistance: 0
+  baseFireResistance: 0
+  baseEarthResistance: 0
+  baseWindResistance: 0
+  baseLightningResistance: 0
+  baseIceResistance: 0
+  equipment: {fileID: 0}
   physicalPowerPerStrength: 5
   magicPowerPerIntelligence: 5
-  baseCritChance: 5
-  critChancePerDexterity: 0.5
-  baseInitiative: 10
-  initiativePerDexterity: 1
-  baseAccuracy: 80
+  hpPerConstitution: 10
+  armorPerStrength: 0.5
+  physicalResistancePerStrength: 0.3
+  allResistancePerConstitution: 0.25
   accuracyPerDexterity: 1
-  baseEvasion: 0
   evasionPerDexterity: 0.5
-  armor: 10
-  physicalResistance: 0
-  fireResistance: 0
-  earthResistance: 0
-  windResistance: 0
-  lightningResistance: 0
-  iceResistance: 0
+  critChancePerDexterity: 0.5
+  initiativePerDexterity: 1
+  elementalDamageBonusPerIntelligence: 0.5
+  meleeArmorBonus: 4
+  meleePhysicalResistanceBonus: 5
+  rangerAccuracyBonus: 5
+  rangerEvasionBonus: 5
+  rangerCritChanceBonus: 4
+  rangerInitiativeBonus: 5
+  mageMagicPowerBonus: 10
+  mageElementalDamageBonus: 5
 --- !u!136 &1308527808
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -7158,7 +7275,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0

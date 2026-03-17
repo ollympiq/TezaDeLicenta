@@ -1,4 +1,3 @@
-
 public struct DamageResult
 {
     public bool Hit;
@@ -9,4 +8,8 @@ public struct DamageResult
     public float ResistancePercent;
     public float ArmorReductionPercent;
     public DamageType DamageType;
+
+    public float ScalingBonus;
+    public float ClassBonusPercent;
+    public float ElementalBonusPercent;
 }

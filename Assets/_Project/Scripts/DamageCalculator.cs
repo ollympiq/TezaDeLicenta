@@ -2,20 +2,51 @@ using UnityEngine;
 
 public static class DamageCalculator
 {
+    public static DamageResult ResolveWeaponAttack(
+        CharacterStats attacker,
+        CharacterStats defender,
+        WeaponDefinition weapon)
+    {
+        if (weapon == null)
+            return default;
+
+        float scalingBonus = weapon.Scaling.GetScalingBonus(attacker);
+        float classBonusPercent = attacker.GetWeaponMasteryBonusPercent(weapon.WeaponFamily);
+
+        return ResolveInternal(
+            attacker,
+            defender,
+            weapon.DamageType,
+            weapon.MinDamage,
+            weapon.MaxDamage,
+            scalingBonus,
+            weapon.BonusAccuracy,
+            weapon.CanCrit,
+            classBonusPercent
+        );
+    }
+
     public static DamageResult ResolveAttack(
         CharacterStats attacker,
         CharacterStats defender,
         AttackDefinition attack)
     {
+        float offensivePower = attack.DamageType == DamageType.Physical
+            ? attacker.PhysicalPower
+            : attacker.MagicPower;
+
+        float scalingBonus = offensivePower * attack.PowerScaling;
+
         return ResolveInternal(
             attacker,
             defender,
             attack.DamageType,
             attack.MinDamage,
             attack.MaxDamage,
-            attack.PowerScaling,
+            scalingBonus,
             attack.BonusAccuracy,
-            attack.CanCrit
+            attack.CanCrit,
+            0f
         );
     }
 
@@ -24,15 +55,22 @@ public static class DamageCalculator
         CharacterStats defender,
         SkillDefinition skill)
     {
+        float offensivePower = skill.DamageType == DamageType.Physical
+            ? attacker.PhysicalPower
+            : attacker.MagicPower;
+
+        float scalingBonus = offensivePower * skill.PowerScaling;
+
         return ResolveInternal(
             attacker,
             defender,
             skill.DamageType,
             skill.MinDamage,
             skill.MaxDamage,
-            skill.PowerScaling,
+            scalingBonus,
             skill.BonusAccuracy,
-            skill.CanCrit
+            skill.CanCrit,
+            0f
         );
     }
 
@@ -42,12 +80,15 @@ public static class DamageCalculator
         DamageType damageType,
         int minDamage,
         int maxDamage,
-        float powerScaling,
+        float scalingBonus,
         float bonusAccuracy,
-        bool canCrit)
+        bool canCrit,
+        float classBonusPercent)
     {
         DamageResult result = new DamageResult();
         result.DamageType = damageType;
+        result.ScalingBonus = scalingBonus;
+        result.ClassBonusPercent = classBonusPercent;
 
         float hitChance = Mathf.Clamp(attacker.Accuracy + bonusAccuracy - defender.Evasion, 5f, 95f);
         result.HitChance = hitChance;
@@ -63,11 +104,20 @@ public static class DamageCalculator
 
         int rolledDamage = Random.Range(minDamage, maxDamage + 1);
 
-        float offensivePower = damageType == DamageType.Physical
-            ? attacker.PhysicalPower
-            : attacker.MagicPower;
+        float rawDamage = rolledDamage + scalingBonus;
 
-        float rawDamage = rolledDamage + offensivePower * powerScaling;
+        if (classBonusPercent > 0f)
+            rawDamage *= 1f + classBonusPercent / 100f;
+
+        float elementalBonusPercent = 0f;
+
+        if (damageType != DamageType.Physical)
+        {
+            elementalBonusPercent = attacker.ElementalDamageBonusPercent;
+            rawDamage *= 1f + elementalBonusPercent / 100f;
+        }
+
+        result.ElementalBonusPercent = elementalBonusPercent;
         result.BaseDamage = Mathf.RoundToInt(rawDamage);
 
         bool wasCrit = canCrit && Random.Range(0f, 100f) <= attacker.CritChance;

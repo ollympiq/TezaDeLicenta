@@ -2,12 +2,11 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(CharacterStats))]
+[RequireComponent(typeof(CharacterEquipment))]
 public class CharacterBasicAttack : MonoBehaviour
 {
-    [Header("Attack")]
-    [SerializeField] private AttackDefinition basicAttack = new AttackDefinition();
-
     private CharacterStats attackerStats;
+    private CharacterEquipment equipment;
     private PlayerAP playerAP;
     private PlayerAnimationController animationController;
     private NavMeshAgent agent;
@@ -15,6 +14,7 @@ public class CharacterBasicAttack : MonoBehaviour
     private void Awake()
     {
         attackerStats = GetComponent<CharacterStats>();
+        equipment = GetComponent<CharacterEquipment>();
         playerAP = GetComponent<PlayerAP>();
         animationController = GetComponent<PlayerAnimationController>();
         agent = GetComponent<NavMeshAgent>();
@@ -25,11 +25,18 @@ public class CharacterBasicAttack : MonoBehaviour
         if (targetStats == null || targetStats == attackerStats)
             return false;
 
+        WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
+        if (weapon == null)
+        {
+            Debug.Log("Nu ai nicio arma echipata.");
+            return false;
+        }
+
         CharacterHealth targetHealth = targetStats.GetComponent<CharacterHealth>();
         if (targetHealth == null || targetHealth.IsDead)
             return false;
 
-        if (!IsTargetInRange(targetStats.transform))
+        if (!IsTargetInRange(targetStats.transform, weapon.Range))
         {
             Debug.Log("Tinta este prea departe.");
             return false;
@@ -37,13 +44,13 @@ public class CharacterBasicAttack : MonoBehaviour
 
         if (playerAP != null)
         {
-            if (!playerAP.HasEnoughAP(basicAttack.ApCost))
+            if (!playerAP.HasEnoughAP(weapon.ApCost))
             {
                 Debug.Log("Nu ai destul AP pentru atac.");
                 return false;
             }
 
-            if (!playerAP.SpendAP(basicAttack.ApCost))
+            if (!playerAP.SpendAP(weapon.ApCost))
                 return false;
         }
 
@@ -56,19 +63,21 @@ public class CharacterBasicAttack : MonoBehaviour
         if (animationController != null)
             animationController.PlayAttackAnimation(targetStats.transform);
 
-        DamageResult result = DamageCalculator.ResolveAttack(attackerStats, targetStats, basicAttack);
+        DamageResult result = DamageCalculator.ResolveWeaponAttack(attackerStats, targetStats, weapon);
 
         if (result.Hit)
         {
             targetHealth.TakeDamage(result.FinalDamage);
 
             if (DamageNumberManager.Instance != null)
+            {
                 DamageNumberManager.Instance.ShowDamage(
                     result.FinalDamage,
                     targetStats.transform,
                     result.DamageType,
                     result.WasCritical
                 );
+            }
         }
         else
         {
@@ -76,11 +85,11 @@ public class CharacterBasicAttack : MonoBehaviour
                 DamageNumberManager.Instance.ShowMiss(targetStats.transform);
         }
 
-        Debug.Log(BuildCombatLog(targetStats.name, result, targetHealth));
+        Debug.Log(BuildCombatLog(weapon, targetStats.name, result, targetHealth));
         return true;
     }
 
-    private bool IsTargetInRange(Transform target)
+    private bool IsTargetInRange(Transform target, float range)
     {
         Vector3 a = transform.position;
         Vector3 b = target.position;
@@ -89,20 +98,22 @@ public class CharacterBasicAttack : MonoBehaviour
         b.y = 0f;
 
         float distance = Vector3.Distance(a, b);
-        return distance <= basicAttack.Range;
+        return distance <= range;
     }
 
-    private string BuildCombatLog(string targetName, DamageResult result, CharacterHealth targetHealth)
+    private string BuildCombatLog(WeaponDefinition weapon, string targetName, DamageResult result, CharacterHealth targetHealth)
     {
         if (!result.Hit)
-            return $"{name} used {basicAttack.AttackName} on {targetName} but missed. Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+            return $"{name} used {weapon.DisplayName} on {targetName} but missed. Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
 
         string critText = result.WasCritical ? " CRITICAL!" : "";
 
         return
-            $"{name} used {basicAttack.AttackName} on {targetName} | " +
+            $"{name} attacked with {weapon.DisplayName} on {targetName} | " +
             $"Type: {result.DamageType} | " +
             $"Base: {result.BaseDamage} | " +
+            $"Scaling Bonus: {result.ScalingBonus:F1} | " +
+            $"Class Bonus: {result.ClassBonusPercent:F1}% | " +
             $"Armor Reduction: {result.ArmorReductionPercent:F1}% | " +
             $"Resistance: {result.ResistancePercent:F1}% | " +
             $"Final Damage: {result.FinalDamage}{critText} | " +
