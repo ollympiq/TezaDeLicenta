@@ -1,14 +1,13 @@
+using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterBasicAttack))]
 public class PlayerCombatController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Camera mainCamera;
-    [SerializeField] private Button basicAttackButton;
 
     [Header("Targeting")]
     [SerializeField] private LayerMask enemyMask;
@@ -16,18 +15,19 @@ public class PlayerCombatController : MonoBehaviour
 
     [Header("Cursor")]
     [SerializeField] private Texture2D defaultCursor;
-    [SerializeField] private Texture2D attackCursor;
-    [SerializeField] private Vector2 attackCursorHotspot = new Vector2(8f, 8f);
-
-    [Header("Button Colors")]
-    [SerializeField] private Image basicAttackButtonImage;
-    [SerializeField] private Color normalButtonColor = Color.white;
-    [SerializeField] private Color selectedButtonColor = new Color(0.75f, 1f, 0.75f, 1f);
 
     private CharacterBasicAttack basicAttack;
-    private bool isTargetingBasicAttack;
 
-    public bool IsTargetingBasicAttack => isTargetingBasicAttack;
+    private SkillDefinition selectedSkill;
+    private int selectedSlotIndex = -1;
+
+    public event Action OnSelectedSkillChanged;
+
+    public int SelectedSlotIndex => selectedSlotIndex;
+
+    public bool HasTargetingSkillSelected =>
+        selectedSkill != null &&
+        selectedSkill.TargetingMode != SkillTargetingMode.None;
 
     private void Awake()
     {
@@ -39,27 +39,17 @@ public class PlayerCombatController : MonoBehaviour
 
     private void Start()
     {
-        if (basicAttackButton != null)
-            basicAttackButton.onClick.AddListener(ToggleBasicAttackMode);
-
-        RefreshButtonVisual();
         ApplyCursor();
-    }
-
-    private void OnDestroy()
-    {
-        if (basicAttackButton != null)
-            basicAttackButton.onClick.RemoveListener(ToggleBasicAttackMode);
     }
 
     private void Update()
     {
-        if (!isTargetingBasicAttack)
+        if (!HasTargetingSkillSelected)
             return;
 
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            CancelTargetingMode();
+            ClearSelectedSkill();
             return;
         }
 
@@ -68,7 +58,7 @@ public class PlayerCombatController : MonoBehaviour
 
         if (Mouse.current.rightButton.wasPressedThisFrame)
         {
-            CancelTargetingMode();
+            ClearSelectedSkill();
             return;
         }
 
@@ -77,33 +67,42 @@ public class PlayerCombatController : MonoBehaviour
             if (IsPointerOverUI())
                 return;
 
-            TryAttackUnderCursor();
+            if (selectedSkill.TargetingMode == SkillTargetingMode.Enemy)
+                TryUseSelectedSkillOnEnemy();
         }
     }
 
-    public void ToggleBasicAttackMode()
+    public void ToggleSkillSelection(SkillDefinition skill, int slotIndex)
     {
-        if (isTargetingBasicAttack)
-            CancelTargetingMode();
-        else
-            EnterBasicAttackMode();
-    }
+        if (skill == null)
+        {
+            ClearSelectedSkill();
+            return;
+        }
 
-    public void EnterBasicAttackMode()
-    {
-        isTargetingBasicAttack = true;
-        RefreshButtonVisual();
+        if (selectedSkill == skill && selectedSlotIndex == slotIndex)
+        {
+            ClearSelectedSkill();
+            return;
+        }
+
+        selectedSkill = skill;
+        selectedSlotIndex = slotIndex;
+
         ApplyCursor();
+        OnSelectedSkillChanged?.Invoke();
     }
 
-    public void CancelTargetingMode()
+    public void ClearSelectedSkill()
     {
-        isTargetingBasicAttack = false;
-        RefreshButtonVisual();
+        selectedSkill = null;
+        selectedSlotIndex = -1;
+
         ApplyCursor();
+        OnSelectedSkillChanged?.Invoke();
     }
 
-    private void TryAttackUnderCursor()
+    private void TryUseSelectedSkillOnEnemy()
     {
         Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
 
@@ -114,10 +113,25 @@ public class PlayerCombatController : MonoBehaviour
         if (targetStats == null)
             return;
 
-        bool attacked = basicAttack.TryAttackTarget(targetStats);
+        bool usedSuccessfully = false;
 
-        if (attacked)
-            CancelTargetingMode();
+        switch (selectedSkill.SkillType)
+        {
+            case SkillType.BasicAttack:
+                usedSuccessfully = basicAttack != null && basicAttack.TryAttackTarget(targetStats);
+                break;
+
+            case SkillType.Active:
+                Debug.Log($"{selectedSkill.DisplayName} exista in bara, dar inca nu este implementat.");
+                break;
+
+            case SkillType.Passive:
+                Debug.Log($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
+                break;
+        }
+
+        if (usedSuccessfully && !selectedSkill.KeepSelectedAfterUse)
+            ClearSelectedSkill();
     }
 
     private bool IsPointerOverUI()
@@ -130,21 +144,15 @@ public class PlayerCombatController : MonoBehaviour
 
     private void ApplyCursor()
     {
-        if (isTargetingBasicAttack && attackCursor != null)
-        {
-            Cursor.SetCursor(attackCursor, attackCursorHotspot, CursorMode.Auto);
-        }
-        else
-        {
-            Cursor.SetCursor(defaultCursor, Vector2.zero, CursorMode.Auto);
-        }
-    }
+        Texture2D cursorTexture = defaultCursor;
+        Vector2 hotspot = Vector2.zero;
 
-    private void RefreshButtonVisual()
-    {
-        if (basicAttackButtonImage == null)
-            return;
+        if (selectedSkill != null && selectedSkill.CursorTexture != null)
+        {
+            cursorTexture = selectedSkill.CursorTexture;
+            hotspot = selectedSkill.CursorHotspot;
+        }
 
-        basicAttackButtonImage.color = isTargetingBasicAttack ? selectedButtonColor : normalButtonColor;
+        Cursor.SetCursor(cursorTexture, hotspot, CursorMode.Auto);
     }
 }

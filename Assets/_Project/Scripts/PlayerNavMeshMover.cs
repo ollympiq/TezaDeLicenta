@@ -51,7 +51,7 @@ public class PlayerNavMeshMover : MonoBehaviour
             if (IsPointerOverUI())
                 return;
 
-            if (combatController != null && combatController.IsTargetingBasicAttack)
+            if (combatController != null && combatController.HasTargetingSkillSelected)
                 return;
 
             TryMoveToMouse();
