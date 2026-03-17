@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SkillBookItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class SkillBookItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI nameText;
@@ -31,6 +31,9 @@ public class SkillBookItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
         if (skill == null || rootCanvas == null)
             return;
 
+        if (SkillTooltipUI.Instance != null)
+            SkillTooltipUI.Instance.Hide();
+
         UISkillDragState.BeginDrag(skill, rootCanvas, skill.Icon, eventData.position);
     }
 
@@ -42,5 +45,17 @@ public class SkillBookItemUI : MonoBehaviour, IBeginDragHandler, IDragHandler, I
     public void OnEndDrag(PointerEventData eventData)
     {
         UISkillDragState.Clear();
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (skill != null && SkillTooltipUI.Instance != null)
+            SkillTooltipUI.Instance.Show(skill);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (SkillTooltipUI.Instance != null)
+            SkillTooltipUI.Instance.Hide();
     }
 }

@@ -8,9 +8,11 @@ public class PlayerCombatController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private Camera mainCamera;
+    [SerializeField] private CharacterSkillCaster skillCaster;
 
     [Header("Targeting")]
     [SerializeField] private LayerMask enemyMask;
+    [SerializeField] private LayerMask groundMask;
     [SerializeField] private float rayDistance = 500f;
 
     [Header("Cursor")]
@@ -32,6 +34,9 @@ public class PlayerCombatController : MonoBehaviour
     private void Awake()
     {
         basicAttack = GetComponent<CharacterBasicAttack>();
+
+        if (skillCaster == null)
+            skillCaster = GetComponent<CharacterSkillCaster>();
 
         if (mainCamera == null)
             mainCamera = Camera.main;
@@ -67,8 +72,20 @@ public class PlayerCombatController : MonoBehaviour
             if (IsPointerOverUI())
                 return;
 
-            if (selectedSkill.TargetingMode == SkillTargetingMode.Enemy)
-                TryUseSelectedSkillOnEnemy();
+            switch (selectedSkill.TargetingMode)
+            {
+                case SkillTargetingMode.Enemy:
+                    TryUseSelectedSkillOnEnemy();
+                    break;
+
+                case SkillTargetingMode.Ground:
+                    TryUseSelectedSkillOnGround();
+                    break;
+
+                case SkillTargetingMode.Self:
+                    Debug.Log("Skill-urile Self nu sunt implementate inca.");
+                    break;
+            }
         }
     }
 
@@ -122,7 +139,35 @@ public class PlayerCombatController : MonoBehaviour
                 break;
 
             case SkillType.Active:
-                Debug.Log($"{selectedSkill.DisplayName} exista in bara, dar inca nu este implementat.");
+                usedSuccessfully = skillCaster != null && skillCaster.TryUseSkillOnTarget(selectedSkill, targetStats);
+                break;
+
+            case SkillType.Passive:
+                Debug.Log($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
+                break;
+        }
+
+        if (usedSuccessfully && !selectedSkill.KeepSelectedAfterUse)
+            ClearSelectedSkill();
+    }
+
+    private void TryUseSelectedSkillOnGround()
+    {
+        Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, rayDistance, groundMask))
+            return;
+
+        bool usedSuccessfully = false;
+
+        switch (selectedSkill.SkillType)
+        {
+            case SkillType.Active:
+                usedSuccessfully = skillCaster != null && skillCaster.TryUseSkillAtPoint(selectedSkill, hit.point);
+                break;
+
+            case SkillType.BasicAttack:
+                Debug.Log("Basic Attack nu poate fi folosit pe ground.");
                 break;
 
             case SkillType.Passive:
@@ -149,10 +194,31 @@ public class PlayerCombatController : MonoBehaviour
 
         if (selectedSkill != null && selectedSkill.CursorTexture != null)
         {
-            cursorTexture = selectedSkill.CursorTexture;
-            hotspot = selectedSkill.CursorHotspot;
+            if (IsCursorTextureUsable(selectedSkill.CursorTexture))
+            {
+                cursorTexture = selectedSkill.CursorTexture;
+                hotspot = selectedSkill.CursorHotspot;
+            }
+            else
+            {
+                Debug.LogWarning($"Cursor texture pentru skill-ul '{selectedSkill.DisplayName}' nu are setarile corecte de import.");
+            }
         }
 
         Cursor.SetCursor(cursorTexture, hotspot, CursorMode.Auto);
+    }
+
+    private bool IsCursorTextureUsable(Texture2D texture)
+    {
+        if (texture == null)
+            return false;
+
+        if (!texture.isReadable)
+            return false;
+
+        if (texture.mipmapCount > 1)
+            return false;
+
+        return true;
     }
 }

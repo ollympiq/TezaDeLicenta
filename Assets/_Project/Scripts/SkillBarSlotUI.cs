@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
+public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     [SerializeField] private Image iconImage;
     [SerializeField] private Image selectedFrame;
@@ -12,6 +12,7 @@ public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
     private SkillBarUI owner;
     private PlayerSkillLoadout loadout;
     private int slotIndex;
+    private SkillDefinition currentSkill;
 
     public void Setup(SkillBarUI newOwner, PlayerSkillLoadout newLoadout, int newSlotIndex)
     {
@@ -25,6 +26,8 @@ public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
 
     public void Refresh(SkillDefinition skill, bool isSelected)
     {
+        currentSkill = skill;
+
         if (iconImage != null)
         {
             iconImage.enabled = skill != null && skill.Icon != null;
@@ -57,5 +60,17 @@ public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler
             return;
 
         owner?.HandleSlotClicked(slotIndex);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        if (currentSkill != null && SkillTooltipUI.Instance != null)
+            SkillTooltipUI.Instance.Show(currentSkill);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (SkillTooltipUI.Instance != null)
+            SkillTooltipUI.Instance.Hide();
     }
 }

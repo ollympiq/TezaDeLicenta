@@ -16,7 +16,17 @@ MonoBehaviour:
   displayName: Fire Ball
   skillType: 1
   targetingMode: 1
-  keepSelectedAfterUse: 1
+  areaMode: 0
+  keepSelectedAfterUse: 0
   icon: {fileID: 21300000, guid: 68959363158d9c3419f8f483d41f5a0d, type: 3}
-  cursorTexture: {fileID: 2800000, guid: 68959363158d9c3419f8f483d41f5a0d, type: 3}
+  cursorTexture: {fileID: 2800000, guid: c0986591da1bfc143a454d06b7204ce4, type: 3}
   cursorHotspot: {x: 0, y: 0}
+  damageType: 1
+  minDamage: 18
+  maxDamage: 28
+  powerScaling: 0.6
+  bonusAccuracy: 0
+  canCrit: 1
+  apCost: 2
+  range: 8
+  areaRadius: 0

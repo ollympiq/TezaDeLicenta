@@ -7,10 +7,49 @@ public static class DamageCalculator
         CharacterStats defender,
         AttackDefinition attack)
     {
-        DamageResult result = new DamageResult();
-        result.DamageType = attack.DamageType;
+        return ResolveInternal(
+            attacker,
+            defender,
+            attack.DamageType,
+            attack.MinDamage,
+            attack.MaxDamage,
+            attack.PowerScaling,
+            attack.BonusAccuracy,
+            attack.CanCrit
+        );
+    }
 
-        float hitChance = Mathf.Clamp(attacker.Accuracy + attack.BonusAccuracy - defender.Evasion, 5f, 95f);
+    public static DamageResult ResolveSkill(
+        CharacterStats attacker,
+        CharacterStats defender,
+        SkillDefinition skill)
+    {
+        return ResolveInternal(
+            attacker,
+            defender,
+            skill.DamageType,
+            skill.MinDamage,
+            skill.MaxDamage,
+            skill.PowerScaling,
+            skill.BonusAccuracy,
+            skill.CanCrit
+        );
+    }
+
+    private static DamageResult ResolveInternal(
+        CharacterStats attacker,
+        CharacterStats defender,
+        DamageType damageType,
+        int minDamage,
+        int maxDamage,
+        float powerScaling,
+        float bonusAccuracy,
+        bool canCrit)
+    {
+        DamageResult result = new DamageResult();
+        result.DamageType = damageType;
+
+        float hitChance = Mathf.Clamp(attacker.Accuracy + bonusAccuracy - defender.Evasion, 5f, 95f);
         result.HitChance = hitChance;
 
         bool hit = Random.Range(0f, 100f) <= hitChance;
@@ -22,16 +61,16 @@ public static class DamageCalculator
             return result;
         }
 
-        int rolledDamage = Random.Range(attack.MinDamage, attack.MaxDamage + 1);
+        int rolledDamage = Random.Range(minDamage, maxDamage + 1);
 
-        float offensivePower = attack.DamageType == DamageType.Physical
+        float offensivePower = damageType == DamageType.Physical
             ? attacker.PhysicalPower
             : attacker.MagicPower;
 
-        float rawDamage = rolledDamage + offensivePower * attack.PowerScaling;
+        float rawDamage = rolledDamage + offensivePower * powerScaling;
         result.BaseDamage = Mathf.RoundToInt(rawDamage);
 
-        bool wasCrit = attack.CanCrit && Random.Range(0f, 100f) <= attacker.CritChance;
+        bool wasCrit = canCrit && Random.Range(0f, 100f) <= attacker.CritChance;
         result.WasCritical = wasCrit;
 
         if (wasCrit)
@@ -39,7 +78,7 @@ public static class DamageCalculator
 
         float armorReduction = 0f;
 
-        if (attack.DamageType == DamageType.Physical)
+        if (damageType == DamageType.Physical)
         {
             armorReduction = defender.ArmorPhysicalReductionPercent;
             rawDamage *= 1f - armorReduction / 100f;
@@ -47,7 +86,7 @@ public static class DamageCalculator
 
         result.ArmorReductionPercent = armorReduction;
 
-        float resistance = GetResistance(defender, attack.DamageType);
+        float resistance = GetResistance(defender, damageType);
         result.ResistancePercent = resistance;
 
         rawDamage *= 1f - resistance / 100f;
