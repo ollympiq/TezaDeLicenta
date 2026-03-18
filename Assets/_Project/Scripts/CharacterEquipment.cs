@@ -19,17 +19,33 @@ public class CharacterEquipment : MonoBehaviour
 
     public event Action OnEquipmentChanged;
 
-    public WeaponDefinition EquippedWeaponDefinition => weaponItem != null ? weaponItem.WeaponDefinition : null;
+    public WeaponDefinition EquippedWeaponDefinition
+    {
+        get
+        {
+            ItemInstance item = GetItemInSlot(EquipmentSlot.Weapon);
+            return item != null ? item.WeaponDefinition : null;
+        }
+    }
 
     private void Awake()
     {
+        NormalizeEquippedItems();
+
         if (weaponItem == null && startingWeapon != null)
             weaponItem = new ItemInstance(startingWeapon, 1);
+
+        NormalizeEquippedItems();
+    }
+
+    private void OnValidate()
+    {
+        NormalizeEquippedItems();
     }
 
     public ItemInstance EquipItem(ItemInstance newItem)
     {
-        if (newItem == null || newItem.Definition == null)
+        if (newItem == null || !newItem.IsValid)
             return null;
 
         EquipmentSlot slot = newItem.Definition.EquipmentSlot;
@@ -64,18 +80,12 @@ public class CharacterEquipment : MonoBehaviour
 
     public ItemInstance GetItemInSlot(EquipmentSlot slot)
     {
-        switch (slot)
-        {
-            case EquipmentSlot.Weapon: return weaponItem;
-            case EquipmentSlot.Head: return headItem;
-            case EquipmentSlot.Chest: return chestItem;
-            case EquipmentSlot.Hands: return handsItem;
-            case EquipmentSlot.Legs: return legsItem;
-            case EquipmentSlot.Feet: return feetItem;
-            case EquipmentSlot.Ring: return ringItem;
-            case EquipmentSlot.Amulet: return amuletItem;
-            default: return null;
-        }
+        ItemInstance raw = GetRawItemInSlot(slot);
+
+        if (raw == null || !raw.IsValid)
+            return null;
+
+        return raw;
     }
 
     public float GetFlatBonus(ItemBonusType bonusType)
@@ -138,33 +148,72 @@ public class CharacterEquipment : MonoBehaviour
 
     public IEnumerable<ItemInstance> GetAllEquippedItems()
     {
-        if (weaponItem != null) yield return weaponItem;
-        if (headItem != null) yield return headItem;
-        if (chestItem != null) yield return chestItem;
-        if (handsItem != null) yield return handsItem;
-        if (legsItem != null) yield return legsItem;
-        if (feetItem != null) yield return feetItem;
-        if (ringItem != null) yield return ringItem;
-        if (amuletItem != null) yield return amuletItem;
+        if (GetItemInSlot(EquipmentSlot.Weapon) != null) yield return GetItemInSlot(EquipmentSlot.Weapon);
+        if (GetItemInSlot(EquipmentSlot.Head) != null) yield return GetItemInSlot(EquipmentSlot.Head);
+        if (GetItemInSlot(EquipmentSlot.Chest) != null) yield return GetItemInSlot(EquipmentSlot.Chest);
+        if (GetItemInSlot(EquipmentSlot.Hands) != null) yield return GetItemInSlot(EquipmentSlot.Hands);
+        if (GetItemInSlot(EquipmentSlot.Legs) != null) yield return GetItemInSlot(EquipmentSlot.Legs);
+        if (GetItemInSlot(EquipmentSlot.Feet) != null) yield return GetItemInSlot(EquipmentSlot.Feet);
+        if (GetItemInSlot(EquipmentSlot.Ring) != null) yield return GetItemInSlot(EquipmentSlot.Ring);
+        if (GetItemInSlot(EquipmentSlot.Amulet) != null) yield return GetItemInSlot(EquipmentSlot.Amulet);
     }
 
     public void ForceRefresh()
     {
+        NormalizeEquippedItems();
         OnEquipmentChanged?.Invoke();
+    }
+
+    private void NormalizeEquippedItems()
+    {
+        weaponItem = NormalizeItem(weaponItem);
+        headItem = NormalizeItem(headItem);
+        chestItem = NormalizeItem(chestItem);
+        handsItem = NormalizeItem(handsItem);
+        legsItem = NormalizeItem(legsItem);
+        feetItem = NormalizeItem(feetItem);
+        ringItem = NormalizeItem(ringItem);
+        amuletItem = NormalizeItem(amuletItem);
+    }
+
+    private ItemInstance NormalizeItem(ItemInstance item)
+    {
+        if (item == null || !item.IsValid)
+            return null;
+
+        return item;
+    }
+
+    private ItemInstance GetRawItemInSlot(EquipmentSlot slot)
+    {
+        switch (slot)
+        {
+            case EquipmentSlot.Weapon: return weaponItem;
+            case EquipmentSlot.Head: return headItem;
+            case EquipmentSlot.Chest: return chestItem;
+            case EquipmentSlot.Hands: return handsItem;
+            case EquipmentSlot.Legs: return legsItem;
+            case EquipmentSlot.Feet: return feetItem;
+            case EquipmentSlot.Ring: return ringItem;
+            case EquipmentSlot.Amulet: return amuletItem;
+            default: return null;
+        }
     }
 
     private void SetItemInSlot(EquipmentSlot slot, ItemInstance item)
     {
+        ItemInstance cleanItem = NormalizeItem(item);
+
         switch (slot)
         {
-            case EquipmentSlot.Weapon: weaponItem = item; break;
-            case EquipmentSlot.Head: headItem = item; break;
-            case EquipmentSlot.Chest: chestItem = item; break;
-            case EquipmentSlot.Hands: handsItem = item; break;
-            case EquipmentSlot.Legs: legsItem = item; break;
-            case EquipmentSlot.Feet: feetItem = item; break;
-            case EquipmentSlot.Ring: ringItem = item; break;
-            case EquipmentSlot.Amulet: amuletItem = item; break;
+            case EquipmentSlot.Weapon: weaponItem = cleanItem; break;
+            case EquipmentSlot.Head: headItem = cleanItem; break;
+            case EquipmentSlot.Chest: chestItem = cleanItem; break;
+            case EquipmentSlot.Hands: handsItem = cleanItem; break;
+            case EquipmentSlot.Legs: legsItem = cleanItem; break;
+            case EquipmentSlot.Feet: feetItem = cleanItem; break;
+            case EquipmentSlot.Ring: ringItem = cleanItem; break;
+            case EquipmentSlot.Amulet: amuletItem = cleanItem; break;
         }
     }
 }

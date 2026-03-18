@@ -6,6 +6,7 @@ public class PlayerStatsApBinder : MonoBehaviour
 {
     private CharacterStats stats;
     private PlayerAP playerAP;
+    private bool initialized;
 
     private void Awake()
     {
@@ -35,6 +36,14 @@ public class PlayerStatsApBinder : MonoBehaviour
         if (stats == null || playerAP == null)
             return;
 
-        playerAP.SetMaxAP(stats.MaxAP, false);
+        if (!initialized)
+        {
+            playerAP.SetMaxAP(stats.MaxAP, true);
+            initialized = true;
+        }
+        else
+        {
+            playerAP.SetMaxAP(stats.MaxAP, false);
+        }
     }
 }

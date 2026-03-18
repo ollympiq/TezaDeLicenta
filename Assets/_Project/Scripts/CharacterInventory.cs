@@ -5,12 +5,27 @@ using UnityEngine;
 public class CharacterInventory : MonoBehaviour
 {
     [SerializeField] private int capacity = 24;
+    [SerializeField] private List<StartingInventoryEntry> startingItems = new List<StartingInventoryEntry>();
     [SerializeField] private List<ItemInstance> items = new List<ItemInstance>();
 
     public event Action OnInventoryChanged;
 
     public IReadOnlyList<ItemInstance> Items => items;
     public int Capacity => capacity;
+    public int ItemCount => items.Count;
+
+    private void Awake()
+    {
+        AddStartingItems();
+    }
+
+    public ItemInstance GetItemAt(int index)
+    {
+        if (index < 0 || index >= items.Count)
+            return null;
+
+        return items[index];
+    }
 
     public bool AddItem(ItemDefinition definition, int amount = 1)
     {
@@ -135,6 +150,21 @@ public class CharacterInventory : MonoBehaviour
 
         RemoveAt(index, 1);
         return true;
+    }
+
+    private void AddStartingItems()
+    {
+        if (startingItems == null || startingItems.Count == 0)
+            return;
+
+        for (int i = 0; i < startingItems.Count; i++)
+        {
+            StartingInventoryEntry entry = startingItems[i];
+            if (entry == null || entry.ItemDefinition == null)
+                continue;
+
+            AddItem(entry.ItemDefinition, entry.Amount);
+        }
     }
 
     private ItemInstance FindStack(ItemDefinition definition)

@@ -19,6 +19,8 @@ public class ItemInstance
     public ItemRarity Rarity => rarity;
     public int StackCount => stackCount;
 
+    public bool IsValid => definition != null && stackCount > 0;
+
     public string DisplayName => definition != null ? definition.DisplayName : "Missing Item";
     public Sprite Icon => definition != null ? definition.Icon : null;
     public bool CanStack => definition != null && definition.Stackable;
@@ -30,7 +32,7 @@ public class ItemInstance
 
     public bool CanStackWith(ItemInstance other)
     {
-        if (other == null || definition == null || other.definition == null)
+        if (other == null || !IsValid || !other.IsValid)
             return false;
 
         return definition == other.definition &&
