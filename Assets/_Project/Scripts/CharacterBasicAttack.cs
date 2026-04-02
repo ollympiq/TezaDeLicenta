@@ -8,7 +8,10 @@ public class CharacterBasicAttack : MonoBehaviour
     private CharacterStats attackerStats;
     private CharacterEquipment equipment;
     private PlayerAP playerAP;
-    private PlayerAnimationController animationController;
+
+    private PlayerAnimationController playerAnimationController;
+    private EnemyAnimationController enemyAnimationController;
+
     private NavMeshAgent agent;
 
     private void Awake()
@@ -16,8 +19,35 @@ public class CharacterBasicAttack : MonoBehaviour
         attackerStats = GetComponent<CharacterStats>();
         equipment = GetComponent<CharacterEquipment>();
         playerAP = GetComponent<PlayerAP>();
-        animationController = GetComponent<PlayerAnimationController>();
+
+        playerAnimationController = GetComponent<PlayerAnimationController>();
+        enemyAnimationController = GetComponent<EnemyAnimationController>();
+
         agent = GetComponent<NavMeshAgent>();
+    }
+
+    public int GetAttackAPCost()
+    {
+        WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
+        return weapon != null ? weapon.ApCost : 999;
+    }
+
+    public float GetAttackRange()
+    {
+        WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
+        return weapon != null ? weapon.Range : 0f;
+    }
+
+    public bool IsTargetInAttackRange(Transform target)
+    {
+        if (target == null)
+            return false;
+
+        WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
+        if (weapon == null)
+            return false;
+
+        return IsTargetInRange(target, weapon.Range);
     }
 
     public bool TryAttackTarget(CharacterStats targetStats)
@@ -60,8 +90,10 @@ public class CharacterBasicAttack : MonoBehaviour
             agent.ResetPath();
         }
 
-        if (animationController != null)
-            animationController.PlayAttackAnimation(targetStats.transform);
+        if (playerAnimationController != null)
+            playerAnimationController.PlayAttackAnimation(targetStats.transform);
+        else if (enemyAnimationController != null)
+            enemyAnimationController.PlayAttackAnimation(targetStats.transform);
 
         DamageResult result = DamageCalculator.ResolveWeaponAttack(attackerStats, targetStats, weapon);
 
@@ -93,7 +125,6 @@ public class CharacterBasicAttack : MonoBehaviour
     {
         Vector3 a = transform.position;
         Vector3 b = target.position;
-
         a.y = 0f;
         b.y = 0f;
 
@@ -114,7 +145,6 @@ public class CharacterBasicAttack : MonoBehaviour
             $"Base: {result.BaseDamage} | " +
             $"Scaling Bonus: {result.ScalingBonus:F1} | " +
             $"Class Bonus: {result.ClassBonusPercent:F1}% | " +
-            $"Armor Reduction: {result.ArmorReductionPercent:F1}% | " +
             $"Resistance: {result.ResistancePercent:F1}% | " +
             $"Final Damage: {result.FinalDamage}{critText} | " +
             $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
