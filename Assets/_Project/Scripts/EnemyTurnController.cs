@@ -22,6 +22,10 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private float minMoveDistance = 0.2f;
     [SerializeField] private bool reserveAPForAttack = true;
 
+    [Header("Melee Positioning")]
+    [SerializeField] private float attackRangeBuffer = 0.1f;
+    [SerializeField] private float destinationTolerance = 0.08f;
+
     private PlayerAP ap;
     private CharacterBasicAttack basicAttack;
     private CharacterHealth health;
@@ -83,14 +87,12 @@ public class EnemyTurnController : MonoBehaviour
             if (targetHealth == null || targetHealth.IsDead)
                 break;
 
-            // 1. Atac daca poate
             if (basicAttack.TryAttackTarget(targetStats))
             {
                 yield return new WaitForSeconds(afterAttackDelay);
                 continue;
             }
 
-            // 2. Daca nu poate ataca, incearca sa se miste limitat de AP
             bool moved = TryMoveTowardTargetWithinAP();
             if (!moved)
                 break;
@@ -126,23 +128,76 @@ public class EnemyTurnController : MonoBehaviour
         if (!agent.CalculatePath(targetStats.transform.position, path))
             return false;
 
+        if (path.status != NavMeshPathStatus.PathComplete)
+            return false;
+
         if (path.corners == null || path.corners.Length < 2)
             return false;
 
-        Vector3 limitedDestination = GetPointAlongPath(path.corners, maxMoveDistance, out float actualMoveDistance);
+        float totalPathLength = GetPathLength(path);
+        if (totalPathLength <= 0.01f)
+            return false;
 
+        float desiredRemainingDistance = GetDesiredRemainingPathDistanceToAttack();
+        float desiredMoveDistance = totalPathLength - desiredRemainingDistance;
+
+        if (desiredMoveDistance <= minMoveDistance)
+            return false;
+
+        float actualMoveDistance = Mathf.Min(maxMoveDistance, desiredMoveDistance);
         if (actualMoveDistance < minMoveDistance)
             return false;
 
-        int apCostForMove = Mathf.CeilToInt(actualMoveDistance / metersPerAP);
+        Vector3 limitedDestination = GetPointAlongPath(path.corners, actualMoveDistance, out float sampledMoveDistance);
+        if (sampledMoveDistance < minMoveDistance)
+            return false;
+
+        int apCostForMove = Mathf.CeilToInt(sampledMoveDistance / metersPerAP);
         apCostForMove = Mathf.Clamp(apCostForMove, 1, ap.CurrentAP);
 
         if (!ap.SpendAP(apCostForMove))
             return false;
 
+        agent.stoppingDistance = destinationTolerance;
         agent.isStopped = false;
         agent.SetDestination(limitedDestination);
+
         return true;
+    }
+
+    private float GetDesiredRemainingPathDistanceToAttack()
+    {
+        float attackRange = basicAttack.GetAttackRange();
+        float attackerRadius = GetBodyRadius(transform);
+        float targetRadius = GetBodyRadius(targetStats.transform);
+
+        return attackerRadius + targetRadius + Mathf.Max(0f, attackRange - attackRangeBuffer);
+    }
+
+    private float GetBodyRadius(Transform t)
+    {
+        if (t == null)
+            return 0.5f;
+
+        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
+            return Mathf.Max(0.1f, navAgent.radius);
+
+        if (t.TryGetComponent<CapsuleCollider>(out var capsule))
+        {
+            float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
+            return capsule.radius * scale;
+        }
+
+        if (t.TryGetComponent<SphereCollider>(out var sphere))
+        {
+            float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
+            return sphere.radius * scale;
+        }
+
+        if (t.TryGetComponent<Collider>(out var col))
+            return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+
+        return 0.5f;
     }
 
     private Vector3 GetPointAlongPath(Vector3[] corners, float maxDistance, out float actualDistance)
@@ -176,6 +231,18 @@ public class EnemyTurnController : MonoBehaviour
         return result;
     }
 
+    private float GetPathLength(NavMeshPath path)
+    {
+        if (path == null || path.corners == null || path.corners.Length < 2)
+            return 0f;
+
+        float total = 0f;
+        for (int i = 1; i < path.corners.Length; i++)
+            total += Vector3.Distance(path.corners[i - 1], path.corners[i]);
+
+        return total;
+    }
+
     private IEnumerator WaitUntilMovementStops()
     {
         if (agent == null || !agent.enabled)
@@ -184,8 +251,11 @@ public class EnemyTurnController : MonoBehaviour
         while (agent.pathPending)
             yield return null;
 
-        while (agent.remainingDistance > agent.stoppingDistance + 0.05f || agent.velocity.sqrMagnitude > 0.01f)
+        while (agent.remainingDistance > agent.stoppingDistance + destinationTolerance ||
+               agent.velocity.sqrMagnitude > 0.01f)
+        {
             yield return null;
+        }
 
         agent.ResetPath();
         agent.isStopped = true;

@@ -84,7 +84,7 @@ public class CharacterBasicAttack : MonoBehaviour
                 return false;
         }
 
-        if (agent != null)
+        if (agent != null && agent.enabled)
         {
             agent.isStopped = true;
             agent.ResetPath();
@@ -123,19 +123,57 @@ public class CharacterBasicAttack : MonoBehaviour
 
     private bool IsTargetInRange(Transform target, float range)
     {
+        float surfaceDistance = GetSurfaceDistanceToTarget(target);
+        return surfaceDistance <= range;
+    }
+
+    public float GetSurfaceDistanceToTarget(Transform target)
+    {
+        if (target == null)
+            return float.MaxValue;
+
         Vector3 a = transform.position;
         Vector3 b = target.position;
         a.y = 0f;
         b.y = 0f;
 
-        float distance = Vector3.Distance(a, b);
-        return distance <= range;
+        float centerDistance = Vector3.Distance(a, b);
+        float combinedRadii = GetBodyRadius(transform) + GetBodyRadius(target);
+
+        return Mathf.Max(0f, centerDistance - combinedRadii);
+    }
+
+    private float GetBodyRadius(Transform t)
+    {
+        if (t == null)
+            return 0.5f;
+
+        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
+            return Mathf.Max(0.1f, navAgent.radius);
+
+        if (t.TryGetComponent<CapsuleCollider>(out var capsule))
+        {
+            float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
+            return capsule.radius * scale;
+        }
+
+        if (t.TryGetComponent<SphereCollider>(out var sphere))
+        {
+            float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
+            return sphere.radius * scale;
+        }
+
+        if (t.TryGetComponent<Collider>(out var col))
+            return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+
+        return 0.5f;
     }
 
     private string BuildCombatLog(WeaponDefinition weapon, string targetName, DamageResult result, CharacterHealth targetHealth)
     {
         if (!result.Hit)
-            return $"{name} used {weapon.DisplayName} on {targetName} but missed. Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+            return $"{name} used {weapon.DisplayName} on {targetName} but missed. " +
+                   $"Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
 
         string critText = result.WasCritical ? " CRITICAL!" : "";
 
