@@ -12,6 +12,7 @@ public class CharacterSkillCaster : MonoBehaviour
     private PlayerAP playerAP;
     private PlayerAnimationController animationController;
     private NavMeshAgent agent;
+    private CharacterHealth selfHealth;
 
     private void Awake()
     {
@@ -19,10 +20,14 @@ public class CharacterSkillCaster : MonoBehaviour
         playerAP = GetComponent<PlayerAP>();
         animationController = GetComponent<PlayerAnimationController>();
         agent = GetComponent<NavMeshAgent>();
+        selfHealth = GetComponent<CharacterHealth>();
     }
 
     public bool TryUseSkillOnTarget(SkillDefinition skill, CharacterStats primaryTarget)
     {
+        if (selfHealth != null && selfHealth.IsDead)
+            return false;
+
         if (skill == null || skill.SkillType != SkillType.Active)
             return false;
 
@@ -57,6 +62,9 @@ public class CharacterSkillCaster : MonoBehaviour
 
     public bool TryUseSkillAtPoint(SkillDefinition skill, Vector3 point)
     {
+        if (selfHealth != null && selfHealth.IsDead)
+            return false;
+
         if (skill == null || skill.SkillType != SkillType.Active)
             return false;
 

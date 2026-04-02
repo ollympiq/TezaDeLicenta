@@ -13,6 +13,7 @@ public class CharacterBasicAttack : MonoBehaviour
     private EnemyAnimationController enemyAnimationController;
 
     private NavMeshAgent agent;
+    private CharacterHealth selfHealth;
 
     private void Awake()
     {
@@ -24,6 +25,7 @@ public class CharacterBasicAttack : MonoBehaviour
         enemyAnimationController = GetComponent<EnemyAnimationController>();
 
         agent = GetComponent<NavMeshAgent>();
+        selfHealth = GetComponent<CharacterHealth>();
     }
 
     public int GetAttackAPCost()
@@ -52,6 +54,9 @@ public class CharacterBasicAttack : MonoBehaviour
 
     public bool TryAttackTarget(CharacterStats targetStats)
     {
+        if (selfHealth != null && selfHealth.IsDead)
+            return false;
+
         if (targetStats == null || targetStats == attackerStats)
             return false;
 
@@ -148,9 +153,6 @@ public class CharacterBasicAttack : MonoBehaviour
         if (t == null)
             return 0.5f;
 
-        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
-            return Mathf.Max(0.1f, navAgent.radius);
-
         if (t.TryGetComponent<CapsuleCollider>(out var capsule))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
@@ -165,6 +167,9 @@ public class CharacterBasicAttack : MonoBehaviour
 
         if (t.TryGetComponent<Collider>(out var col))
             return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+
+        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
+            return Mathf.Max(0.1f, navAgent.radius);
 
         return 0.5f;
     }

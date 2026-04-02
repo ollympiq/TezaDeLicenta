@@ -19,6 +19,7 @@ public class PlayerCombatController : MonoBehaviour
     [SerializeField] private Texture2D defaultCursor;
 
     private CharacterBasicAttack basicAttack;
+    private CharacterHealth health;
 
     private SkillDefinition selectedSkill;
     private int selectedSlotIndex = -1;
@@ -40,6 +41,8 @@ public class PlayerCombatController : MonoBehaviour
 
         if (mainCamera == null)
             mainCamera = Camera.main;
+
+        health = GetComponent<CharacterHealth>();
     }
 
     private void Start()
@@ -49,6 +52,9 @@ public class PlayerCombatController : MonoBehaviour
 
     private void Update()
     {
+        if (health != null && health.IsDead)
+            return;
+
         if (!HasTargetingSkillSelected)
             return;
 
@@ -91,6 +97,12 @@ public class PlayerCombatController : MonoBehaviour
 
     public void ToggleSkillSelection(SkillDefinition skill, int slotIndex)
     {
+        if (health != null && health.IsDead)
+        {
+            ClearSelectedSkill();
+            return;
+        }
+
         if (skill == null)
         {
             ClearSelectedSkill();

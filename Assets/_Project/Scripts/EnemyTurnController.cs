@@ -179,9 +179,6 @@ public class EnemyTurnController : MonoBehaviour
         if (t == null)
             return 0.5f;
 
-        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
-            return Mathf.Max(0.1f, navAgent.radius);
-
         if (t.TryGetComponent<CapsuleCollider>(out var capsule))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
@@ -196,6 +193,9 @@ public class EnemyTurnController : MonoBehaviour
 
         if (t.TryGetComponent<Collider>(out var col))
             return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+
+        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
+            return Mathf.Max(0.1f, navAgent.radius);
 
         return 0.5f;
     }
