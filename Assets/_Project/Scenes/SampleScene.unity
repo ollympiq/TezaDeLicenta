@@ -481,7 +481,7 @@ MonoBehaviour:
   agent: {fileID: 29811626}
   targetStats: {fileID: 902157971}
   thinkDelay: 0.1
-  afterMoveDelay: 0.15
+  afterMoveDelay: 0.01
   afterAttackDelay: 1
   metersPerAP: 1.5
   minMoveDistance: 0.2
@@ -582,7 +582,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 29811618}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.75
+  m_Radius: 0.6
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -611,8 +611,9 @@ MonoBehaviour:
   animator: {fileID: 530546079}
   visualModel: {fileID: 530546078}
   mainCollider: {fileID: 29811631}
-  runThreshold: 0.1
+  runThreshold: 0.03
   rotationSpeed: 12
+  stopGraceTime: 0.12
   hurtLockDuration: 0.45
   attackLockDuration: 0.7
   disableAgentOnDeath: 1
@@ -2498,7 +2499,7 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: 2a05aa92e919809459a6b3e94ddd019c, type: 2}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.15452313
+      value: -0.010599613
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2506,11 +2507,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0.10209131
+      value: 0.00033473969
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.83436954
+      value: 0.9995019
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalRotation.x
@@ -2518,7 +2519,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.5512056
+      value: 0.031560063
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalRotation.z
@@ -2530,7 +2531,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 66.9
+      value: 3.617
       objectReference: {fileID: 0}
     - target: {fileID: 7292658344771522932, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
@@ -5255,6 +5256,7 @@ MonoBehaviour:
   enemyTurns:
   - {fileID: 1308527817}
   - {fileID: 29811621}
+  - {fileID: 0}
   endTurnButton: {fileID: 1989377565}
   autoStartOnStart: 1
   nextTurnDelay: 0.2
@@ -6371,12 +6373,12 @@ NavMeshAgent:
   m_GameObject: {fileID: 902157962}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.45
+  m_Radius: 0.3
   m_Speed: 4
   m_Acceleration: 30
   avoidancePriority: 50
   m_AngularSpeed: 720
-  m_StoppingDistance: 0.05
+  m_StoppingDistance: 0.01
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -6403,7 +6405,7 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
+  m_Radius: 0.25
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
@@ -9334,8 +9336,9 @@ MonoBehaviour:
   animator: {fileID: 2008769445}
   visualModel: {fileID: 2008769446}
   mainCollider: {fileID: 1308527821}
-  runThreshold: 0.1
+  runThreshold: 0.03
   rotationSpeed: 12
+  stopGraceTime: 0.12
   hurtLockDuration: 0.45
   attackLockDuration: 0.7
   disableAgentOnDeath: 1
@@ -9349,7 +9352,7 @@ NavMeshAgent:
   m_GameObject: {fileID: 1308527805}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.75
+  m_Radius: 0.6
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
@@ -9488,8 +9491,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.1697273, y: 1.6956453, z: 2.3667736}
-  m_Center: {x: -0.08486366, y: -0.15217733, z: 0.21501589}
+  m_Size: {x: 0.8, y: 1.7, z: 2.06}
+  m_Center: {x: -0.02800262, y: -0.15217733, z: 0.18314958}
 --- !u!114 &1308527822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9514,11 +9517,11 @@ NavMeshObstacle:
   m_Enabled: 1
   serializedVersion: 3
   m_Shape: 1
-  m_Extents: {x: 0.5848635, y: 0.8478225, z: 1.183387}
+  m_Extents: {x: 0.4, y: 0.85, z: 1.03}
   m_MoveThreshold: 0.05
   m_Carve: 0
   m_CarveOnlyStationary: 1
-  m_Center: {x: -0.08486366, y: -0.1521773, z: 0.2150159}
+  m_Center: {x: 2800262, y: -0.1521773, z: 0.2150159}
   m_TimeToStationary: 0.02
 --- !u!1 &1316470742
 GameObject:

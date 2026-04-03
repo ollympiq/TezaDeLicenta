@@ -13,6 +13,7 @@ public class EnemyAnimationController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float runThreshold = 0.1f;
     [SerializeField] private float rotationSpeed = 12f;
+    [SerializeField] private float stopGraceTime = 0.12f;
 
     [Header("Action Locks")]
     [SerializeField] private float hurtLockDuration = 0.45f;
@@ -26,6 +27,7 @@ public class EnemyAnimationController : MonoBehaviour
     private int lastHp;
     private float actionLockTimer;
     private bool isDead;
+    private float runningHoldTimer;
 
     private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
     private static readonly int HurtHash = Animator.StringToHash("Hurt");
@@ -80,22 +82,32 @@ public class EnemyAnimationController : MonoBehaviour
             return;
         }
 
-        if (agent == null)
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
             animator.SetBool(IsRunningHash, false);
             return;
         }
 
-        Vector3 horizontalVelocity = agent.velocity;
-        horizontalVelocity.y = 0f;
+        Vector3 desired = agent.desiredVelocity;
+        desired.y = 0f;
 
-        float speed = horizontalVelocity.magnitude;
-        bool isRunning = speed > runThreshold;
+        bool hasMovementIntent =
+            agent.pathPending ||
+            (agent.hasPath && agent.remainingDistance > agent.stoppingDistance + 0.05f);
+
+        bool movingEnough = desired.sqrMagnitude > 0.001f;
+
+        if (hasMovementIntent && movingEnough)
+            runningHoldTimer = stopGraceTime;
+        else
+            runningHoldTimer -= Time.deltaTime;
+
+        bool isRunning = hasMovementIntent && (movingEnough || runningHoldTimer > 0f);
 
         animator.SetBool(IsRunningHash, isRunning);
 
-        if (isRunning)
-            RotateVisualToward(horizontalVelocity.normalized);
+        if (isRunning && desired.sqrMagnitude > 0.0001f)
+            RotateVisualToward(desired.normalized);
     }
 
     public void PlayAttackAnimation(Transform target = null)
