@@ -23,7 +23,7 @@ public class PlayerCombatController : MonoBehaviour
 
     private SkillDefinition selectedSkill;
     private int selectedSlotIndex = -1;
-
+    private bool turnInputEnabled;
     public event Action OnSelectedSkillChanged;
 
     public int SelectedSlotIndex => selectedSlotIndex;
@@ -43,6 +43,7 @@ public class PlayerCombatController : MonoBehaviour
             mainCamera = Camera.main;
 
         health = GetComponent<CharacterHealth>();
+        turnInputEnabled = false;
     }
 
     private void Start()
@@ -55,6 +56,13 @@ public class PlayerCombatController : MonoBehaviour
         if (health != null && health.IsDead)
             return;
 
+        if (!turnInputEnabled)
+        {
+            if (HasTargetingSkillSelected)
+                ClearSelectedSkill();
+
+            return;
+        }
         if (!HasTargetingSkillSelected)
             return;
 
@@ -97,6 +105,12 @@ public class PlayerCombatController : MonoBehaviour
 
     public void ToggleSkillSelection(SkillDefinition skill, int slotIndex)
     {
+        if (!turnInputEnabled)
+        {
+            ClearSelectedSkill();
+            return;
+        }
+
         if (health != null && health.IsDead)
         {
             ClearSelectedSkill();
@@ -232,5 +246,13 @@ public class PlayerCombatController : MonoBehaviour
             return false;
 
         return true;
+    }
+
+    public void SetTurnInputEnabled(bool enabled)
+    {
+        turnInputEnabled = enabled;
+
+        if (!enabled)
+            ClearSelectedSkill();
     }
 }

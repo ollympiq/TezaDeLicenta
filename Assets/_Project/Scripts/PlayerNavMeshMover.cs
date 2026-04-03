@@ -23,6 +23,7 @@ public class PlayerNavMeshMover : MonoBehaviour
     private NavMeshAgent agent;
     private PlayerAP playerAP;
     private CharacterHealth health;
+    private bool turnInputEnabled;
 
     private void Awake()
     {
@@ -35,6 +36,7 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (combatController == null)
             combatController = GetComponent<PlayerCombatController>();
+        turnInputEnabled = false;
     }
 
     private void Update()
@@ -44,6 +46,8 @@ public class PlayerNavMeshMover : MonoBehaviour
             StopMovementImmediately();
             return;
         }
+        if (!turnInputEnabled)
+            return;
 
         if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
         {
@@ -135,5 +139,13 @@ public class PlayerNavMeshMover : MonoBehaviour
             total += Vector3.Distance(path.corners[i - 1], path.corners[i]);
 
         return total;
+    }
+
+    public void SetTurnInputEnabled(bool enabled)
+    {
+        turnInputEnabled = enabled;
+
+        if (!enabled)
+            StopMovementImmediately();
     }
 }
