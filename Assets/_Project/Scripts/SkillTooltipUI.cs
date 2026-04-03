@@ -13,11 +13,16 @@ public class SkillTooltipUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI detailsText;
 
+    [Header("Preview Source")]
+    [SerializeField] private PlayerCombatController playerCombatController;
+
     [Header("Position")]
     [SerializeField] private Vector2 cursorOffset = new Vector2(18f, 18f);
     [SerializeField] private float screenPadding = 12f;
 
     private SkillDefinition currentSkill;
+    private CharacterStats previewCasterStats;
+    private CharacterEquipment previewCasterEquipment;
 
     private void Awake()
     {
@@ -32,6 +37,7 @@ public class SkillTooltipUI : MonoBehaviour
         if (rootCanvas == null)
             rootCanvas = GetComponentInParent<Canvas>();
 
+        ResolvePreviewReferences();
         Hide();
     }
 
@@ -40,6 +46,8 @@ public class SkillTooltipUI : MonoBehaviour
         if (panelRoot == null || !panelRoot.gameObject.activeSelf || currentSkill == null)
             return;
 
+        ResolvePreviewReferences();
+        RefreshCurrentTooltip();
         UpdatePosition();
     }
 
@@ -52,18 +60,12 @@ public class SkillTooltipUI : MonoBehaviour
         }
 
         currentSkill = skill;
-
-        if (nameText != null)
-            nameText.text = skill.DisplayName;
-
-        if (detailsText != null)
-            detailsText.text = BuildDetails(skill);
+        ResolvePreviewReferences();
+        RefreshCurrentTooltip();
 
         panelRoot.gameObject.SetActive(true);
-
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
-
         panelRoot.SetAsLastSibling();
         UpdatePosition();
     }
@@ -76,18 +78,93 @@ public class SkillTooltipUI : MonoBehaviour
             panelRoot.gameObject.SetActive(false);
     }
 
+    private void ResolvePreviewReferences()
+    {
+        if (playerCombatController == null)
+            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
+
+        if (playerCombatController != null)
+        {
+            if (previewCasterStats == null)
+                previewCasterStats = playerCombatController.GetComponent<CharacterStats>();
+
+            if (previewCasterEquipment == null)
+                previewCasterEquipment = playerCombatController.GetComponent<CharacterEquipment>();
+        }
+    }
+
+    private void RefreshCurrentTooltip()
+    {
+        if (currentSkill == null)
+            return;
+
+        if (nameText != null)
+            nameText.text = currentSkill.DisplayName;
+
+        if (detailsText != null)
+            detailsText.text = BuildDetails(currentSkill);
+    }
+
     private string BuildDetails(SkillDefinition skill)
+    {
+        if (skill == null)
+            return string.Empty;
+
+        return skill.SkillType == SkillType.BasicAttack
+            ? BuildBasicAttackDetails(skill)
+            : BuildSkillDetails(skill);
+    }
+
+    private string BuildBasicAttackDetails(SkillDefinition fallbackSkill)
+    {
+        WeaponDefinition weapon = previewCasterEquipment != null
+            ? previewCasterEquipment.EquippedWeaponDefinition
+            : null;
+
+        if (previewCasterStats == null || weapon == null)
+            return BuildFallbackSkillDetails(fallbackSkill);
+
+        DamagePreviewUtility.TryBuildWeaponPreview(previewCasterStats, weapon, out DamagePreviewInfo preview);
+
+        return
+     $"AP Cost: {weapon.ApCost}\n" +
+     $"Damage Type: {weapon.DamageType}\n" +
+     $"Damage: {preview.MinPreview}-{preview.MaxPreview}\n" +
+     $"Range: {weapon.Range:0.0}\n" +
+     $"Area Radius: -";
+    }
+
+    private string BuildSkillDetails(SkillDefinition skill)
+    {
+        string areaText = skill.AreaMode == SkillAreaMode.Circle
+            ? $"Area Radius: {skill.AreaRadius:0.0}"
+            : "Area Radius: -";
+
+        if (previewCasterStats == null)
+            return BuildFallbackSkillDetails(skill);
+
+        DamagePreviewUtility.TryBuildSkillPreview(previewCasterStats, skill, out DamagePreviewInfo preview);
+
+        return
+    $"AP Cost: {skill.ApCost}\n" +
+    $"Damage Type: {skill.DamageType}\n" +
+    $"Damage: {preview.MinPreview}-{preview.MaxPreview}\n" +
+    $"Range: {skill.Range:0.0}\n" +
+    $"{areaText}";
+    }
+
+    private string BuildFallbackSkillDetails(SkillDefinition skill)
     {
         string areaText = skill.AreaMode == SkillAreaMode.Circle
             ? $"Area Radius: {skill.AreaRadius:0.0}"
             : "Area Radius: -";
 
         return
-            $"AP Cost: {skill.ApCost}\n" +
-            $"Damage Type: {skill.DamageType}\n" +
-            $"Damage: {skill.MinDamage}-{skill.MaxDamage}\n" +
-            $"Range: {skill.Range:0.0}\n" +
-            $"{areaText}";
+    $"AP Cost: {skill.ApCost}\n" +
+    $"Damage Type: {skill.DamageType}\n" +
+    $"Damage: {skill.MinDamage}-{skill.MaxDamage}\n" +
+    $"Range: {skill.Range:0.0}\n" +
+    $"{areaText}";
     }
 
     private void UpdatePosition()
@@ -96,24 +173,17 @@ public class SkillTooltipUI : MonoBehaviour
             return;
 
         Vector2 mousePos = Mouse.current.position.ReadValue();
-
-        // Pentru pivot stanga-sus:
-        // X = marginea stanga a tooltipului
-        // Y = marginea de sus a tooltipului
         Vector2 desired = mousePos + cursorOffset;
 
         float tooltipWidth = panelRoot.rect.width;
         float tooltipHeight = panelRoot.rect.height;
 
-        // Daca iese in dreapta, il mutam in stanga cursorului
         if (desired.x + tooltipWidth + screenPadding > Screen.width)
             desired.x = mousePos.x - tooltipWidth - cursorOffset.x;
 
-        // Daca iese jos, il mutam deasupra cursorului
         if (desired.y - tooltipHeight - screenPadding < 0f)
             desired.y = mousePos.y + tooltipHeight + cursorOffset.y;
 
-        // Clamp final
         desired.x = Mathf.Clamp(desired.x, screenPadding, Screen.width - tooltipWidth - screenPadding);
         desired.y = Mathf.Clamp(desired.y, tooltipHeight + screenPadding, Screen.height - screenPadding);
 

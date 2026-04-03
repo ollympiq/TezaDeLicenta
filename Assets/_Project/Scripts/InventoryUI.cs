@@ -75,10 +75,18 @@ public class InventoryUI : MonoBehaviour
         if (panelRoot == null)
             return;
 
-        panelRoot.SetActive(!panelRoot.activeSelf);
+        bool willOpen = !panelRoot.activeSelf;
+        panelRoot.SetActive(willOpen);
 
-        if (panelRoot.activeSelf)
+        if (willOpen)
+        {
             RefreshAll();
+        }
+        else
+        {
+            if (ItemTooltipUI.Instance != null)
+                ItemTooltipUI.Instance.Hide();
+        }
     }
 
     public void HandleInventorySlotClicked(int slotIndex)

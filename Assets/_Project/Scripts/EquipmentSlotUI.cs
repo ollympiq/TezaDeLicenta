@@ -68,4 +68,10 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
             default: return "?";
         }
     }
+
+    private void OnDisable()
+    {
+        if (ItemTooltipUI.Instance != null)
+            ItemTooltipUI.Instance.Hide();
+    }
 }

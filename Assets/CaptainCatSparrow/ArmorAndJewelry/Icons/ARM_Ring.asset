@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d5916a598cce906459a1134928c666e3, type: 3}
-  m_Name: ARM_Boots
+  m_Name: ARM_Ring
   m_EditorClassIdentifier: Assembly-CSharp::ArmorDefinition
   itemId: new_item
-  displayName: Boots
+  displayName: Old Ring
   description: 
-  icon: {fileID: 21300000, guid: 33ecf9ec13a42524cbaed293f19d67c2, type: 3}
+  icon: {fileID: 21300000, guid: 161d4730f36de6b42ad214d0d33e423d, type: 3}
   baseRarity: 0
   buyPrice: 10
   sellPrice: 5
   stackable: 0
   maxStack: 1
   statModifiers:
-  - bonusType: 2
-    value: 2
-  equipmentSlot: 6
+  - bonusType: 0
+    value: 3
+  equipmentSlot: 7
   armorValue: 5
   physicalResistance: 0
   fireResistance: 0

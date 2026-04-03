@@ -56,4 +56,10 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
         if (ItemTooltipUI.Instance != null)
             ItemTooltipUI.Instance.Hide();
     }
+
+    private void OnDisable()
+    {
+        if (ItemTooltipUI.Instance != null)
+            ItemTooltipUI.Instance.Hide();
+    }
 }
