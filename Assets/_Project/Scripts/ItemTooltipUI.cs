@@ -197,24 +197,58 @@ public class ItemTooltipUI : MonoBehaviour
 
     private void UpdatePosition()
     {
-        if (Mouse.current == null || panelRoot == null)
+        if (Mouse.current == null || panelRoot == null || rootCanvas == null)
             return;
 
-        Vector2 mousePos = Mouse.current.position.ReadValue();
-        Vector2 desired = mousePos + cursorOffset;
+        RectTransform canvasRect = rootCanvas.transform as RectTransform;
+        if (canvasRect == null)
+            return;
 
-        float tooltipWidth = panelRoot.rect.width;
-        float tooltipHeight = panelRoot.rect.height;
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
 
-        if (desired.x + tooltipWidth + screenPadding > Screen.width)
-            desired.x = mousePos.x - tooltipWidth - cursorOffset.x;
+        Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
+        Camera uiCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
+            ? null
+            : rootCanvas.worldCamera;
 
-        if (desired.y - tooltipHeight - screenPadding < 0f)
-            desired.y = mousePos.y + tooltipHeight + cursorOffset.y;
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvasRect,
+                mouseScreenPos,
+                uiCamera,
+                out Vector2 localMousePos))
+        {
+            return;
+        }
 
-        desired.x = Mathf.Clamp(desired.x, screenPadding, Screen.width - tooltipWidth - screenPadding);
-        desired.y = Mathf.Clamp(desired.y, tooltipHeight + screenPadding, Screen.height - screenPadding);
+        float panelWidth = panelRoot.rect.width;
+        float panelHeight = panelRoot.rect.height;
 
-        panelRoot.position = desired;
+        float canvasHalfWidth = canvasRect.rect.width * 0.5f;
+        float canvasHalfHeight = canvasRect.rect.height * 0.5f;
+
+        bool placeRight = mouseScreenPos.x + cursorOffset.x + panelWidth + screenPadding <= Screen.width;
+        bool placeBelow = mouseScreenPos.y - cursorOffset.y - panelHeight - screenPadding >= 0f;
+
+        panelRoot.anchorMin = panelRoot.anchorMax = new Vector2(0.5f, 0.5f);
+        panelRoot.pivot = new Vector2(placeRight ? 0f : 1f, placeBelow ? 1f : 0f);
+
+        Vector2 offset = new Vector2(
+            placeRight ? cursorOffset.x : -cursorOffset.x,
+            placeBelow ? -cursorOffset.y : cursorOffset.y
+        );
+
+        Vector2 anchoredPos = localMousePos + offset;
+
+        float minX = -canvasHalfWidth + screenPadding + panelWidth * panelRoot.pivot.x;
+        float maxX = canvasHalfWidth - screenPadding - panelWidth * (1f - panelRoot.pivot.x);
+
+        float minY = -canvasHalfHeight + screenPadding + panelHeight * panelRoot.pivot.y;
+        float maxY = canvasHalfHeight - screenPadding - panelHeight * (1f - panelRoot.pivot.y);
+
+        anchoredPos.x = Mathf.Clamp(anchoredPos.x, minX, maxX);
+        anchoredPos.y = Mathf.Clamp(anchoredPos.y, minY, maxY);
+
+        panelRoot.anchoredPosition = anchoredPos;
     }
 }

@@ -1,11 +1,12 @@
+using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class SkillTooltipUI : MonoBehaviour
+public class EnemyStatsTooltipUI : MonoBehaviour
 {
-    public static SkillTooltipUI Instance { get; private set; }
+    public static EnemyStatsTooltipUI Instance { get; private set; }
 
     [Header("References")]
     [SerializeField] private Canvas rootCanvas;
@@ -13,16 +14,12 @@ public class SkillTooltipUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI detailsText;
 
-    [Header("Preview Source")]
-    [SerializeField] private PlayerCombatController playerCombatController;
-
     [Header("Position")]
     [SerializeField] private Vector2 cursorOffset = new Vector2(18f, 18f);
     [SerializeField] private float screenPadding = 12f;
 
-    private SkillDefinition currentSkill;
-    private CharacterStats previewCasterStats;
-    private CharacterEquipment previewCasterEquipment;
+    private CharacterStats currentStats;
+    private CharacterHealth currentHealth;
 
     private void Awake()
     {
@@ -37,134 +34,104 @@ public class SkillTooltipUI : MonoBehaviour
         if (rootCanvas == null)
             rootCanvas = GetComponentInParent<Canvas>();
 
-        ResolvePreviewReferences();
+        CanvasGroup cg = GetComponent<CanvasGroup>();
+        if (cg != null)
+        {
+            cg.blocksRaycasts = false;
+            cg.interactable = false;
+        }
+
         Hide();
     }
 
     private void Update()
     {
-        if (panelRoot == null || !panelRoot.gameObject.activeSelf || currentSkill == null)
+        if (panelRoot == null || !panelRoot.gameObject.activeSelf || currentStats == null)
             return;
 
-        ResolvePreviewReferences();
         RefreshCurrentTooltip();
         UpdatePosition();
     }
 
-    public void Show(SkillDefinition skill)
+    public void Show(CharacterStats stats, CharacterHealth health = null)
     {
-        if (skill == null || panelRoot == null)
+        if (stats == null || panelRoot == null)
         {
             Hide();
             return;
         }
 
-        currentSkill = skill;
-        ResolvePreviewReferences();
+        currentStats = stats;
+        currentHealth = health != null ? health : stats.GetComponent<CharacterHealth>();
+
         RefreshCurrentTooltip();
 
         panelRoot.gameObject.SetActive(true);
+        panelRoot.SetAsLastSibling();
+
         Canvas.ForceUpdateCanvases();
         LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
-        panelRoot.SetAsLastSibling();
         UpdatePosition();
     }
 
     public void Hide()
     {
-        currentSkill = null;
+        currentStats = null;
+        currentHealth = null;
 
         if (panelRoot != null)
             panelRoot.gameObject.SetActive(false);
     }
 
-    private void ResolvePreviewReferences()
-    {
-        if (playerCombatController == null)
-            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
-
-        if (playerCombatController != null)
-        {
-            if (previewCasterStats == null)
-                previewCasterStats = playerCombatController.GetComponent<CharacterStats>();
-
-            if (previewCasterEquipment == null)
-                previewCasterEquipment = playerCombatController.GetComponent<CharacterEquipment>();
-        }
-    }
-
     private void RefreshCurrentTooltip()
     {
-        if (currentSkill == null)
+        if (currentStats == null)
             return;
 
         if (nameText != null)
-            nameText.text = currentSkill.DisplayName;
+            nameText.text = currentStats.gameObject.name;
 
         if (detailsText != null)
-            detailsText.text = BuildDetails(currentSkill);
+            detailsText.text = BuildDetails(currentStats, currentHealth);
     }
 
-    private string BuildDetails(SkillDefinition skill)
+    private string BuildDetails(CharacterStats stats, CharacterHealth health)
     {
-        if (skill == null)
-            return string.Empty;
+        StringBuilder sb = new StringBuilder();
 
-        return skill.SkillType == SkillType.BasicAttack
-            ? BuildBasicAttackDetails(skill)
-            : BuildSkillDetails(skill);
-    }
+        sb.AppendLine($"Class: {stats.Class}");
 
-    private string BuildBasicAttackDetails(SkillDefinition fallbackSkill)
-    {
-        WeaponDefinition weapon = previewCasterEquipment != null
-            ? previewCasterEquipment.EquippedWeaponDefinition
-            : null;
+        if (health != null)
+            sb.AppendLine($"HP: {health.CurrentHP}/{health.MaxHP}");
+        else
+            sb.AppendLine($"HP: {stats.MaxHP}/{stats.MaxHP}");
 
-        if (previewCasterStats == null || weapon == null)
-            return BuildFallbackSkillDetails(fallbackSkill);
+        sb.AppendLine($"AP: {stats.MaxAP}");
+        sb.AppendLine();
 
-        DamagePreviewUtility.TryBuildWeaponPreview(previewCasterStats, weapon, out DamagePreviewInfo preview);
+        sb.AppendLine($"Strength: {stats.Strength}");
+        sb.AppendLine($"Constitution: {stats.Constitution}");
+        sb.AppendLine($"Dexterity: {stats.Dexterity}");
+        sb.AppendLine($"Intelligence: {stats.Intelligence}");
+        sb.AppendLine();
 
-        return
-     $"AP Cost: {weapon.ApCost}\n" +
-     $"Damage Type: {weapon.DamageType}\n" +
-     $"Damage: {preview.MinPreview}-{preview.MaxPreview}\n" +
-     $"Range: {weapon.Range:0.0}\n" +
-     $"Area Radius: -";
-    }
+        sb.AppendLine($"Physical Power: {stats.PhysicalPower}");
+        sb.AppendLine($"Magic Power: {stats.MagicPower}");
+        sb.AppendLine($"Crit Chance: {stats.CritChance:F1}%");
+        sb.AppendLine($"Initiative: {stats.Initiative}");
+        sb.AppendLine($"Accuracy: {stats.Accuracy:F1}%");
+        sb.AppendLine($"Evasion: {stats.Evasion:F1}%");
+        sb.AppendLine();
 
-    private string BuildSkillDetails(SkillDefinition skill)
-    {
-        string areaText = skill.AreaMode == SkillAreaMode.Circle
-            ? $"Area Radius: {skill.AreaRadius:0.0}"
-            : "Area Radius: -";
+        sb.AppendLine($"Armor: {stats.Armor}");
+        sb.AppendLine($"Physical Resistance: {stats.PhysicalResistance:F1}%");
+        sb.AppendLine($"Fire Resistance: {stats.FireResistance:F1}%");
+        sb.AppendLine($"Earth Resistance: {stats.EarthResistance:F1}%");
+        sb.AppendLine($"Wind Resistance: {stats.WindResistance:F1}%");
+        sb.AppendLine($"Lightning Resistance: {stats.LightningResistance:F1}%");
+        sb.AppendLine($"Ice Resistance: {stats.IceResistance:F1}%");
 
-        if (previewCasterStats == null)
-            return BuildFallbackSkillDetails(skill);
-
-        DamagePreviewUtility.TryBuildSkillPreview(previewCasterStats, skill, out DamagePreviewInfo preview);
-
-        return
-    $"AP Cost: {skill.ApCost}\n" +
-    $"Damage Type: {skill.DamageType}\n" +
-    $"Damage: {preview.MinPreview}-{preview.MaxPreview}\n" +
-    $"Range: {skill.Range:0.0}\n" +
-    $"{areaText}";
-    }
-
-    private string BuildFallbackSkillDetails(SkillDefinition skill)
-    {
-        string areaText = skill.AreaMode == SkillAreaMode.Circle
-            ? $"Area Radius: {skill.AreaRadius:0.0}"
-            : "Area Radius: -";
-
-        return
-    $"AP Cost: {skill.ApCost}\n" +
-    $"Damage Type: {skill.DamageType}\n" +
-    $"Damage: {skill.MinDamage}-{skill.MaxDamage}\n" +
-    $"Range: {skill.Range:0.0}\n" +
-    $"{areaText}";
+        return sb.ToString();
     }
 
     private void UpdatePosition()
