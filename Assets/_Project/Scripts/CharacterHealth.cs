@@ -5,7 +5,6 @@ using UnityEngine;
 public class CharacterHealth : MonoBehaviour
 {
     [SerializeField] private int currentHP;
-
     private CharacterStats stats;
     private bool initialized;
 
@@ -19,6 +18,7 @@ public class CharacterHealth : MonoBehaviour
     private void Awake()
     {
         stats = GetComponent<CharacterStats>();
+        InitializeIfNeeded();
     }
 
     private void OnEnable()
@@ -33,24 +33,17 @@ public class CharacterHealth : MonoBehaviour
             stats.OnStatsChanged -= HandleStatsChanged;
     }
 
-    private void Start()
-    {
-        if (!initialized)
-        {
-            currentHP = MaxHP;
-            initialized = true;
-            NotifyChanged();
-        }
-    }
-
     public void ResetToFull()
     {
+        InitializeIfNeeded();
         currentHP = MaxHP;
         NotifyChanged();
     }
 
     public void Heal(int amount)
     {
+        InitializeIfNeeded();
+
         if (amount <= 0 || IsDead)
             return;
 
@@ -60,11 +53,12 @@ public class CharacterHealth : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+        InitializeIfNeeded();
+
         if (amount <= 0 || IsDead)
             return;
 
         bool wasAlive = !IsDead;
-
         currentHP = Mathf.Clamp(currentHP - amount, 0, MaxHP);
         NotifyChanged();
 
@@ -74,8 +68,9 @@ public class CharacterHealth : MonoBehaviour
 
     public void SetCurrentHP(int value)
     {
-        bool wasAlive = !IsDead;
+        InitializeIfNeeded();
 
+        bool wasAlive = !IsDead;
         currentHP = Mathf.Clamp(value, 0, MaxHP);
         NotifyChanged();
 
@@ -86,9 +81,22 @@ public class CharacterHealth : MonoBehaviour
     private void HandleStatsChanged()
     {
         if (!initialized)
+        {
+            InitializeIfNeeded();
             return;
+        }
 
         currentHP = Mathf.Clamp(currentHP, 0, MaxHP);
+        NotifyChanged();
+    }
+
+    private void InitializeIfNeeded()
+    {
+        if (initialized)
+            return;
+
+        currentHP = MaxHP;
+        initialized = true;
         NotifyChanged();
     }
 

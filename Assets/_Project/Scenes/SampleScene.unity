@@ -5841,7 +5841,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   mainCamera: {fileID: 330585545}
-  combatController: {fileID: 0}
+  combatController: {fileID: 902157976}
   groundMask:
     serializedVersion: 2
     m_Bits: 64
