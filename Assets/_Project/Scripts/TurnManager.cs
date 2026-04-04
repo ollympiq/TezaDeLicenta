@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,6 +30,16 @@ public class TurnManager : MonoBehaviour
     public bool IsCombatActive => combatActive;
     public bool IsPlayerTurnActive => combatActive && playerTurnActive;
     public int CurrentRound => roundNumber;
+
+    public event Action OnTurnStateChanged;
+
+    [Serializable]
+    public struct TurnActorPortraitData
+    {
+        public bool IsValid;
+        public bool IsPlayer;
+        public Sprite Portrait;
+    }
 
     private void Awake()
     {
@@ -88,8 +99,7 @@ public class TurnManager : MonoBehaviour
 
         if (enemyTurns.Count == 0)
         {
-            enemyTurns = FindObjectsByType<EnemyTurnController>(FindObjectsSortMode.None)
-                .ToList();
+            enemyTurns = FindObjectsByType<EnemyTurnController>(FindObjectsSortMode.None).ToList();
         }
     }
 
@@ -102,6 +112,48 @@ public class TurnManager : MonoBehaviour
         playerTurnActive = false;
         UpdateEndTurnButton(false);
         QueueAdvance();
+    }
+
+    public TurnActorPortraitData GetCurrentActorPortraitData()
+    {
+        TurnActor actor = GetCurrentAliveActor();
+        return BuildPortraitData(actor);
+    }
+
+    public TurnActorPortraitData GetNextActorPortraitData()
+    {
+        TurnActor actor = PeekNextAliveActor();
+        return BuildPortraitData(actor);
+    }
+
+    public List<TurnActorPortraitData> GetVisibleTurnOrderPortraits()
+    {
+        List<TurnActorPortraitData> result = new List<TurnActorPortraitData>();
+
+        if (!combatActive || roundOrder.Count == 0)
+            return result;
+
+        HashSet<CharacterHealth> addedActors = new HashSet<CharacterHealth>();
+
+        // 1. Adauga actorii ramasi din runda curenta, incepand cu actorul curent
+        int startIndex = Mathf.Clamp(currentTurnIndex, 0, roundOrder.Count - 1);
+
+        for (int i = startIndex; i < roundOrder.Count; i++)
+        {
+            TurnActor actor = roundOrder[i];
+            if (IsActorAlive(actor) && addedActors.Add(actor.Health))
+                result.Add(BuildPortraitData(actor));
+        }
+
+        // 2. Adauga actorii care ar veni dupa wrap-around, dar fara duplicate
+        for (int i = 0; i < startIndex; i++)
+        {
+            TurnActor actor = roundOrder[i];
+            if (IsActorAlive(actor) && addedActors.Add(actor.Health))
+                result.Add(BuildPortraitData(actor));
+        }
+
+        return result;
     }
 
     private void QueueAdvance()
@@ -169,6 +221,7 @@ public class TurnManager : MonoBehaviour
             playerTurnActive = true;
             UpdateEndTurnButton(true);
             playerTurn.BeginTurn();
+            NotifyTurnStateChanged();
             return;
         }
 
@@ -177,6 +230,8 @@ public class TurnManager : MonoBehaviour
 
         if (playerTurn != null)
             playerTurn.EndTurn();
+
+        NotifyTurnStateChanged();
 
         if (actor.Enemy == null)
         {
@@ -229,6 +284,30 @@ public class TurnManager : MonoBehaviour
         );
     }
 
+    private List<TurnActor> BuildPreviewRoundOrder()
+    {
+        List<TurnActor> result = new List<TurnActor>();
+
+        List<TurnActor> aliveEnemies = enemyTurns
+            .Where(e => e != null)
+            .Select(CreateEnemyActor)
+            .Where(a => a != null && a.IsAlive)
+            .OrderByDescending(a => a.Initiative)
+            .ToList();
+
+        TurnActor playerActor = CreatePlayerActor();
+
+        if (playerActor != null && playerActor.IsAlive)
+            result.Add(playerActor);
+
+        result.AddRange(aliveEnemies);
+
+        return result
+            .OrderByDescending(a => a.Initiative)
+            .ThenByDescending(a => a.IsPlayer ? 1 : 0)
+            .ToList();
+    }
+
     private TurnActor CreatePlayerActor()
     {
         if (playerTurn == null || playerTurn.Health == null || playerTurn.Stats == null)
@@ -266,6 +345,57 @@ public class TurnManager : MonoBehaviour
         return actor != null && actor.Health != null && !actor.Health.IsDead;
     }
 
+    private TurnActor GetCurrentAliveActor()
+    {
+        if (!combatActive || currentTurnIndex < 0 || currentTurnIndex >= roundOrder.Count)
+            return null;
+
+        TurnActor actor = roundOrder[currentTurnIndex];
+        return IsActorAlive(actor) ? actor : null;
+    }
+
+    private TurnActor PeekNextAliveActor()
+    {
+        if (!combatActive || roundOrder.Count == 0)
+            return null;
+
+        int nextIndex = currentTurnIndex + 1;
+
+        for (int i = nextIndex; i < roundOrder.Count; i++)
+        {
+            if (IsActorAlive(roundOrder[i]))
+                return roundOrder[i];
+        }
+
+        List<TurnActor> nextRound = BuildPreviewRoundOrder();
+        for (int i = 0; i < nextRound.Count; i++)
+        {
+            if (IsActorAlive(nextRound[i]))
+                return nextRound[i];
+        }
+
+        return null;
+    }
+
+    private TurnActorPortraitData BuildPortraitData(TurnActor actor)
+    {
+        if (actor == null)
+            return default;
+
+        GameObject actorObject = actor.IsPlayer
+            ? actor.Player.gameObject
+            : actor.Enemy.gameObject;
+
+        TurnOrderPortrait portraitSource = actorObject.GetComponent<TurnOrderPortrait>();
+
+        return new TurnActorPortraitData
+        {
+            IsValid = true,
+            IsPlayer = actor.IsPlayer,
+            Portrait = portraitSource != null ? portraitSource.Portrait : null
+        };
+    }
+
     private bool CheckCombatEnded()
     {
         bool playerDead = playerTurn == null || playerTurn.Health == null || playerTurn.Health.IsDead;
@@ -285,6 +415,7 @@ public class TurnManager : MonoBehaviour
             if (playerTurn != null)
                 playerTurn.EndTurn();
 
+            NotifyTurnStateChanged();
             return true;
         }
 
@@ -297,6 +428,7 @@ public class TurnManager : MonoBehaviour
             if (playerTurn != null)
                 playerTurn.SetExplorationControl(true);
 
+            NotifyTurnStateChanged();
             return true;
         }
 
@@ -310,6 +442,11 @@ public class TurnManager : MonoBehaviour
 
         endTurnButton.gameObject.SetActive(combatActive);
         endTurnButton.interactable = playerCanEndTurn;
+    }
+
+    private void NotifyTurnStateChanged()
+    {
+        OnTurnStateChanged?.Invoke();
     }
 
     private sealed class TurnActor

@@ -11,7 +11,8 @@ public class EnemyAnimationController : MonoBehaviour
     [SerializeField] private Collider mainCollider;
 
     [Header("Movement")]
-    [SerializeField] private float runThreshold = 0.1f;
+    [SerializeField] private float runEnterThreshold = 0.08f;
+    [SerializeField] private float runExitThreshold = 0.03f;
     [SerializeField] private float rotationSpeed = 12f;
     [SerializeField] private float stopGraceTime = 0.12f;
 
@@ -27,7 +28,9 @@ public class EnemyAnimationController : MonoBehaviour
     private int lastHp;
     private float actionLockTimer;
     private bool isDead;
+
     private float runningHoldTimer;
+    private bool runningState;
 
     private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
     private static readonly int HurtHash = Animator.StringToHash("Hurt");
@@ -78,13 +81,13 @@ public class EnemyAnimationController : MonoBehaviour
         if (actionLockTimer > 0f)
         {
             actionLockTimer -= Time.deltaTime;
-            animator.SetBool(IsRunningHash, false);
+            SetRunning(false);
             return;
         }
 
         if (agent == null || !agent.enabled || !agent.isOnNavMesh)
         {
-            animator.SetBool(IsRunningHash, false);
+            SetRunning(false);
             return;
         }
 
@@ -95,18 +98,29 @@ public class EnemyAnimationController : MonoBehaviour
             agent.pathPending ||
             (agent.hasPath && agent.remainingDistance > agent.stoppingDistance + 0.05f);
 
-        bool movingEnough = desired.sqrMagnitude > 0.001f;
+        float speed = desired.magnitude;
 
-        if (hasMovementIntent && movingEnough)
+        if (hasMovementIntent && speed > runExitThreshold)
             runningHoldTimer = stopGraceTime;
         else
-            runningHoldTimer -= Time.deltaTime;
+            runningHoldTimer = Mathf.Max(0f, runningHoldTimer - Time.deltaTime);
 
-        bool isRunning = hasMovementIntent && (movingEnough || runningHoldTimer > 0f);
+        if (!runningState)
+        {
+            if (hasMovementIntent && (speed >= runEnterThreshold || runningHoldTimer > 0f))
+                runningState = true;
+        }
+        else
+        {
+            if (!hasMovementIntent && runningHoldTimer <= 0f)
+                runningState = false;
+            else if (speed <= runExitThreshold && runningHoldTimer <= 0f)
+                runningState = false;
+        }
 
-        animator.SetBool(IsRunningHash, isRunning);
+        animator.SetBool(IsRunningHash, runningState);
 
-        if (isRunning && desired.sqrMagnitude > 0.0001f)
+        if (runningState && desired.sqrMagnitude > 0.0001f)
             RotateVisualToward(desired.normalized);
     }
 
@@ -125,7 +139,7 @@ public class EnemyAnimationController : MonoBehaviour
         }
 
         actionLockTimer = attackLockDuration;
-        animator.SetBool(IsRunningHash, false);
+        SetRunning(false);
         animator.ResetTrigger(AttackHash);
         animator.SetTrigger(AttackHash);
     }
@@ -144,7 +158,7 @@ public class EnemyAnimationController : MonoBehaviour
         if (tookDamage && stillAlive)
         {
             actionLockTimer = hurtLockDuration;
-            animator.SetBool(IsRunningHash, false);
+            SetRunning(false);
             animator.ResetTrigger(HurtHash);
             animator.SetTrigger(HurtHash);
         }
@@ -159,20 +173,33 @@ public class EnemyAnimationController : MonoBehaviour
 
         isDead = true;
         actionLockTimer = 0f;
-        animator.SetBool(IsRunningHash, false);
+        SetRunning(false);
+
         animator.ResetTrigger(HurtHash);
         animator.ResetTrigger(AttackHash);
         animator.SetTrigger(DieHash);
 
         if (disableAgentOnDeath && agent != null)
         {
-            agent.isStopped = true;
-            agent.ResetPath();
-            agent.enabled = false;
+            if (agent.enabled)
+            {
+                agent.isStopped = true;
+                agent.ResetPath();
+                agent.enabled = false;
+            }
         }
 
         if (disableColliderOnDeath && mainCollider != null)
             mainCollider.enabled = false;
+    }
+
+    private void SetRunning(bool value)
+    {
+        runningState = value;
+        runningHoldTimer = value ? stopGraceTime : 0f;
+
+        if (animator != null)
+            animator.SetBool(IsRunningHash, value);
     }
 
     private void RotateVisualToward(Vector3 direction, bool instant = false)
@@ -183,12 +210,16 @@ public class EnemyAnimationController : MonoBehaviour
         Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
 
         if (instant)
+        {
             visualModel.rotation = targetRotation;
+        }
         else
+        {
             visualModel.rotation = Quaternion.Slerp(
                 visualModel.rotation,
                 targetRotation,
                 rotationSpeed * Time.deltaTime
             );
+        }
     }
 }
