@@ -1,19 +1,11 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class SkillBookUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private PlayerSkillLoadout loadout;
     [SerializeField] private Canvas rootCanvas;
-    [SerializeField] private Button toggleButton;
-    [SerializeField] private Button closeButton;
-    [SerializeField] private GameObject panelRoot;
-    [SerializeField] private Transform contentRoot;
-    [SerializeField] private SkillBookItemUI itemPrefab;
-
-    private readonly List<SkillBookItemUI> spawnedItems = new List<SkillBookItemUI>();
+    [SerializeField] private SkillBookSlotUI[] slots;
 
     private void Start()
     {
@@ -23,74 +15,49 @@ public class SkillBookUI : MonoBehaviour
         if (rootCanvas == null)
             rootCanvas = GetComponentInParent<Canvas>();
 
-        if (toggleButton != null)
-            toggleButton.onClick.AddListener(TogglePanel);
+        if (loadout != null)
+            loadout.OnLoadoutChanged += RefreshNow;
 
-        if (closeButton != null)
-            closeButton.onClick.AddListener(ClosePanel);
-
-        if (panelRoot != null)
-            panelRoot.SetActive(false);
-
-        RefreshBook();
+        RefreshNow();
     }
 
     private void OnDestroy()
     {
-        if (toggleButton != null)
-            toggleButton.onClick.RemoveListener(TogglePanel);
-
-        if (closeButton != null)
-            closeButton.onClick.RemoveListener(ClosePanel);
+        if (loadout != null)
+            loadout.OnLoadoutChanged -= RefreshNow;
     }
 
-    public void TogglePanel()
+    public void RefreshNow()
     {
-        if (panelRoot == null)
+        if (slots == null || slots.Length == 0)
             return;
 
-        bool nextState = !panelRoot.activeSelf;
-        panelRoot.SetActive(nextState);
-
-        if (nextState)
-            RefreshBook();
-        else
-            UISkillDragState.Clear();
-    }
-
-    public void ClosePanel()
-    {
-        if (panelRoot == null)
-            return;
-
-        panelRoot.SetActive(false);
-        UISkillDragState.Clear();
-    }
-
-    public void RefreshBook()
-    {
-        if (loadout == null || contentRoot == null || itemPrefab == null || rootCanvas == null)
-            return;
-
-        UISkillDragState.Clear();
-
-        for (int i = 0; i < spawnedItems.Count; i++)
+        if (loadout == null || rootCanvas == null)
         {
-            if (spawnedItems[i] != null)
-                Destroy(spawnedItems[i].gameObject);
+            ClearAll();
+            return;
         }
 
-        spawnedItems.Clear();
+        var skills = loadout.AvailableSkills;
 
-        for (int i = 0; i < loadout.AvailableSkills.Count; i++)
+        for (int i = 0; i < slots.Length; i++)
         {
-            SkillDefinition skill = loadout.AvailableSkills[i];
-            if (skill == null)
+            if (slots[i] == null)
                 continue;
 
-            SkillBookItemUI item = Instantiate(itemPrefab, contentRoot);
-            item.Bind(skill, rootCanvas);
-            spawnedItems.Add(item);
+            if (i < skills.Count && skills[i] != null)
+                slots[i].Bind(skills[i], rootCanvas);
+            else
+                slots[i].ClearSlot();
+        }
+    }
+
+    private void ClearAll()
+    {
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] != null)
+                slots[i].ClearSlot();
         }
     }
 }

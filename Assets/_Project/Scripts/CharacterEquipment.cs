@@ -14,6 +14,7 @@ public class CharacterEquipment : MonoBehaviour
     [SerializeField] private ItemInstance handsItem;
     [SerializeField] private ItemInstance legsItem;
     [SerializeField] private ItemInstance feetItem;
+    [SerializeField] private ItemInstance beltItem;
     [SerializeField] private ItemInstance ringItem;
     [SerializeField] private ItemInstance amuletItem;
 
@@ -54,7 +55,6 @@ public class CharacterEquipment : MonoBehaviour
 
         ItemInstance previous = GetItemInSlot(slot);
         SetItemInSlot(slot, newItem);
-
         OnEquipmentChanged?.Invoke();
         return previous;
     }
@@ -81,7 +81,6 @@ public class CharacterEquipment : MonoBehaviour
     public ItemInstance GetItemInSlot(EquipmentSlot slot)
     {
         ItemInstance raw = GetRawItemInSlot(slot);
-
         if (raw == null || !raw.IsValid)
             return null;
 
@@ -154,6 +153,7 @@ public class CharacterEquipment : MonoBehaviour
         if (GetItemInSlot(EquipmentSlot.Hands) != null) yield return GetItemInSlot(EquipmentSlot.Hands);
         if (GetItemInSlot(EquipmentSlot.Legs) != null) yield return GetItemInSlot(EquipmentSlot.Legs);
         if (GetItemInSlot(EquipmentSlot.Feet) != null) yield return GetItemInSlot(EquipmentSlot.Feet);
+        if (GetItemInSlot(EquipmentSlot.Belt) != null) yield return GetItemInSlot(EquipmentSlot.Belt);
         if (GetItemInSlot(EquipmentSlot.Ring) != null) yield return GetItemInSlot(EquipmentSlot.Ring);
         if (GetItemInSlot(EquipmentSlot.Amulet) != null) yield return GetItemInSlot(EquipmentSlot.Amulet);
     }
@@ -172,6 +172,7 @@ public class CharacterEquipment : MonoBehaviour
         handsItem = NormalizeItem(handsItem);
         legsItem = NormalizeItem(legsItem);
         feetItem = NormalizeItem(feetItem);
+        beltItem = NormalizeItem(beltItem);
         ringItem = NormalizeItem(ringItem);
         amuletItem = NormalizeItem(amuletItem);
     }
@@ -194,6 +195,7 @@ public class CharacterEquipment : MonoBehaviour
             case EquipmentSlot.Hands: return handsItem;
             case EquipmentSlot.Legs: return legsItem;
             case EquipmentSlot.Feet: return feetItem;
+            case EquipmentSlot.Belt: return beltItem;
             case EquipmentSlot.Ring: return ringItem;
             case EquipmentSlot.Amulet: return amuletItem;
             default: return null;
@@ -212,6 +214,7 @@ public class CharacterEquipment : MonoBehaviour
             case EquipmentSlot.Hands: handsItem = cleanItem; break;
             case EquipmentSlot.Legs: legsItem = cleanItem; break;
             case EquipmentSlot.Feet: feetItem = cleanItem; break;
+            case EquipmentSlot.Belt: beltItem = cleanItem; break;
             case EquipmentSlot.Ring: ringItem = cleanItem; break;
             case EquipmentSlot.Amulet: amuletItem = cleanItem; break;
         }

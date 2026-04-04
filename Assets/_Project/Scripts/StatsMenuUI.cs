@@ -1,13 +1,11 @@
 using System.Text;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class StatsMenuUI : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private CharacterStats targetStats;
-    [SerializeField] private Button toggleButton;
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private TextMeshProUGUI statsText;
 
@@ -16,12 +14,6 @@ public class StatsMenuUI : MonoBehaviour
 
     private CharacterHealth targetHealth;
     private PlayerAP targetAP;
-
-    private void Awake()
-    {
-        if (toggleButton != null)
-            toggleButton.onClick.AddListener(TogglePanel);
-    }
 
     private void Start()
     {
@@ -39,21 +31,7 @@ public class StatsMenuUI : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (toggleButton != null)
-            toggleButton.onClick.RemoveListener(TogglePanel);
-
         UnsubscribeFromEvents();
-    }
-
-    public void TogglePanel()
-    {
-        if (panelRoot == null)
-            return;
-
-        panelRoot.SetActive(!panelRoot.activeSelf);
-
-        if (panelRoot.activeSelf)
-            Refresh();
     }
 
     public void Refresh()

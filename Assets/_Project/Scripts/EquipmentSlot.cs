@@ -7,6 +7,7 @@ public enum EquipmentSlot
     Hands,
     Legs,
     Feet,
+    Belt,
     Ring,
     Amulet
 }

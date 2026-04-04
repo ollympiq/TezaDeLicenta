@@ -8,7 +8,12 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private CharacterInventory inventory;
     [SerializeField] private CharacterEquipment equipment;
     [SerializeField] private Button toggleButton;
-    [SerializeField] private GameObject panelRoot;
+    [SerializeField] private SkillBookUI skillBookUI;
+
+    [Header("Panels")]
+    [SerializeField] private GameObject panelRoot;          // InventoryPanel
+    [SerializeField] private GameObject statsPanelRoot;     // StatsPanel
+    [SerializeField] private GameObject skillBookPanelRoot; // SkillBookPanel
 
     [Header("UI Slots")]
     [SerializeField] private EquipmentSlotUI[] equipmentSlots;
@@ -24,6 +29,9 @@ public class InventoryUI : MonoBehaviour
 
         if (equipment == null)
             equipment = FindFirstObjectByType<CharacterEquipment>();
+
+        if (skillBookUI == null)
+            skillBookUI = FindFirstObjectByType<SkillBookUI>(FindObjectsInactive.Include);
 
         if (toggleButton != null)
             toggleButton.onClick.AddListener(TogglePanel);
@@ -46,10 +54,10 @@ public class InventoryUI : MonoBehaviour
                 inventorySlots[i].Setup(this, i);
         }
 
-        if (panelRoot != null)
-            panelRoot.SetActive(startOpened);
+        SetPanelsVisible(startOpened);
 
-        RefreshAll();
+        if (startOpened)
+            RefreshAll();
     }
 
     private void OnDestroy()
@@ -72,11 +80,10 @@ public class InventoryUI : MonoBehaviour
 
     public void TogglePanel()
     {
-        if (panelRoot == null)
-            return;
+        bool isOpen = panelRoot != null && panelRoot.activeSelf;
+        bool willOpen = !isOpen;
 
-        bool willOpen = !panelRoot.activeSelf;
-        panelRoot.SetActive(willOpen);
+        SetPanelsVisible(willOpen);
 
         if (willOpen)
         {
@@ -86,7 +93,33 @@ public class InventoryUI : MonoBehaviour
         {
             if (ItemTooltipUI.Instance != null)
                 ItemTooltipUI.Instance.Hide();
+
+            if (SkillTooltipUI.Instance != null)
+                SkillTooltipUI.Instance.Hide();
+
+            UISkillDragState.Clear();
         }
+    }
+
+    private void SetPanelsVisible(bool visible)
+    {
+        if (panelRoot != null)
+            panelRoot.SetActive(visible);
+
+        if (statsPanelRoot != null)
+            statsPanelRoot.SetActive(visible);
+
+        if (skillBookPanelRoot != null)
+            skillBookPanelRoot.SetActive(visible);
+    }
+
+    public void RefreshAll()
+    {
+        RefreshEquipment();
+        RefreshInventory();
+
+        if (skillBookUI != null)
+            skillBookUI.RefreshNow();
     }
 
     public void HandleInventorySlotClicked(int slotIndex)
@@ -128,12 +161,6 @@ public class InventoryUI : MonoBehaviour
             equipment.EquipItem(removed);
             Debug.Log("Inventarul este plin.");
         }
-    }
-
-    public void RefreshAll()
-    {
-        RefreshEquipment();
-        RefreshInventory();
     }
 
     private void EquipItemFromInventory(int slotIndex)

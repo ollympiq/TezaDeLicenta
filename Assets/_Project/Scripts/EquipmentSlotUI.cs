@@ -53,6 +53,12 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
             ItemTooltipUI.Instance.Hide();
     }
 
+    private void OnDisable()
+    {
+        if (ItemTooltipUI.Instance != null)
+            ItemTooltipUI.Instance.Hide();
+    }
+
     private string GetShortSlotLabel(EquipmentSlot slot)
     {
         switch (slot)
@@ -63,15 +69,10 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
             case EquipmentSlot.Hands: return "G";
             case EquipmentSlot.Legs: return "L";
             case EquipmentSlot.Feet: return "F";
+            case EquipmentSlot.Belt: return "B";
             case EquipmentSlot.Ring: return "R";
             case EquipmentSlot.Amulet: return "A";
             default: return "?";
         }
-    }
-
-    private void OnDisable()
-    {
-        if (ItemTooltipUI.Instance != null)
-            ItemTooltipUI.Instance.Hide();
     }
 }
