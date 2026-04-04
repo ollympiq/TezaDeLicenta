@@ -11,7 +11,6 @@ public class EnemyNavModeSwitcher : MonoBehaviour
 
     private NavMeshAgent agent;
     private NavMeshObstacle obstacle;
-
     private bool usingAgentMode;
 
     private void Awake()
@@ -24,14 +23,13 @@ public class EnemyNavModeSwitcher : MonoBehaviour
 
         if (health == null)
             health = GetComponent<CharacterHealth>();
+
+        ApplyInitialMode();
     }
 
-    private void Start()
+    private void OnEnable()
     {
-        if (obstacle != null)
-            obstacle.carving = false;
-
-        SetObstacleModeInstant();
+        ApplyInitialMode();
     }
 
     private void Update()
@@ -53,16 +51,29 @@ public class EnemyNavModeSwitcher : MonoBehaviour
             SetObstacleModeInstant();
     }
 
+    private void ApplyInitialMode()
+    {
+        if (obstacle != null)
+            obstacle.carving = false;
+
+        bool shouldUseAgent = turnController != null && turnController.IsTakingTurn;
+
+        if (shouldUseAgent)
+            SetAgentModeInstant();
+        else
+            SetObstacleModeInstant();
+    }
+
     private void SetAgentModeInstant()
     {
-        if (obstacle != null && obstacle.enabled)
+        if (obstacle != null)
             obstacle.enabled = false;
-
-        if (agent != null && !agent.enabled)
-            agent.enabled = true;
 
         if (agent != null)
         {
+            if (!agent.enabled)
+                agent.enabled = true;
+
             agent.Warp(transform.position);
             agent.isStopped = false;
             agent.ResetPath();
@@ -73,14 +84,17 @@ public class EnemyNavModeSwitcher : MonoBehaviour
 
     private void SetObstacleModeInstant()
     {
-        if (agent != null && agent.enabled)
+        if (agent != null)
         {
-            agent.isStopped = true;
-            agent.ResetPath();
-            agent.enabled = false;
+            if (agent.enabled)
+            {
+                agent.isStopped = true;
+                agent.ResetPath();
+                agent.enabled = false;
+            }
         }
 
-        if (obstacle != null && !obstacle.enabled)
+        if (obstacle != null)
         {
             obstacle.carving = false;
             obstacle.enabled = true;
@@ -98,7 +112,7 @@ public class EnemyNavModeSwitcher : MonoBehaviour
             agent.enabled = false;
         }
 
-        if (obstacle != null && obstacle.enabled)
+        if (obstacle != null)
             obstacle.enabled = false;
 
         usingAgentMode = false;
