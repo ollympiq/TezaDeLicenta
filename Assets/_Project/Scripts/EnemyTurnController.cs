@@ -386,6 +386,9 @@ public class EnemyTurnController : MonoBehaviour
             return sphere.radius * scale;
         }
 
+        if (t.TryGetComponent<Collider>(out var col))
+            return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
+
         return 0.5f;
     }
 

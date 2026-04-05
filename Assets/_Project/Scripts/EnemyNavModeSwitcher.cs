@@ -53,9 +53,6 @@ public class EnemyNavModeSwitcher : MonoBehaviour
 
     private void ApplyInitialMode()
     {
-        if (obstacle != null)
-            obstacle.carving = false;
-
         bool shouldUseAgent = turnController != null && turnController.IsTakingTurn;
 
         if (shouldUseAgent)
@@ -84,19 +81,16 @@ public class EnemyNavModeSwitcher : MonoBehaviour
 
     private void SetObstacleModeInstant()
     {
-        if (agent != null)
+        if (agent != null && agent.enabled)
         {
-            if (agent.enabled)
-            {
-                agent.isStopped = true;
-                agent.ResetPath();
-                agent.enabled = false;
-            }
+            agent.isStopped = true;
+            agent.ResetPath();
+            agent.enabled = false;
         }
 
         if (obstacle != null)
         {
-            obstacle.carving = false;
+            obstacle.carving = true;
             obstacle.enabled = true;
         }
 
