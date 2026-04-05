@@ -67,6 +67,9 @@ public class ItemTooltipUI : MonoBehaviour
         if (detailsText != null)
             detailsText.text = BuildDetails(item);
 
+        if (nameText != null)
+            nameText.text = UIRichTextColors.Paint(item.DisplayName, UIRichTextColors.RarityColor(item.Rarity));
+
         panelRoot.gameObject.SetActive(true);
         panelRoot.SetAsLastSibling();
 
@@ -90,8 +93,15 @@ public class ItemTooltipUI : MonoBehaviour
 
         StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine($"Rarity: {item.Rarity}");
-        sb.AppendLine($"Category: {item.Definition.Category}");
+        sb.AppendLine(UIRichTextColors.Line(
+            "Rarity",
+            item.Rarity.ToString(),
+            UIRichTextColors.RarityColor(item.Rarity)));
+
+        sb.AppendLine(UIRichTextColors.Line(
+            "Category",
+            item.Definition.Category.ToString(),
+            UIRichTextColors.CategoryColor(item.Definition.Category)));
 
         if (!string.IsNullOrWhiteSpace(item.Definition.Description))
         {
@@ -102,38 +112,67 @@ public class ItemTooltipUI : MonoBehaviour
         WeaponDefinition weapon = item.WeaponDefinition;
         if (weapon != null)
         {
+            string dmgColor = UIRichTextColors.DamageTypeColor(weapon.DamageType);
+
             sb.AppendLine();
-            sb.AppendLine($"Damage: {weapon.MinDamage}-{weapon.MaxDamage}");
-            sb.AppendLine($"Damage Type: {weapon.DamageType}");
-            sb.AppendLine($"Range: {weapon.Range:0.0}");
-            sb.AppendLine($"AP Cost: {weapon.ApCost}");
-            sb.AppendLine($"Weapon Family: {weapon.WeaponFamily}");
+            sb.AppendLine(UIRichTextColors.Line(
+                "Damage",
+                $"{weapon.MinDamage}-{weapon.MaxDamage}",
+                dmgColor));
+
+            sb.AppendLine(UIRichTextColors.Line(
+                "Damage Type",
+                weapon.DamageType.ToString(),
+                dmgColor));
+
+            sb.AppendLine(UIRichTextColors.Line(
+                "Range",
+                $"{weapon.Range:0.0}",
+                UIRichTextColors.White));
+
+            sb.AppendLine(UIRichTextColors.Line(
+                "AP Cost",
+                weapon.ApCost.ToString(),
+                UIRichTextColors.AP));
+
+            sb.AppendLine(UIRichTextColors.Line(
+                "Weapon Family",
+                weapon.WeaponFamily.ToString(),
+                UIRichTextColors.White));
 
             string scalingText = BuildScalingText(weapon);
             if (!string.IsNullOrEmpty(scalingText))
-                sb.AppendLine($"Scaling: {scalingText}");
+            {
+                sb.AppendLine(UIRichTextColors.Line(
+                    "Scaling",
+                    scalingText,
+                    UIRichTextColors.White));
+            }
         }
 
         ArmorDefinition armor = item.ArmorDefinition;
         if (armor != null)
         {
             sb.AppendLine();
-            sb.AppendLine($"Armor: {armor.ArmorValue}");
+            sb.AppendLine(UIRichTextColors.Line(
+                "Armor",
+                armor.ArmorValue.ToString(),
+                UIRichTextColors.Armor));
 
-            AppendIfNonZero(sb, "Physical Resistance", armor.PhysicalResistance, "%");
-            AppendIfNonZero(sb, "Fire Resistance", armor.FireResistance, "%");
-            AppendIfNonZero(sb, "Earth Resistance", armor.EarthResistance, "%");
-            AppendIfNonZero(sb, "Wind Resistance", armor.WindResistance, "%");
-            AppendIfNonZero(sb, "Lightning Resistance", armor.LightningResistance, "%");
-            AppendIfNonZero(sb, "Ice Resistance", armor.IceResistance, "%");
+            AppendIfNonZero(sb, "Physical Resistance", armor.PhysicalResistance, "%", UIRichTextColors.Physical);
+            AppendIfNonZero(sb, "Fire Resistance", armor.FireResistance, "%", UIRichTextColors.Fire);
+            AppendIfNonZero(sb, "Earth Resistance", armor.EarthResistance, "%", UIRichTextColors.Earth);
+            AppendIfNonZero(sb, "Wind Resistance", armor.WindResistance, "%", UIRichTextColors.Wind);
+            AppendIfNonZero(sb, "Lightning Resistance", armor.LightningResistance, "%", UIRichTextColors.Lightning);
+            AppendIfNonZero(sb, "Ice Resistance", armor.IceResistance, "%", UIRichTextColors.Ice);
         }
 
         PotionDefinition potion = item.PotionDefinition;
         if (potion != null)
         {
             sb.AppendLine();
-            AppendIfNonZero(sb, "Heal", potion.HealAmount, "");
-            AppendIfNonZero(sb, "Restore AP", potion.RestoreAP, "");
+            AppendIfNonZero(sb, "Heal", potion.HealAmount, "", UIRichTextColors.HP);
+            AppendIfNonZero(sb, "Restore AP", potion.RestoreAP, "", UIRichTextColors.AP);
         }
 
         var modifiers = item.Definition.StatModifiers;
@@ -145,20 +184,29 @@ public class ItemTooltipUI : MonoBehaviour
             for (int i = 0; i < modifiers.Count; i++)
             {
                 ItemStatModifier mod = modifiers[i];
-                if (mod == null)
-                    continue;
+                if (mod == null) continue;
 
-                sb.AppendLine($"+{mod.Value:0.##} {mod.BonusType}");
+                string color = UIRichTextColors.BonusTypeColor(mod.BonusType);
+                sb.AppendLine(UIRichTextColors.Paint($"+{mod.Value:0.##} {mod.BonusType}", color));
             }
         }
 
         if (item.StackCount > 1)
         {
             sb.AppendLine();
-            sb.AppendLine($"Stack: {item.StackCount}");
+            sb.AppendLine(UIRichTextColors.Line(
+                "Stack",
+                item.StackCount.ToString(),
+                UIRichTextColors.White));
         }
 
         return sb.ToString();
+    }
+
+    private void AppendIfNonZero(StringBuilder sb, string label, float value, string suffix, string color)
+    {
+        if (Mathf.Abs(value) < 0.001f) return;
+        sb.AppendLine(UIRichTextColors.Line(label, $"{value:0.##}{suffix}", color));
     }
 
     private string BuildScalingText(WeaponDefinition weapon)
@@ -168,15 +216,15 @@ public class ItemTooltipUI : MonoBehaviour
 
         StringBuilder sb = new StringBuilder();
 
-        AppendScaling(sb, "STR", weapon.Scaling.StrengthScale);
-        AppendScaling(sb, "CON", weapon.Scaling.ConstitutionScale);
-        AppendScaling(sb, "DEX", weapon.Scaling.DexterityScale);
-        AppendScaling(sb, "INT", weapon.Scaling.IntelligenceScale);
+        AppendScaling(sb, "STR", weapon.Scaling.StrengthScale, UIRichTextColors.Strength);
+        AppendScaling(sb, "CON", weapon.Scaling.ConstitutionScale, UIRichTextColors.Constitution);
+        AppendScaling(sb, "DEX", weapon.Scaling.DexterityScale, UIRichTextColors.Dexterity);
+        AppendScaling(sb, "INT", weapon.Scaling.IntelligenceScale, UIRichTextColors.Intelligence);
 
         return sb.ToString().Trim();
     }
 
-    private void AppendScaling(StringBuilder sb, string shortName, float value)
+    private void AppendScaling(StringBuilder sb, string shortName, float value, string color)
     {
         if (value <= 0f)
             return;
@@ -184,7 +232,9 @@ public class ItemTooltipUI : MonoBehaviour
         if (sb.Length > 0)
             sb.Append(" | ");
 
-        sb.Append($"{shortName} x{value:0.##}");
+        sb.Append(UIRichTextColors.Paint(shortName, color));
+        sb.Append(" ");
+        sb.Append(UIRichTextColors.Paint($"x{value:0.##}", color));
     }
 
     private void AppendIfNonZero(StringBuilder sb, string label, float value, string suffix)

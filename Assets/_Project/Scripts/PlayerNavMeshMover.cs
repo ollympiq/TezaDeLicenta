@@ -36,6 +36,7 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (combatController == null)
             combatController = GetComponent<PlayerCombatController>();
+
         turnInputEnabled = false;
     }
 
@@ -46,14 +47,9 @@ public class PlayerNavMeshMover : MonoBehaviour
             StopMovementImmediately();
             return;
         }
+
         if (!turnInputEnabled)
             return;
-
-        if (Keyboard.current != null && Keyboard.current.rKey.wasPressedThisFrame)
-        {
-            playerAP.RestoreAllAP();
-            Debug.Log("AP resetat la maxim.");
-        }
 
         if (Mouse.current == null || mainCamera == null)
             return;

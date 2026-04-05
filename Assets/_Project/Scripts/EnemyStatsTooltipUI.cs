@@ -99,37 +99,37 @@ public class EnemyStatsTooltipUI : MonoBehaviour
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine($"Class: {stats.Class}");
+        sb.AppendLine(UIRichTextColors.DualLine("Class", stats.Class.ToString(), UIRichTextColors.White, UIRichTextColors.ClassColor(stats.Class)));
 
         if (health != null)
-            sb.AppendLine($"HP: {health.CurrentHP}/{health.MaxHP}");
+            sb.AppendLine(UIRichTextColors.Line("HP", $"{health.CurrentHP}/{health.MaxHP}", UIRichTextColors.HP));
         else
-            sb.AppendLine($"HP: {stats.MaxHP}/{stats.MaxHP}");
+            sb.AppendLine(UIRichTextColors.Line("HP", $"{stats.MaxHP}/{stats.MaxHP}", UIRichTextColors.HP));
 
-        sb.AppendLine($"AP: {stats.MaxAP}");
+        sb.AppendLine(UIRichTextColors.Line("AP", $"{stats.MaxAP}", UIRichTextColors.AP));
+
         sb.AppendLine();
+        sb.AppendLine(UIRichTextColors.Line("Strength", $"{stats.Strength}", UIRichTextColors.Strength));
+        sb.AppendLine(UIRichTextColors.Line("Constitution", $"{stats.Constitution}", UIRichTextColors.Constitution));
+        sb.AppendLine(UIRichTextColors.Line("Dexterity", $"{stats.Dexterity}", UIRichTextColors.Dexterity));
+        sb.AppendLine(UIRichTextColors.Line("Intelligence", $"{stats.Intelligence}", UIRichTextColors.Intelligence));
 
-        sb.AppendLine($"Strength: {stats.Strength}");
-        sb.AppendLine($"Constitution: {stats.Constitution}");
-        sb.AppendLine($"Dexterity: {stats.Dexterity}");
-        sb.AppendLine($"Intelligence: {stats.Intelligence}");
         sb.AppendLine();
+        sb.AppendLine(UIRichTextColors.Line("Physical Power", $"{stats.PhysicalPower}", UIRichTextColors.PhysicalPower));
+        sb.AppendLine(UIRichTextColors.Line("Magic Power", $"{stats.MagicPower}", UIRichTextColors.MagicPower));
+        sb.AppendLine(UIRichTextColors.Line("Crit Chance", $"{stats.CritChance:F1}%", UIRichTextColors.Crit));
+        sb.AppendLine(UIRichTextColors.Line("Initiative", $"{stats.Initiative}", UIRichTextColors.Initiative));
+        sb.AppendLine(UIRichTextColors.Line("Accuracy", $"{stats.Accuracy:F1}%", UIRichTextColors.Accuracy));
+        sb.AppendLine(UIRichTextColors.Line("Evasion", $"{stats.Evasion:F1}%", UIRichTextColors.Evasion));
 
-        sb.AppendLine($"Physical Power: {stats.PhysicalPower}");
-        sb.AppendLine($"Magic Power: {stats.MagicPower}");
-        sb.AppendLine($"Crit Chance: {stats.CritChance:F1}%");
-        sb.AppendLine($"Initiative: {stats.Initiative}");
-        sb.AppendLine($"Accuracy: {stats.Accuracy:F1}%");
-        sb.AppendLine($"Evasion: {stats.Evasion:F1}%");
         sb.AppendLine();
-
-        sb.AppendLine($"Armor: {stats.Armor}");
-        sb.AppendLine($"Physical Resistance: {stats.PhysicalResistance:F1}%");
-        sb.AppendLine($"Fire Resistance: {stats.FireResistance:F1}%");
-        sb.AppendLine($"Earth Resistance: {stats.EarthResistance:F1}%");
-        sb.AppendLine($"Wind Resistance: {stats.WindResistance:F1}%");
-        sb.AppendLine($"Lightning Resistance: {stats.LightningResistance:F1}%");
-        sb.AppendLine($"Ice Resistance: {stats.IceResistance:F1}%");
+        sb.AppendLine(UIRichTextColors.Line("Armor", $"{stats.Armor}", UIRichTextColors.Armor));
+        sb.AppendLine(UIRichTextColors.Line("Physical Resistance", $"{stats.PhysicalResistance:F1}%", UIRichTextColors.Physical));
+        sb.AppendLine(UIRichTextColors.Line("Fire Resistance", $"{stats.FireResistance:F1}%", UIRichTextColors.Fire));
+        sb.AppendLine(UIRichTextColors.Line("Earth Resistance", $"{stats.EarthResistance:F1}%", UIRichTextColors.Earth));
+        sb.AppendLine(UIRichTextColors.Line("Wind Resistance", $"{stats.WindResistance:F1}%", UIRichTextColors.Wind));
+        sb.AppendLine(UIRichTextColors.Line("Lightning Resistance", $"{stats.LightningResistance:F1}%", UIRichTextColors.Lightning));
+        sb.AppendLine(UIRichTextColors.Line("Ice Resistance", $"{stats.IceResistance:F1}%", UIRichTextColors.Ice));
 
         return sb.ToString();
     }

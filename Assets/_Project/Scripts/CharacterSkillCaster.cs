@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(CharacterStats))]
+[RequireComponent(typeof(TurnActionLimiter))]
 public class CharacterSkillCaster : MonoBehaviour
 {
     [Header("Targeting")]
@@ -13,6 +14,7 @@ public class CharacterSkillCaster : MonoBehaviour
     private PlayerAnimationController animationController;
     private NavMeshAgent agent;
     private CharacterHealth selfHealth;
+    private TurnActionLimiter turnActionLimiter;
 
     private void Awake()
     {
@@ -21,6 +23,7 @@ public class CharacterSkillCaster : MonoBehaviour
         animationController = GetComponent<PlayerAnimationController>();
         agent = GetComponent<NavMeshAgent>();
         selfHealth = GetComponent<CharacterHealth>();
+        turnActionLimiter = GetComponent<TurnActionLimiter>();
     }
 
     public bool TryUseSkillOnTarget(SkillDefinition skill, CharacterStats primaryTarget)
@@ -30,6 +33,12 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (skill == null || skill.SkillType != SkillType.Active)
             return false;
+
+        if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
+        {
+            Debug.Log($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
+            return false;
+        }
 
         if (primaryTarget == null)
             return false;
@@ -51,6 +60,8 @@ public class CharacterSkillCaster : MonoBehaviour
         if (!TrySpendAP(skill.ApCost))
             return false;
 
+        turnActionLimiter?.MarkSkillUsed(skill);
+
         StopMovement();
 
         if (animationController != null)
@@ -68,6 +79,12 @@ public class CharacterSkillCaster : MonoBehaviour
         if (skill == null || skill.SkillType != SkillType.Active)
             return false;
 
+        if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
+        {
+            Debug.Log($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
+            return false;
+        }
+
         if (!IsPointInRange(point, skill.Range))
         {
             Debug.Log("Punctul ales este prea departe pentru skill.");
@@ -83,6 +100,8 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (!TrySpendAP(skill.ApCost))
             return false;
+
+        turnActionLimiter?.MarkSkillUsed(skill);
 
         StopMovement();
         ApplySkillToTargets(skill, targets);

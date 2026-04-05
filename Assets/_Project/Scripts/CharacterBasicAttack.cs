@@ -3,11 +3,13 @@ using UnityEngine.AI;
 
 [RequireComponent(typeof(CharacterStats))]
 [RequireComponent(typeof(CharacterEquipment))]
+[RequireComponent(typeof(TurnActionLimiter))]
 public class CharacterBasicAttack : MonoBehaviour
 {
     private CharacterStats attackerStats;
     private CharacterEquipment equipment;
     private PlayerAP playerAP;
+    private TurnActionLimiter turnActionLimiter;
 
     private PlayerAnimationController playerAnimationController;
     private EnemyAnimationController enemyAnimationController;
@@ -20,6 +22,7 @@ public class CharacterBasicAttack : MonoBehaviour
         attackerStats = GetComponent<CharacterStats>();
         equipment = GetComponent<CharacterEquipment>();
         playerAP = GetComponent<PlayerAP>();
+        turnActionLimiter = GetComponent<TurnActionLimiter>();
 
         playerAnimationController = GetComponent<PlayerAnimationController>();
         enemyAnimationController = GetComponent<EnemyAnimationController>();
@@ -67,6 +70,12 @@ public class CharacterBasicAttack : MonoBehaviour
             return false;
         }
 
+        if (turnActionLimiter != null && !turnActionLimiter.CanUseBasicAttack())
+        {
+            Debug.Log("Basic Attack a fost deja folosit in acest tur.");
+            return false;
+        }
+
         CharacterHealth targetHealth = targetStats.GetComponent<CharacterHealth>();
         if (targetHealth == null || targetHealth.IsDead)
             return false;
@@ -88,6 +97,8 @@ public class CharacterBasicAttack : MonoBehaviour
             if (!playerAP.SpendAP(weapon.ApCost))
                 return false;
         }
+
+        turnActionLimiter?.MarkBasicAttackUsed();
 
         if (agent != null && agent.enabled)
         {
@@ -153,6 +164,9 @@ public class CharacterBasicAttack : MonoBehaviour
         if (t == null)
             return 0.5f;
 
+        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
+            return Mathf.Max(0.1f, navAgent.radius);
+
         if (t.TryGetComponent<CapsuleCollider>(out var capsule))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
@@ -164,12 +178,6 @@ public class CharacterBasicAttack : MonoBehaviour
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
             return sphere.radius * scale;
         }
-
-        if (t.TryGetComponent<Collider>(out var col))
-            return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
-
-        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
-            return Mathf.Max(0.1f, navAgent.radius);
 
         return 0.5f;
     }

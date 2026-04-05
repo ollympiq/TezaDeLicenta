@@ -519,6 +519,7 @@ GameObject:
   - component: {fileID: 29811620}
   - component: {fileID: 29811619}
   - component: {fileID: 29811635}
+  - component: {fileID: 29811636}
   m_Layer: 7
   m_Name: Enemy_2
   m_TagString: Untagged
@@ -570,14 +571,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTurnController
   agent: {fileID: 29811626}
   targetStats: {fileID: 902157971}
+  animationController: {fileID: 0}
+  actionLimiter: {fileID: 0}
+  mediumAttack:
+    attackName: Basic Attack
+    damageType: 0
+    minDamage: 25
+    maxDamage: 30
+    powerScaling: 0.35
+    bonusAccuracy: 0
+    canCrit: 1
+    apCost: 2
+    range: 2.2
+  heavyAttack:
+    attackName: Basic Attack
+    damageType: 0
+    minDamage: 35
+    maxDamage: 45
+    powerScaling: 0.35
+    bonusAccuracy: 0
+    canCrit: 1
+    apCost: 2
+    range: 2.2
   thinkDelay: 0.1
-  afterMoveDelay: 0.01
+  afterMoveDelay: 0.15
   afterAttackDelay: 1
   metersPerAP: 1.5
   minMoveDistance: 0.2
-  reserveAPForAttack: 1
   attackRangeBuffer: 0.01
   destinationTolerance: 0.01
+  attackPositionSamples: 12
+  navMeshSampleDistance: 1.25
 --- !u!114 &29811622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -710,7 +734,9 @@ MonoBehaviour:
   rotationSpeed: 12
   stopGraceTime: 0.12
   hurtLockDuration: 0.45
-  attackLockDuration: 0.7
+  basicAttackLockDuration: 0.7
+  mediumAttackLockDuration: 0.85
+  heavyAttackLockDuration: 1
   disableAgentOnDeath: 1
   disableColliderOnDeath: 1
 --- !u!114 &29811628
@@ -894,6 +920,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnOrderPortrait
   portrait: {fileID: 21300000, guid: 6054318fc678eef4e97655493b73c580, type: 3}
+--- !u!114 &29811636
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29811618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34c8f5aabe0bb124c8bc45e973be36a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnActionLimiter
 --- !u!1 &62189985
 GameObject:
   m_ObjectHideFlags: 0
@@ -4274,10 +4312,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
   m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
+    m_Left: 20
+    m_Right: 20
+    m_Top: 20
+    m_Bottom: 20
   m_ChildAlignment: 0
   m_Spacing: 0
   m_ChildForceExpandWidth: 0
@@ -4300,14 +4338,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.26415092, g: 0.26415092, b: 0.26415092, a: 0.90588236}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 2989a4dc4115a014490b11afadbdb163, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -9235,6 +9273,7 @@ GameObject:
   - component: {fileID: 902157981}
   - component: {fileID: 902157982}
   - component: {fileID: 902157983}
+  - component: {fileID: 902157984}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -9254,8 +9293,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 903402a70eb3e874181c41918e7d818d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  maxAP: 0
-  currentAP: 0
+  maxAP: 10
+  currentAP: 10
 --- !u!114 &902157964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9435,11 +9474,11 @@ MonoBehaviour:
   characterClass: 1
   level: 1
   strength: 10
-  constitution: 10
+  constitution: 40
   dexterity: 10
   intelligence: 10
   baseMaxHP: 50
-  baseMaxAP: 6
+  baseMaxAP: 10
   baseArmor: 5
   basePhysicalResistance: 0
   baseFireResistance: 0
@@ -9682,6 +9721,7 @@ MonoBehaviour:
   mover: {fileID: 902157964}
   combatController: {fileID: 902157976}
   agent: {fileID: 902157965}
+  actionLimiter: {fileID: 0}
 --- !u!114 &902157983
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9695,6 +9735,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   portrait: {fileID: 21300000, guid: 612061a00207f9c439e2431d46c7acae, type: 3}
+--- !u!114 &902157984
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 902157962}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34c8f5aabe0bb124c8bc45e973be36a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnActionLimiter
 --- !u!1 &909728259
 GameObject:
   m_ObjectHideFlags: 0
@@ -12893,6 +12945,7 @@ GameObject:
   - component: {fileID: 1308527823}
   - component: {fileID: 1308527822}
   - component: {fileID: 1308527824}
+  - component: {fileID: 1308527825}
   m_Layer: 7
   m_Name: Enemy_1
   m_TagString: Untagged
@@ -13068,7 +13121,9 @@ MonoBehaviour:
   rotationSpeed: 12
   stopGraceTime: 0.12
   hurtLockDuration: 0.45
-  attackLockDuration: 0.7
+  basicAttackLockDuration: 0.7
+  mediumAttackLockDuration: 0.85
+  heavyAttackLockDuration: 1
   disableAgentOnDeath: 1
   disableColliderOnDeath: 1
 --- !u!195 &1308527814
@@ -13121,14 +13176,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EnemyTurnController
   agent: {fileID: 1308527814}
   targetStats: {fileID: 902157971}
+  animationController: {fileID: 0}
+  actionLimiter: {fileID: 0}
+  mediumAttack:
+    attackName: Basic Attack
+    damageType: 0
+    minDamage: 25
+    maxDamage: 30
+    powerScaling: 0.35
+    bonusAccuracy: 0
+    canCrit: 1
+    apCost: 2
+    range: 2.2
+  heavyAttack:
+    attackName: Basic Attack
+    damageType: 0
+    minDamage: 35
+    maxDamage: 45
+    powerScaling: 0.35
+    bonusAccuracy: 0
+    canCrit: 1
+    apCost: 2
+    range: 2.2
   thinkDelay: 0.1
   afterMoveDelay: 0.15
   afterAttackDelay: 1
   metersPerAP: 1.5
   minMoveDistance: 0.2
-  reserveAPForAttack: 1
   attackRangeBuffer: 0.01
   destinationTolerance: 0.01
+  attackPositionSamples: 12
+  navMeshSampleDistance: 1.25
 --- !u!114 &1308527818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13268,6 +13346,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurnOrderPortrait
   portrait: {fileID: 21300000, guid: 6054318fc678eef4e97655493b73c580, type: 3}
+--- !u!114 &1308527825
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1308527805}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34c8f5aabe0bb124c8bc45e973be36a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnActionLimiter
 --- !u!1 &1316470742
 GameObject:
   m_ObjectHideFlags: 0

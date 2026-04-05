@@ -21,7 +21,9 @@ MonoBehaviour:
   sellPrice: 5
   stackable: 0
   maxStack: 1
-  statModifiers: []
+  statModifiers:
+  - bonusType: 0
+    value: 5
   weaponFamily: 1
   damageType: 0
   minDamage: 10

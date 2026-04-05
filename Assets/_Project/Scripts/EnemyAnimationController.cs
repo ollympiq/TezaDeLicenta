@@ -18,7 +18,9 @@ public class EnemyAnimationController : MonoBehaviour
 
     [Header("Action Locks")]
     [SerializeField] private float hurtLockDuration = 0.45f;
-    [SerializeField] private float attackLockDuration = 0.7f;
+    [SerializeField] private float basicAttackLockDuration = 0.7f;
+    [SerializeField] private float mediumAttackLockDuration = 0.85f;
+    [SerializeField] private float heavyAttackLockDuration = 1.0f;
 
     [Header("Death")]
     [SerializeField] private bool disableAgentOnDeath = true;
@@ -35,6 +37,8 @@ public class EnemyAnimationController : MonoBehaviour
     private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
     private static readonly int HurtHash = Animator.StringToHash("Hurt");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
+    private static readonly int MediumAttackHash = Animator.StringToHash("MediumAttack");
+    private static readonly int HeavyAttackHash = Animator.StringToHash("HeavyAttack");
     private static readonly int DieHash = Animator.StringToHash("Die");
 
     private void Awake()
@@ -126,22 +130,68 @@ public class EnemyAnimationController : MonoBehaviour
 
     public void PlayAttackAnimation(Transform target = null)
     {
+        PlayBasicAttackAnimation(target);
+    }
+
+    public void PlayBasicAttackAnimation(Transform target = null)
+    {
         if (animator == null || isDead)
             return;
 
-        if (target != null)
-        {
-            Vector3 dir = target.position - transform.position;
-            dir.y = 0f;
+        FaceTarget(target);
 
-            if (dir.sqrMagnitude > 0.0001f)
-                RotateVisualToward(dir.normalized, true);
-        }
-
-        actionLockTimer = attackLockDuration;
+        actionLockTimer = basicAttackLockDuration;
         SetRunning(false);
-        animator.ResetTrigger(AttackHash);
+
+        ResetAttackTriggers();
         animator.SetTrigger(AttackHash);
+    }
+
+    public void PlayMediumAttackAnimation(Transform target = null)
+    {
+        if (animator == null || isDead)
+            return;
+
+        FaceTarget(target);
+
+        actionLockTimer = mediumAttackLockDuration;
+        SetRunning(false);
+
+        ResetAttackTriggers();
+        animator.SetTrigger(MediumAttackHash);
+    }
+
+    public void PlayHeavyAttackAnimation(Transform target = null)
+    {
+        if (animator == null || isDead)
+            return;
+
+        FaceTarget(target);
+
+        actionLockTimer = heavyAttackLockDuration;
+        SetRunning(false);
+
+        ResetAttackTriggers();
+        animator.SetTrigger(HeavyAttackHash);
+    }
+
+    private void FaceTarget(Transform target)
+    {
+        if (target == null)
+            return;
+
+        Vector3 dir = target.position - transform.position;
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude > 0.0001f)
+            RotateVisualToward(dir.normalized, true);
+    }
+
+    private void ResetAttackTriggers()
+    {
+        animator.ResetTrigger(AttackHash);
+        animator.ResetTrigger(MediumAttackHash);
+        animator.ResetTrigger(HeavyAttackHash);
     }
 
     private void HandleHealthChanged(int currentHp, int maxHp)
@@ -159,6 +209,8 @@ public class EnemyAnimationController : MonoBehaviour
         {
             actionLockTimer = hurtLockDuration;
             SetRunning(false);
+
+            ResetAttackTriggers();
             animator.ResetTrigger(HurtHash);
             animator.SetTrigger(HurtHash);
         }
@@ -176,7 +228,7 @@ public class EnemyAnimationController : MonoBehaviour
         SetRunning(false);
 
         animator.ResetTrigger(HurtHash);
-        animator.ResetTrigger(AttackHash);
+        ResetAttackTriggers();
         animator.SetTrigger(DieHash);
 
         if (disableAgentOnDeath && agent != null)

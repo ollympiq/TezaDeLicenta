@@ -99,7 +99,13 @@ public class SkillTooltipUI : MonoBehaviour
             return;
 
         if (nameText != null)
-            nameText.text = currentSkill.DisplayName;
+        {
+            string titleColor = currentSkill.SkillType == SkillType.Passive
+                ? UIRichTextColors.MagicPower
+                : UIRichTextColors.DamageTypeColor(currentSkill.DamageType);
+
+            nameText.text = UIRichTextColors.Paint(currentSkill.DisplayName, titleColor);
+        }
 
         if (detailsText != null)
             detailsText.text = BuildDetails(currentSkill);
@@ -117,54 +123,55 @@ public class SkillTooltipUI : MonoBehaviour
 
     private string BuildBasicAttackDetails(SkillDefinition fallbackSkill)
     {
-        WeaponDefinition weapon = previewCasterEquipment != null
-            ? previewCasterEquipment.EquippedWeaponDefinition
-            : null;
-
+        WeaponDefinition weapon = previewCasterEquipment != null ? previewCasterEquipment.EquippedWeaponDefinition : null;
         if (previewCasterStats == null || weapon == null)
             return BuildFallbackSkillDetails(fallbackSkill);
 
         DamagePreviewUtility.TryBuildWeaponPreview(previewCasterStats, weapon, out DamagePreviewInfo preview);
+        string dmgColor = UIRichTextColors.DamageTypeColor(weapon.DamageType);
 
         return
-     $"AP Cost: {weapon.ApCost}\n" +
-     $"Damage Type: {weapon.DamageType}\n" +
-     $"Damage: {preview.MinPreview}-{preview.MaxPreview}\n" +
-     $"Range: {weapon.Range:0.0}\n" +
-     $"Area Radius: -";
+            UIRichTextColors.Line("AP Cost", weapon.ApCost.ToString(), UIRichTextColors.AP) + "\n" +
+            UIRichTextColors.Line("Damage Type", weapon.DamageType.ToString(), dmgColor) + "\n" +
+            UIRichTextColors.Line("Damage", $"{preview.MinPreview}-{preview.MaxPreview}", dmgColor) + "\n" +
+            UIRichTextColors.Line("Range", $"{weapon.Range:0.0}", UIRichTextColors.White) + "\n" +
+            UIRichTextColors.Line("Area Radius", "-", UIRichTextColors.White);
     }
 
     private string BuildSkillDetails(SkillDefinition skill)
     {
         string areaText = skill.AreaMode == SkillAreaMode.Circle
-            ? $"Area Radius: {skill.AreaRadius:0.0}"
-            : "Area Radius: -";
+            ? UIRichTextColors.Line("Area Radius", $"{skill.AreaRadius:0.0}", UIRichTextColors.White)
+            : UIRichTextColors.Line("Area Radius", "-", UIRichTextColors.White);
 
         if (previewCasterStats == null)
             return BuildFallbackSkillDetails(skill);
 
         DamagePreviewUtility.TryBuildSkillPreview(previewCasterStats, skill, out DamagePreviewInfo preview);
+        string dmgColor = UIRichTextColors.DamageTypeColor(skill.DamageType);
 
         return
-    $"AP Cost: {skill.ApCost}\n" +
-    $"Damage Type: {skill.DamageType}\n" +
-    $"Damage: {preview.MinPreview}-{preview.MaxPreview}\n" +
-    $"Range: {skill.Range:0.0}\n" +
-    $"{areaText}";
+            UIRichTextColors.Line("AP Cost", skill.ApCost.ToString(), UIRichTextColors.AP) + "\n" +
+            UIRichTextColors.Line("Damage Type", skill.DamageType.ToString(), dmgColor) + "\n" +
+            UIRichTextColors.Line("Damage", $"{preview.MinPreview}-{preview.MaxPreview}", dmgColor) + "\n" +
+            UIRichTextColors.Line("Range", $"{skill.Range:0.0}", UIRichTextColors.White) + "\n" +
+            areaText;
     }
 
     private string BuildFallbackSkillDetails(SkillDefinition skill)
     {
         string areaText = skill.AreaMode == SkillAreaMode.Circle
-            ? $"Area Radius: {skill.AreaRadius:0.0}"
-            : "Area Radius: -";
+            ? UIRichTextColors.Line("Area Radius", $"{skill.AreaRadius:0.0}", UIRichTextColors.White)
+            : UIRichTextColors.Line("Area Radius", "-", UIRichTextColors.White);
+
+        string dmgColor = UIRichTextColors.DamageTypeColor(skill.DamageType);
 
         return
-    $"AP Cost: {skill.ApCost}\n" +
-    $"Damage Type: {skill.DamageType}\n" +
-    $"Damage: {skill.MinDamage}-{skill.MaxDamage}\n" +
-    $"Range: {skill.Range:0.0}\n" +
-    $"{areaText}";
+            UIRichTextColors.Line("AP Cost", skill.ApCost.ToString(), UIRichTextColors.AP) + "\n" +
+            UIRichTextColors.Line("Damage Type", skill.DamageType.ToString(), dmgColor) + "\n" +
+            UIRichTextColors.Line("Damage", $"{skill.MinDamage}-{skill.MaxDamage}", dmgColor) + "\n" +
+            UIRichTextColors.Line("Range", $"{skill.Range:0.0}", UIRichTextColors.White) + "\n" +
+            areaText;
     }
 
     private void UpdatePosition()

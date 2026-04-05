@@ -6,6 +6,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(CharacterStats))]
 [RequireComponent(typeof(PlayerNavMeshMover))]
 [RequireComponent(typeof(PlayerCombatController))]
+[RequireComponent(typeof(TurnActionLimiter))]
 public class PlayerTurnController : MonoBehaviour
 {
     [Header("References")]
@@ -15,6 +16,7 @@ public class PlayerTurnController : MonoBehaviour
     [SerializeField] private PlayerNavMeshMover mover;
     [SerializeField] private PlayerCombatController combatController;
     [SerializeField] private NavMeshAgent agent;
+    [SerializeField] private TurnActionLimiter actionLimiter;
 
     public CharacterHealth Health => health;
     public CharacterStats Stats => stats;
@@ -30,6 +32,7 @@ public class PlayerTurnController : MonoBehaviour
         if (mover == null) mover = GetComponent<PlayerNavMeshMover>();
         if (combatController == null) combatController = GetComponent<PlayerCombatController>();
         if (agent == null) agent = GetComponent<NavMeshAgent>();
+        if (actionLimiter == null) actionLimiter = GetComponent<TurnActionLimiter>();
 
         SetControlEnabled(false);
     }
@@ -43,6 +46,8 @@ public class PlayerTurnController : MonoBehaviour
 
         if (ap != null)
             ap.RestoreAllAP();
+
+        actionLimiter?.ResetTurnUsage();
 
         SetControlEnabled(true);
     }
