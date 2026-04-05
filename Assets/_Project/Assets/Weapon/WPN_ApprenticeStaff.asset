@@ -15,7 +15,7 @@ MonoBehaviour:
   itemId: new_item
   displayName: Apprentice Staff
   description: 
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: 69952ff862566a54eb579cdcfce9814f, type: 3}
   baseRarity: 0
   buyPrice: 10
   sellPrice: 5

@@ -15,6 +15,13 @@ public class ItemInstance
         this.stackCount = Mathf.Max(1, stackCount);
     }
 
+    public ItemInstance(ItemDefinition definition, ItemRarity rarity, int stackCount = 1)
+    {
+        this.definition = definition;
+        this.rarity = rarity;
+        this.stackCount = Mathf.Max(1, stackCount);
+    }
+
     public ItemDefinition Definition => definition;
     public ItemRarity Rarity => rarity;
     public int StackCount => stackCount;
@@ -48,5 +55,13 @@ public class ItemInstance
     public void RemoveFromStack(int amount)
     {
         stackCount = Mathf.Max(0, stackCount - amount);
+    }
+
+    public ItemInstance Clone()
+    {
+        if (!IsValid)
+            return null;
+
+        return new ItemInstance(definition, rarity, stackCount);
     }
 }

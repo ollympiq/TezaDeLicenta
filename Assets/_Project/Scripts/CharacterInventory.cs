@@ -97,6 +97,59 @@ public class CharacterInventory : MonoBehaviour
         return true;
     }
 
+    public bool CanAddItemInstance(ItemInstance instance)
+    {
+        if (instance == null || !instance.IsValid)
+            return false;
+
+        int remaining = instance.StackCount;
+        int freeSlots = capacity - items.Count;
+
+        if (instance.CanStack)
+        {
+            for (int i = 0; i < items.Count; i++)
+            {
+                ItemInstance existing = items[i];
+                if (existing == null || !existing.IsValid)
+                    continue;
+
+                if (!existing.CanStackWith(instance))
+                    continue;
+
+                int freeSpace = existing.MaxStack - existing.StackCount;
+                if (freeSpace <= 0)
+                    continue;
+
+                int toFit = Mathf.Min(freeSpace, remaining);
+                remaining -= toFit;
+
+                if (remaining <= 0)
+                    return true;
+            }
+        }
+
+        while (remaining > 0)
+        {
+            if (freeSlots <= 0)
+                return false;
+
+            int stackSize = instance.CanStack ? instance.MaxStack : 1;
+            remaining -= Mathf.Min(stackSize, remaining);
+            freeSlots--;
+        }
+
+        return true;
+    }
+
+    public bool CanAddDefinitionAmount(ItemDefinition definition, int amount)
+    {
+        if (definition == null || amount <= 0)
+            return false;
+
+        ItemInstance probe = new ItemInstance(definition, amount);
+        return CanAddItemInstance(probe);
+    }
+
     public ItemInstance TakeAt(int index)
     {
         if (index < 0 || index >= items.Count)
