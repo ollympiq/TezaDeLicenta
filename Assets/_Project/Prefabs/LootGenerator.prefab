@@ -1,0 +1,96 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &5912864777754304172
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8301131014757677283}
+  - component: {fileID: 2237022341499764996}
+  m_Layer: 0
+  m_Name: LootGenerator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8301131014757677283
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5912864777754304172}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -5.70582, y: -2.86082, z: -0.07661}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2237022341499764996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5912864777754304172}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d51861d75fce344ba04de0c55a4c4a9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LootGenerator
+  weaponPool: []
+  armorPool: []
+  potionPool: []
+  skillBookPool: []
+  tierSettings:
+  - tier: 0
+    minGold: 5
+    maxGold: 20
+    minItems: 0
+    maxItems: 1
+    weaponWeight: 20
+    armorWeight: 30
+    potionWeight: 45
+    skillBookWeight: 5
+    commonWeight: 70
+    uncommonWeight: 22
+    rareWeight: 7
+    epicWeight: 1
+    legendaryWeight: 0
+    uniqueWeight: 0
+  - tier: 1
+    minGold: 20
+    maxGold: 50
+    minItems: 1
+    maxItems: 2
+    weaponWeight: 30
+    armorWeight: 35
+    potionWeight: 25
+    skillBookWeight: 10
+    commonWeight: 35
+    uncommonWeight: 35
+    rareWeight: 20
+    epicWeight: 8
+    legendaryWeight: 2
+    uniqueWeight: 0
+  - tier: 2
+    minGold: 50
+    maxGold: 120
+    minItems: 2
+    maxItems: 4
+    weaponWeight: 35
+    armorWeight: 35
+    potionWeight: 15
+    skillBookWeight: 15
+    commonWeight: 10
+    uncommonWeight: 30
+    rareWeight: 30
+    epicWeight: 20
+    legendaryWeight: 8
+    uniqueWeight: 2

@@ -105,6 +105,16 @@ public class PlayerProgression : MonoBehaviour
         currentLevel = Mathf.Max(1, level);
         unspentStatPoints = Mathf.Max(0, points);
 
+        if (stats != null)
+        {
+            int delta = currentLevel - stats.BaseLevel;
+            if (delta > 0)
+                stats.AddBaseLevel(delta);
+        }
+
+        if (health != null)
+            health.ResetToFull();
+
         NotifyChanged();
     }
 
