@@ -40,17 +40,14 @@ public class CharacterStats : MonoBehaviour
     [Header("Attribute Bonuses")]
     [SerializeField] private int physicalPowerPerStrength = 2;
     [SerializeField] private int magicPowerPerIntelligence = 2;
-
     [SerializeField] private int hpPerConstitution = 12;
     [SerializeField] private float armorPerStrength = 0.5f;
     [SerializeField] private float physicalResistancePerStrength = 0.30f;
     [SerializeField] private float allResistancePerConstitution = 0.25f;
-
     [SerializeField] private float accuracyPerDexterity = 0.8f;
     [SerializeField] private float evasionPerDexterity = 0.5f;
     [SerializeField] private float critChancePerDexterity = 0.2f;
     [SerializeField] private int initiativePerDexterity = 1;
-
     [SerializeField] private float elementalDamageBonusPerIntelligence = 0.5f;
 
     [Header("Class Passive Bonuses")]
@@ -65,96 +62,150 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] private int mageMagicPowerBonus = 10;
     [SerializeField] private float mageElementalDamageBonus = 5f;
 
+    [Header("Runtime Scaling")]
+    [SerializeField] private int runtimeLevelOffset = 0;
+    [SerializeField] private int runtimeStrengthBonus = 0;
+    [SerializeField] private int runtimeConstitutionBonus = 0;
+    [SerializeField] private int runtimeDexterityBonus = 0;
+    [SerializeField] private int runtimeIntelligenceBonus = 0;
+    [SerializeField] private int runtimeBaseMaxHPBonus = 0;
+    [SerializeField] private int runtimeBaseArmorBonus = 0;
+    [SerializeField] private float runtimePhysicalResistanceBonus = 0f;
+    [SerializeField] private float runtimeFireResistanceBonus = 0f;
+    [SerializeField] private float runtimeEarthResistanceBonus = 0f;
+    [SerializeField] private float runtimeWindResistanceBonus = 0f;
+    [SerializeField] private float runtimeLightningResistanceBonus = 0f;
+    [SerializeField] private float runtimeIceResistanceBonus = 0f;
+
     public event Action OnStatsChanged;
 
     public CharacterClass Class => characterClass;
-    public int Level => level;
 
-    public int Strength => Mathf.Max(1, strength + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Strength)));
-    public int Constitution => Mathf.Max(1, constitution + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Constitution)));
-    public int Dexterity => Mathf.Max(1, dexterity + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Dexterity)));
-    public int Intelligence => Mathf.Max(1, intelligence + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Intelligence)));
+    public int BaseLevel => Mathf.Max(1, level);
+    public int Level => Mathf.Max(1, level + runtimeLevelOffset);
 
-    public int MaxHP => baseMaxHP + Constitution * hpPerConstitution + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MaxHP));
-    public int MaxAP => Mathf.Max(1, baseMaxAP + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MaxAP)));
+    public int BaseStrength => Mathf.Max(1, strength);
+    public int BaseConstitution => Mathf.Max(1, constitution);
+    public int BaseDexterity => Mathf.Max(1, dexterity);
+    public int BaseIntelligence => Mathf.Max(1, intelligence);
 
-    public int PhysicalPower => Strength * physicalPowerPerStrength + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.PhysicalPower));
-    public int MagicPower => Intelligence * magicPowerPerIntelligence + GetClassMagicPowerBonus() + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MagicPower));
+    public int Strength => Mathf.Max(1, strength + runtimeStrengthBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Strength)));
+    public int Constitution => Mathf.Max(1, constitution + runtimeConstitutionBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Constitution)));
+    public int Dexterity => Mathf.Max(1, dexterity + runtimeDexterityBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Dexterity)));
+    public int Intelligence => Mathf.Max(1, intelligence + runtimeIntelligenceBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Intelligence)));
 
-    public float CritChance => Mathf.Clamp(
-        3f +
-        Dexterity * critChancePerDexterity +
-        GetClassCritChanceBonus() +
-        GetEquipmentBonus(ItemBonusType.CritChance), 0f, 100f);
+    public int MaxHP =>
+        (baseMaxHP + runtimeBaseMaxHPBonus) +
+        Constitution * hpPerConstitution +
+        Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MaxHP));
 
-    public int Initiative => Mathf.RoundToInt(
-        10 +
-        Dexterity * initiativePerDexterity +
-        GetClassInitiativeBonus() +
-        GetEquipmentBonus(ItemBonusType.Initiative));
+    public int MaxAP =>
+        Mathf.Max(1, baseMaxAP + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MaxAP)));
 
-    public float Accuracy => Mathf.Clamp(
-        80f +
-        Dexterity * accuracyPerDexterity +
-        GetClassAccuracyBonus() +
-        GetEquipmentBonus(ItemBonusType.Accuracy), 0f, 100f);
+    public int PhysicalPower =>
+        Strength * physicalPowerPerStrength +
+        Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.PhysicalPower));
 
-    public float Evasion => Mathf.Clamp(
-        0f +
-        Dexterity * evasionPerDexterity +
-        GetClassEvasionBonus() +
-        GetEquipmentBonus(ItemBonusType.Evasion), 0f, 95f);
+    public int MagicPower =>
+        Intelligence * magicPowerPerIntelligence +
+        GetClassMagicPowerBonus() +
+        Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MagicPower));
 
-    public int Armor => Mathf.Max(0, Mathf.RoundToInt(
-        baseArmor +
-        Strength * armorPerStrength +
-        GetClassArmorBonus() +
-        GetEquipmentBonus(ItemBonusType.Armor) +
-        GetArmorFromEquipment()));
+    public float CritChance =>
+        Mathf.Clamp(
+            3f +
+            Dexterity * critChancePerDexterity +
+            GetClassCritChanceBonus() +
+            GetEquipmentBonus(ItemBonusType.CritChance),
+            0f, 100f);
 
-    public float PhysicalResistance => ClampResistance(
-        basePhysicalResistance +
-        Strength * physicalResistancePerStrength +
-        Constitution * allResistancePerConstitution +
-        GetClassPhysicalResistanceBonus() +
-        GetEquipmentBonus(ItemBonusType.PhysicalResistance) +
-        GetResistanceFromEquipment(DamageType.Physical));
+    public int Initiative =>
+        Mathf.RoundToInt(
+            10 +
+            Dexterity * initiativePerDexterity +
+            GetClassInitiativeBonus() +
+            GetEquipmentBonus(ItemBonusType.Initiative));
 
-    public float FireResistance => ClampResistance(
-        baseFireResistance +
-        Constitution * allResistancePerConstitution +
-        GetEquipmentBonus(ItemBonusType.FireResistance) +
-        GetResistanceFromEquipment(DamageType.Fire));
+    public float Accuracy =>
+        Mathf.Clamp(
+            80f +
+            Dexterity * accuracyPerDexterity +
+            GetClassAccuracyBonus() +
+            GetEquipmentBonus(ItemBonusType.Accuracy),
+            0f, 100f);
 
-    public float EarthResistance => ClampResistance(
-        baseEarthResistance +
-        Constitution * allResistancePerConstitution +
-        GetEquipmentBonus(ItemBonusType.EarthResistance) +
-        GetResistanceFromEquipment(DamageType.Earth));
+    public float Evasion =>
+        Mathf.Clamp(
+            0f +
+            Dexterity * evasionPerDexterity +
+            GetClassEvasionBonus() +
+            GetEquipmentBonus(ItemBonusType.Evasion),
+            0f, 95f);
 
-    public float WindResistance => ClampResistance(
-        baseWindResistance +
-        Constitution * allResistancePerConstitution +
-        GetEquipmentBonus(ItemBonusType.WindResistance) +
-        GetResistanceFromEquipment(DamageType.Wind));
+    public int Armor =>
+        Mathf.Max(0, Mathf.RoundToInt(
+            (baseArmor + runtimeBaseArmorBonus) +
+            Strength * armorPerStrength +
+            GetClassArmorBonus() +
+            GetEquipmentBonus(ItemBonusType.Armor) +
+            GetArmorFromEquipment()));
 
-    public float LightningResistance => ClampResistance(
-        baseLightningResistance +
-        Constitution * allResistancePerConstitution +
-        GetEquipmentBonus(ItemBonusType.LightningResistance) +
-        GetResistanceFromEquipment(DamageType.Lightning));
+    public float PhysicalResistance =>
+        ClampResistance(
+            basePhysicalResistance +
+            runtimePhysicalResistanceBonus +
+            Strength * physicalResistancePerStrength +
+            Constitution * allResistancePerConstitution +
+            GetClassPhysicalResistanceBonus() +
+            GetEquipmentBonus(ItemBonusType.PhysicalResistance) +
+            GetResistanceFromEquipment(DamageType.Physical));
 
-    public float IceResistance => ClampResistance(
-        baseIceResistance +
-        Constitution * allResistancePerConstitution +
-        GetEquipmentBonus(ItemBonusType.IceResistance) +
-        GetResistanceFromEquipment(DamageType.Ice));
+    public float FireResistance =>
+        ClampResistance(
+            baseFireResistance +
+            runtimeFireResistanceBonus +
+            Constitution * allResistancePerConstitution +
+            GetEquipmentBonus(ItemBonusType.FireResistance) +
+            GetResistanceFromEquipment(DamageType.Fire));
 
-    public float ElementalDamageBonusPercent => Mathf.Max(
-        0f,
-        Intelligence * elementalDamageBonusPerIntelligence +
-        GetClassElementalDamageBonus() +
-        GetEquipmentBonus(ItemBonusType.ElementalDamageBonusPercent));
+    public float EarthResistance =>
+        ClampResistance(
+            baseEarthResistance +
+            runtimeEarthResistanceBonus +
+            Constitution * allResistancePerConstitution +
+            GetEquipmentBonus(ItemBonusType.EarthResistance) +
+            GetResistanceFromEquipment(DamageType.Earth));
+
+    public float WindResistance =>
+        ClampResistance(
+            baseWindResistance +
+            runtimeWindResistanceBonus +
+            Constitution * allResistancePerConstitution +
+            GetEquipmentBonus(ItemBonusType.WindResistance) +
+            GetResistanceFromEquipment(DamageType.Wind));
+
+    public float LightningResistance =>
+        ClampResistance(
+            baseLightningResistance +
+            runtimeLightningResistanceBonus +
+            Constitution * allResistancePerConstitution +
+            GetEquipmentBonus(ItemBonusType.LightningResistance) +
+            GetResistanceFromEquipment(DamageType.Lightning));
+
+    public float IceResistance =>
+        ClampResistance(
+            baseIceResistance +
+            runtimeIceResistanceBonus +
+            Constitution * allResistancePerConstitution +
+            GetEquipmentBonus(ItemBonusType.IceResistance) +
+            GetResistanceFromEquipment(DamageType.Ice));
+
+    public float ElementalDamageBonusPercent =>
+        Mathf.Max(
+            0f,
+            Intelligence * elementalDamageBonusPerIntelligence +
+            GetClassElementalDamageBonus() +
+            GetEquipmentBonus(ItemBonusType.ElementalDamageBonusPercent));
 
     public float ArmorPhysicalReductionPercent => Mathf.Clamp(Armor * 0.2f, 0f, 70f);
 
@@ -209,6 +260,7 @@ public class CharacterStats : MonoBehaviour
         baseLightningResistance = 0f;
         baseIceResistance = 0f;
 
+        ClearRuntimeScaling(false);
         NotifyStatsChanged();
     }
 
@@ -250,16 +302,112 @@ public class CharacterStats : MonoBehaviour
         return 0f;
     }
 
+    public void AddBaseLevel(int amount = 1)
+    {
+        level = Mathf.Max(1, level + amount);
+        NotifyStatsChanged();
+    }
+
+    public void AddBasePrimaryAttributes(int strengthAmount, int constitutionAmount, int dexterityAmount, int intelligenceAmount)
+    {
+        strength = Mathf.Max(1, strength + strengthAmount);
+        constitution = Mathf.Max(1, constitution + constitutionAmount);
+        dexterity = Mathf.Max(1, dexterity + dexterityAmount);
+        intelligence = Mathf.Max(1, intelligence + intelligenceAmount);
+        NotifyStatsChanged();
+    }
+
+    public void AddBaseValues(int maxHpAmount, int maxApAmount, int armorAmount)
+    {
+        baseMaxHP = Mathf.Max(1, baseMaxHP + maxHpAmount);
+        baseMaxAP = Mathf.Max(1, baseMaxAP + maxApAmount);
+        baseArmor = Mathf.Max(0, baseArmor + armorAmount);
+        NotifyStatsChanged();
+    }
+
+    public void ClearRuntimeScaling(bool notify = true)
+    {
+        runtimeLevelOffset = 0;
+
+        runtimeStrengthBonus = 0;
+        runtimeConstitutionBonus = 0;
+        runtimeDexterityBonus = 0;
+        runtimeIntelligenceBonus = 0;
+
+        runtimeBaseMaxHPBonus = 0;
+        runtimeBaseArmorBonus = 0;
+
+        runtimePhysicalResistanceBonus = 0f;
+        runtimeFireResistanceBonus = 0f;
+        runtimeEarthResistanceBonus = 0f;
+        runtimeWindResistanceBonus = 0f;
+        runtimeLightningResistanceBonus = 0f;
+        runtimeIceResistanceBonus = 0f;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void SetRuntimeLevelOffset(int value, bool notify = true)
+    {
+        runtimeLevelOffset = Mathf.Max(0, value);
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void SetRuntimePrimaryAttributeBonuses(int strBonus, int conBonus, int dexBonus, int intBonus, bool notify = true)
+    {
+        runtimeStrengthBonus = strBonus;
+        runtimeConstitutionBonus = conBonus;
+        runtimeDexterityBonus = dexBonus;
+        runtimeIntelligenceBonus = intBonus;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void SetRuntimeBaseValueBonuses(int maxHpBonus, int armorBonus, bool notify = true)
+    {
+        runtimeBaseMaxHPBonus = maxHpBonus;
+        runtimeBaseArmorBonus = armorBonus;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void SetRuntimeResistanceBonuses(
+        float physicalBonus,
+        float fireBonus,
+        float earthBonus,
+        float windBonus,
+        float lightningBonus,
+        float iceBonus,
+        bool notify = true)
+    {
+        runtimePhysicalResistanceBonus = physicalBonus;
+        runtimeFireResistanceBonus = fireBonus;
+        runtimeEarthResistanceBonus = earthBonus;
+        runtimeWindResistanceBonus = windBonus;
+        runtimeLightningResistanceBonus = lightningBonus;
+        runtimeIceResistanceBonus = iceBonus;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
     public string GetStatsDisplayText()
     {
         StringBuilder sb = new StringBuilder();
 
         sb.AppendLine($"Class: {characterClass}");
+        sb.AppendLine($"Level: {Level}");
         sb.AppendLine($"Strength: {Strength}");
         sb.AppendLine($"Constitution: {Constitution}");
         sb.AppendLine($"Dexterity: {Dexterity}");
         sb.AppendLine($"Intelligence: {Intelligence}");
         sb.AppendLine();
+
         sb.AppendLine($"Max HP: {MaxHP}");
         sb.AppendLine($"Max AP: {MaxAP}");
         sb.AppendLine($"Physical Power: {PhysicalPower}");
@@ -270,6 +418,7 @@ public class CharacterStats : MonoBehaviour
         sb.AppendLine($"Accuracy: {Accuracy:F1}%");
         sb.AppendLine($"Evasion: {Evasion:F1}%");
         sb.AppendLine();
+
         sb.AppendLine($"Armor: {Armor}");
         sb.AppendLine($"Physical Resistance: {PhysicalResistance:F1}%");
         sb.AppendLine($"Fire Resistance: {FireResistance:F1}%");

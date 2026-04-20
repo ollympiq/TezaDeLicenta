@@ -88,6 +88,7 @@ public static class UIRichTextColors
             case ItemCategory.Weapon: return Physical;
             case ItemCategory.Armor: return Armor;
             case ItemCategory.Consumable: return AP;
+            case ItemCategory.SkillBook: return Intelligence;
             default: return White;
         }
     }

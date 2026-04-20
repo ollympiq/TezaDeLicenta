@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -62,13 +63,10 @@ public class ItemTooltipUI : MonoBehaviour
         currentItem = item;
 
         if (nameText != null)
-            nameText.text = item.DisplayName;
+            nameText.text = UIRichTextColors.Paint(item.DisplayName, UIRichTextColors.RarityColor(item.Rarity));
 
         if (detailsText != null)
             detailsText.text = BuildDetails(item);
-
-        if (nameText != null)
-            nameText.text = UIRichTextColors.Paint(item.DisplayName, UIRichTextColors.RarityColor(item.Rarity));
 
         panelRoot.gameObject.SetActive(true);
         panelRoot.SetAsLastSibling();
@@ -93,15 +91,9 @@ public class ItemTooltipUI : MonoBehaviour
 
         StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine(UIRichTextColors.Line(
-            "Rarity",
-            item.Rarity.ToString(),
-            UIRichTextColors.RarityColor(item.Rarity)));
-
-        sb.AppendLine(UIRichTextColors.Line(
-            "Category",
-            item.Definition.Category.ToString(),
-            UIRichTextColors.CategoryColor(item.Definition.Category)));
+        sb.AppendLine(UIRichTextColors.Line("Rarity", item.Rarity.ToString(), UIRichTextColors.RarityColor(item.Rarity)));
+        sb.AppendLine(UIRichTextColors.Line("Category", GetCategoryDisplayName(item.Definition.Category), GetCategoryColor(item.Definition.Category)));
+        sb.AppendLine(UIRichTextColors.Line("Item Level", item.ItemLevel.ToString(), UIRichTextColors.Level));
 
         if (!string.IsNullOrWhiteSpace(item.Definition.Description))
         {
@@ -109,118 +101,271 @@ public class ItemTooltipUI : MonoBehaviour
             sb.AppendLine(item.Definition.Description);
         }
 
-        WeaponDefinition weapon = item.WeaponDefinition;
-        if (weapon != null)
-        {
-            string dmgColor = UIRichTextColors.DamageTypeColor(weapon.DamageType);
-
-            sb.AppendLine();
-            sb.AppendLine(UIRichTextColors.Line(
-                "Damage",
-                $"{weapon.MinDamage}-{weapon.MaxDamage}",
-                dmgColor));
-
-            sb.AppendLine(UIRichTextColors.Line(
-                "Damage Type",
-                weapon.DamageType.ToString(),
-                dmgColor));
-
-            sb.AppendLine(UIRichTextColors.Line(
-                "Range",
-                $"{weapon.Range:0.0}",
-                UIRichTextColors.White));
-
-            sb.AppendLine(UIRichTextColors.Line(
-                "AP Cost",
-                weapon.ApCost.ToString(),
-                UIRichTextColors.AP));
-
-            sb.AppendLine(UIRichTextColors.Line(
-                "Weapon Family",
-                weapon.WeaponFamily.ToString(),
-                UIRichTextColors.White));
-
-            string scalingText = BuildScalingText(weapon);
-            if (!string.IsNullOrEmpty(scalingText))
-            {
-                sb.AppendLine(UIRichTextColors.Line(
-                    "Scaling",
-                    scalingText,
-                    UIRichTextColors.White));
-            }
-        }
-
-        ArmorDefinition armor = item.ArmorDefinition;
-        if (armor != null)
-        {
-            sb.AppendLine();
-            sb.AppendLine(UIRichTextColors.Line(
-                "Armor",
-                armor.ArmorValue.ToString(),
-                UIRichTextColors.Armor));
-
-            AppendIfNonZero(sb, "Physical Resistance", armor.PhysicalResistance, "%", UIRichTextColors.Physical);
-            AppendIfNonZero(sb, "Fire Resistance", armor.FireResistance, "%", UIRichTextColors.Fire);
-            AppendIfNonZero(sb, "Earth Resistance", armor.EarthResistance, "%", UIRichTextColors.Earth);
-            AppendIfNonZero(sb, "Wind Resistance", armor.WindResistance, "%", UIRichTextColors.Wind);
-            AppendIfNonZero(sb, "Lightning Resistance", armor.LightningResistance, "%", UIRichTextColors.Lightning);
-            AppendIfNonZero(sb, "Ice Resistance", armor.IceResistance, "%", UIRichTextColors.Ice);
-        }
-
-        PotionDefinition potion = item.PotionDefinition;
-        if (potion != null)
-        {
-            sb.AppendLine();
-            AppendIfNonZero(sb, "Heal", potion.HealAmount, "", UIRichTextColors.HP);
-            AppendIfNonZero(sb, "Restore AP", potion.RestoreAP, "", UIRichTextColors.AP);
-        }
-
-        var modifiers = item.Definition.StatModifiers;
-        if (modifiers != null && modifiers.Count > 0)
-        {
-            sb.AppendLine();
-            sb.AppendLine("Bonuses:");
-
-            for (int i = 0; i < modifiers.Count; i++)
-            {
-                ItemStatModifier mod = modifiers[i];
-                if (mod == null) continue;
-
-                string color = UIRichTextColors.BonusTypeColor(mod.BonusType);
-                sb.AppendLine(UIRichTextColors.Paint($"+{mod.Value:0.##} {mod.BonusType}", color));
-            }
-        }
+        AppendWeaponSection(sb, item);
+        AppendArmorSection(sb, item);
+        AppendPotionSection(sb, item);
+        AppendSkillBookSection(sb, item);
+        AppendBonusSection(sb, item);
 
         if (item.StackCount > 1)
         {
             sb.AppendLine();
-            sb.AppendLine(UIRichTextColors.Line(
-                "Stack",
-                item.StackCount.ToString(),
-                UIRichTextColors.White));
+            sb.AppendLine(UIRichTextColors.Line("Stack", item.StackCount.ToString(), UIRichTextColors.White));
         }
 
-        return sb.ToString();
+        return sb.ToString().TrimEnd();
+    }
+
+    private void AppendWeaponSection(StringBuilder sb, ItemInstance item)
+    {
+        WeaponDefinition weapon = item.WeaponDefinition;
+        if (weapon == null)
+            return;
+
+        string dmgColor = UIRichTextColors.DamageTypeColor(weapon.DamageType);
+
+        sb.AppendLine();
+        sb.AppendLine(UIRichTextColors.Line("Damage", $"{item.GetWeaponMinDamage()}-{item.GetWeaponMaxDamage()}", dmgColor));
+        sb.AppendLine(UIRichTextColors.Line("Damage Type", weapon.DamageType.ToString(), dmgColor));
+        sb.AppendLine(UIRichTextColors.Line("Range", $"{weapon.Range:0.0}", UIRichTextColors.White));
+        sb.AppendLine(UIRichTextColors.Line("AP Cost", weapon.ApCost.ToString(), UIRichTextColors.AP));
+        sb.AppendLine(UIRichTextColors.Line("Weapon Family", weapon.WeaponFamily.ToString(), UIRichTextColors.White));
+
+        string scalingText = BuildWeaponScalingText(weapon);
+        if (!string.IsNullOrEmpty(scalingText))
+            sb.AppendLine(UIRichTextColors.Line("Scaling", scalingText, UIRichTextColors.White));
+    }
+
+    private void AppendArmorSection(StringBuilder sb, ItemInstance item)
+    {
+        ArmorDefinition armor = item.ArmorDefinition;
+        if (armor == null)
+            return;
+
+        sb.AppendLine();
+
+        int totalArmor = item.GetArmorValue();
+        if (totalArmor > 0)
+            sb.AppendLine(UIRichTextColors.Line("Armor", totalArmor.ToString(), UIRichTextColors.Armor));
+
+        AppendResistanceLine(sb, item, ItemBonusType.PhysicalResistance, armor.PhysicalResistance, "Physical Resistance", UIRichTextColors.Physical);
+        AppendResistanceLine(sb, item, ItemBonusType.FireResistance, armor.FireResistance, "Fire Resistance", UIRichTextColors.Fire);
+        AppendResistanceLine(sb, item, ItemBonusType.EarthResistance, armor.EarthResistance, "Earth Resistance", UIRichTextColors.Earth);
+        AppendResistanceLine(sb, item, ItemBonusType.WindResistance, armor.WindResistance, "Wind Resistance", UIRichTextColors.Wind);
+        AppendResistanceLine(sb, item, ItemBonusType.LightningResistance, armor.LightningResistance, "Lightning Resistance", UIRichTextColors.Lightning);
+        AppendResistanceLine(sb, item, ItemBonusType.IceResistance, armor.IceResistance, "Ice Resistance", UIRichTextColors.Ice);
+    }
+
+    private void AppendPotionSection(StringBuilder sb, ItemInstance item)
+    {
+        PotionDefinition potion = item.PotionDefinition;
+        if (potion == null)
+            return;
+
+        sb.AppendLine();
+        AppendIfNonZero(sb, "Heal", potion.HealAmount, "", UIRichTextColors.HP);
+        AppendIfNonZero(sb, "Restore AP", potion.RestoreAP, "", UIRichTextColors.AP);
+    }
+
+    private void AppendSkillBookSection(StringBuilder sb, ItemInstance item)
+    {
+        SkillBookDefinition skillBook = item.SkillBookDefinition;
+        if (skillBook == null)
+            return;
+
+        sb.AppendLine();
+
+        SkillDefinition skill = skillBook.TaughtSkill;
+        if (skill == null)
+        {
+            sb.AppendLine(UIRichTextColors.Line("Teaches", "No Skill Assigned", UIRichTextColors.Intelligence));
+            return;
+        }
+
+        string dmgColor = UIRichTextColors.DamageTypeColor(skill.DamageType);
+
+        sb.AppendLine(UIRichTextColors.Line("Teaches", skill.DisplayName, UIRichTextColors.Intelligence));
+        sb.AppendLine(UIRichTextColors.Line("Skill Type", skill.SkillType.ToString(), UIRichTextColors.White));
+        sb.AppendLine(UIRichTextColors.Line("Targeting", skill.TargetingMode.ToString(), UIRichTextColors.White));
+        sb.AppendLine(UIRichTextColors.Line("Area", skill.AreaMode.ToString(), UIRichTextColors.White));
+        sb.AppendLine(UIRichTextColors.Line("Damage", $"{skill.MinDamage}-{skill.MaxDamage}", dmgColor));
+        sb.AppendLine(UIRichTextColors.Line("Damage Type", skill.DamageType.ToString(), dmgColor));
+        sb.AppendLine(UIRichTextColors.Line("Power Scaling", $"x{skill.PowerScaling:0.##}", UIRichTextColors.MagicPower));
+        sb.AppendLine(UIRichTextColors.Line("AP Cost", skill.ApCost.ToString(), UIRichTextColors.AP));
+        sb.AppendLine(UIRichTextColors.Line("Range", $"{skill.Range:0.0}", UIRichTextColors.White));
+
+        if (skill.AreaRadius > 0f && skill.AreaMode != SkillAreaMode.SingleTarget)
+            sb.AppendLine(UIRichTextColors.Line("Area Radius", $"{skill.AreaRadius:0.0}", UIRichTextColors.White));
+
+        if (skill.BonusAccuracy > 0f)
+            sb.AppendLine(UIRichTextColors.Line("Bonus Accuracy", $"{skill.BonusAccuracy:0.##}", UIRichTextColors.Accuracy));
+
+        sb.AppendLine(UIRichTextColors.Line("Can Crit", skill.CanCrit ? "Yes" : "No", skill.CanCrit ? UIRichTextColors.Crit : UIRichTextColors.White));
+    }
+
+    private void AppendBonusSection(StringBuilder sb, ItemInstance item)
+    {
+        StringBuilder bonusLines = new StringBuilder();
+
+        Array values = Enum.GetValues(typeof(ItemBonusType));
+        for (int i = 0; i < values.Length; i++)
+        {
+            ItemBonusType bonusType = (ItemBonusType)values.GetValue(i);
+
+            if (IsShownInMainSection(item, bonusType))
+                continue;
+
+            float total = GetTotalBonus(item, bonusType);
+            if (Mathf.Abs(total) < 0.001f)
+                continue;
+
+            string color = UIRichTextColors.BonusTypeColor(bonusType);
+            string label = GetBonusDisplayName(bonusType);
+            string suffix = IsPercentBonus(bonusType) ? "%" : "";
+
+            bonusLines.AppendLine(UIRichTextColors.Line(label, $"+{total:0.##}{suffix}", color));
+        }
+
+        if (bonusLines.Length <= 0)
+            return;
+
+        sb.AppendLine();
+        sb.AppendLine("Bonuses:");
+        sb.Append(bonusLines);
+    }
+
+    private void AppendResistanceLine(StringBuilder sb, ItemInstance item, ItemBonusType bonusType, float baseValue, string label, string color)
+    {
+        float total = baseValue + GetDefinitionModifierTotal(item.Definition, bonusType) + item.GetRolledBonus(bonusType);
+        AppendIfNonZero(sb, label, total, "%", color);
+    }
+
+    private float GetTotalBonus(ItemInstance item, ItemBonusType bonusType)
+    {
+        if (item == null || item.Definition == null)
+            return 0f;
+
+        return GetDefinitionModifierTotal(item.Definition, bonusType) + item.GetRolledBonus(bonusType);
+    }
+
+    private float GetDefinitionModifierTotal(ItemDefinition definition, ItemBonusType bonusType)
+    {
+        if (definition == null || definition.StatModifiers == null)
+            return 0f;
+
+        float total = 0f;
+        for (int i = 0; i < definition.StatModifiers.Count; i++)
+        {
+            ItemStatModifier mod = definition.StatModifiers[i];
+            if (mod != null && mod.BonusType == bonusType)
+                total += mod.Value;
+        }
+
+        return total;
+    }
+
+    private bool IsShownInMainSection(ItemInstance item, ItemBonusType bonusType)
+    {
+        if (item == null)
+            return false;
+
+        if (item.ArmorDefinition == null)
+            return false;
+
+        switch (bonusType)
+        {
+            case ItemBonusType.Armor:
+            case ItemBonusType.PhysicalResistance:
+            case ItemBonusType.FireResistance:
+            case ItemBonusType.EarthResistance:
+            case ItemBonusType.WindResistance:
+            case ItemBonusType.LightningResistance:
+            case ItemBonusType.IceResistance:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private bool IsPercentBonus(ItemBonusType bonusType)
+    {
+        switch (bonusType)
+        {
+            case ItemBonusType.CritChance:
+            case ItemBonusType.PhysicalResistance:
+            case ItemBonusType.FireResistance:
+            case ItemBonusType.EarthResistance:
+            case ItemBonusType.WindResistance:
+            case ItemBonusType.LightningResistance:
+            case ItemBonusType.IceResistance:
+            case ItemBonusType.ElementalDamageBonusPercent:
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
+    private string GetBonusDisplayName(ItemBonusType bonusType)
+    {
+        switch (bonusType)
+        {
+            case ItemBonusType.MaxHP: return "Max HP";
+            case ItemBonusType.MaxAP: return "Max AP";
+            case ItemBonusType.PhysicalPower: return "Physical Power";
+            case ItemBonusType.MagicPower: return "Magic Power";
+            case ItemBonusType.CritChance: return "Crit Chance";
+            case ItemBonusType.PhysicalResistance: return "Physical Resistance";
+            case ItemBonusType.FireResistance: return "Fire Resistance";
+            case ItemBonusType.EarthResistance: return "Earth Resistance";
+            case ItemBonusType.WindResistance: return "Wind Resistance";
+            case ItemBonusType.LightningResistance: return "Lightning Resistance";
+            case ItemBonusType.IceResistance: return "Ice Resistance";
+            case ItemBonusType.ElementalDamageBonusPercent: return "Elemental Damage";
+            default: return bonusType.ToString();
+        }
+    }
+
+    private string GetCategoryDisplayName(ItemCategory category)
+    {
+        switch (category)
+        {
+            case ItemCategory.SkillBook: return "Skill Book";
+            default: return category.ToString();
+        }
+    }
+
+    private string GetCategoryColor(ItemCategory category)
+    {
+        switch (category)
+        {
+            case ItemCategory.SkillBook:
+                return UIRichTextColors.Intelligence;
+
+            default:
+                return UIRichTextColors.CategoryColor(category);
+        }
     }
 
     private void AppendIfNonZero(StringBuilder sb, string label, float value, string suffix, string color)
     {
-        if (Mathf.Abs(value) < 0.001f) return;
+        if (Mathf.Abs(value) < 0.001f)
+            return;
+
         sb.AppendLine(UIRichTextColors.Line(label, $"{value:0.##}{suffix}", color));
     }
 
-    private string BuildScalingText(WeaponDefinition weapon)
+    private string BuildWeaponScalingText(WeaponDefinition weapon)
     {
         if (weapon == null || weapon.Scaling == null)
             return string.Empty;
 
         StringBuilder sb = new StringBuilder();
-
         AppendScaling(sb, "STR", weapon.Scaling.StrengthScale, UIRichTextColors.Strength);
         AppendScaling(sb, "CON", weapon.Scaling.ConstitutionScale, UIRichTextColors.Constitution);
         AppendScaling(sb, "DEX", weapon.Scaling.DexterityScale, UIRichTextColors.Dexterity);
         AppendScaling(sb, "INT", weapon.Scaling.IntelligenceScale, UIRichTextColors.Intelligence);
-
         return sb.ToString().Trim();
     }
 
@@ -237,14 +382,6 @@ public class ItemTooltipUI : MonoBehaviour
         sb.Append(UIRichTextColors.Paint($"x{value:0.##}", color));
     }
 
-    private void AppendIfNonZero(StringBuilder sb, string label, float value, string suffix)
-    {
-        if (Mathf.Abs(value) < 0.001f)
-            return;
-
-        sb.AppendLine($"{label}: {value:0.##}{suffix}");
-    }
-
     private void UpdatePosition()
     {
         if (Mouse.current == null || panelRoot == null || rootCanvas == null)
@@ -258,22 +395,13 @@ public class ItemTooltipUI : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
 
         Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-        Camera uiCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-            ? null
-            : rootCanvas.worldCamera;
+        Camera uiCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
 
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRect,
-                mouseScreenPos,
-                uiCamera,
-                out Vector2 localMousePos))
-        {
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, mouseScreenPos, uiCamera, out Vector2 localMousePos))
             return;
-        }
 
         float panelWidth = panelRoot.rect.width;
         float panelHeight = panelRoot.rect.height;
-
         float canvasHalfWidth = canvasRect.rect.width * 0.5f;
         float canvasHalfHeight = canvasRect.rect.height * 0.5f;
 
@@ -292,7 +420,6 @@ public class ItemTooltipUI : MonoBehaviour
 
         float minX = -canvasHalfWidth + screenPadding + panelWidth * panelRoot.pivot.x;
         float maxX = canvasHalfWidth - screenPadding - panelWidth * (1f - panelRoot.pivot.x);
-
         float minY = -canvasHalfHeight + screenPadding + panelHeight * panelRoot.pivot.y;
         float maxY = canvasHalfHeight - screenPadding - panelHeight * (1f - panelRoot.pivot.y);
 

@@ -7,21 +7,29 @@ public class EnemyLootContainer : MonoBehaviour
     [Header("Loot Identity")]
     [SerializeField] private EnemyLootTier lootTier = EnemyLootTier.Normal;
 
+    [Header("Generation")]
+    [SerializeField] private bool useGeneratedLoot = true;
+    
+
     [Header("Debug Preview Loot")]
-    [SerializeField] private List<ItemDefinition> debugPreviewLootDefinitions = new();
+    [SerializeField] private List<ItemDefinition> debugPreviewLootDefinitions = new List<ItemDefinition>();
 
     private CharacterHealth health;
-    private readonly List<ItemInstance> lootItems = new();
+    private readonly List<ItemInstance> lootItems = new List<ItemInstance>();
+    private int goldAmount;
 
     public EnemyLootTier LootTier => lootTier;
     public bool IsLootable { get; private set; }
     public IReadOnlyList<ItemInstance> LootItems => lootItems;
     public int ItemCount => lootItems.Count;
+    public int GoldAmount => Mathf.Max(0, goldAmount);
 
     private void Awake()
     {
         health = GetComponent<CharacterHealth>();
-        RebuildDebugPreviewLoot();
+
+        if (!useGeneratedLoot)
+            RebuildDebugPreviewLoot();
     }
 
     private void OnEnable()
@@ -38,12 +46,41 @@ public class EnemyLootContainer : MonoBehaviour
 
     private void HandleDied(CharacterHealth deadHealth)
     {
+        if (useGeneratedLoot)
+            GenerateLootNow();
+        else
+            RebuildDebugPreviewLoot();
+
         IsLootable = true;
     }
 
+    public void GenerateLootNow()
+    {
+        lootItems.Clear();
+        goldAmount = 0;
+
+        LootGenerator generator = LootGenerator.Instance;
+        if (generator == null)
+        {
+            Debug.LogWarning("EnemyLootContainer: nu exista LootGenerator in scena.");
+            return;
+        }
+
+        GeneratedLootResult result = generator.GenerateLoot(lootTier, ResolveItemLevel());
+        goldAmount = result.GoldAmount;
+        SetLootItems(result.Items);
+    }
+    private int ResolveItemLevel()
+    {
+        if (CurrentLevelContext.Instance != null)
+            return CurrentLevelContext.Instance.CurrentLevel;
+
+        return 1;
+    }
     public void RebuildDebugPreviewLoot()
     {
         lootItems.Clear();
+        goldAmount = 0;
 
         for (int i = 0; i < debugPreviewLootDefinitions.Count; i++)
         {
@@ -74,6 +111,13 @@ public class EnemyLootContainer : MonoBehaviour
         return item;
     }
 
+    public int TakeGold()
+    {
+        int taken = GoldAmount;
+        goldAmount = 0;
+        return taken;
+    }
+
     public void SetLootItems(IEnumerable<ItemInstance> newItems)
     {
         lootItems.Clear();
@@ -91,5 +135,6 @@ public class EnemyLootContainer : MonoBehaviour
     public void ClearLoot()
     {
         lootItems.Clear();
+        goldAmount = 0;
     }
 }

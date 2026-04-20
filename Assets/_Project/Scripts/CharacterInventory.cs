@@ -187,24 +187,67 @@ public class CharacterInventory : MonoBehaviour
             return false;
 
         ItemInstance item = items[index];
-        PotionDefinition potion = item.PotionDefinition;
+        if (item == null || !item.IsValid)
+            return false;
 
+        if (TryUsePotion(item, user))
+        {
+            RemoveAt(index, 1);
+            return true;
+        }
+
+        if (TryUseSkillBook(item, user))
+        {
+            RemoveAt(index, 1);
+            return true;
+        }
+
+        return false;
+    }
+    private bool TryUsePotion(ItemInstance item, GameObject user)
+    {
+        PotionDefinition potion = item.PotionDefinition;
         if (potion == null)
             return false;
 
         CharacterHealth health = user.GetComponent<CharacterHealth>();
         PlayerAP playerAP = user.GetComponent<PlayerAP>();
 
+        bool used = false;
+
         if (health != null && potion.HealAmount > 0)
+        {
             health.Heal(potion.HealAmount);
+            used = true;
+        }
 
         if (playerAP != null && potion.RestoreAP > 0)
+        {
             playerAP.RestoreAP(potion.RestoreAP);
+            used = true;
+        }
 
-        RemoveAt(index, 1);
-        return true;
+        return used;
     }
 
+    private bool TryUseSkillBook(ItemInstance item, GameObject user)
+    {
+        SkillBookDefinition skillBook = item.SkillBookDefinition;
+        if (skillBook == null || skillBook.TaughtSkill == null)
+            return false;
+
+        PlayerSkillLoadout loadout = user.GetComponent<PlayerSkillLoadout>();
+        if (loadout == null)
+            return false;
+
+        if (loadout.HasSkill(skillBook.TaughtSkill))
+        {
+            Debug.Log("Player already knows this skill.");
+            return false;
+        }
+
+        return loadout.LearnSkill(skillBook.TaughtSkill, true);
+    }
     private void AddStartingItems()
     {
         if (startingItems == null || startingItems.Count == 0)

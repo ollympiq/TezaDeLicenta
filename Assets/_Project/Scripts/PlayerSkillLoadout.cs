@@ -23,11 +23,13 @@ public class PlayerSkillLoadout : MonoBehaviour
     {
         EnsureSetup();
     }
+
     private void Start()
     {
         EnsureSetup();
         OnLoadoutChanged?.Invoke();
     }
+
     private void OnValidate()
     {
         EnsureSetup();
@@ -35,6 +37,9 @@ public class PlayerSkillLoadout : MonoBehaviour
 
     private void EnsureSetup()
     {
+        if (availableSkills == null)
+            availableSkills = new List<SkillDefinition>();
+
         if (equippedSkills == null || equippedSkills.Length != 8)
             equippedSkills = new SkillDefinition[8];
 
@@ -53,6 +58,43 @@ public class PlayerSkillLoadout : MonoBehaviour
         return equippedSkills[slotIndex];
     }
 
+    public bool HasSkill(SkillDefinition skill)
+    {
+        if (skill == null)
+            return false;
+
+        EnsureSetup();
+        return availableSkills.Contains(skill);
+    }
+
+    public bool LearnSkill(SkillDefinition skill, bool autoEquipToFirstFreeSlot = false)
+    {
+        if (skill == null)
+            return false;
+
+        EnsureSetup();
+
+        if (availableSkills.Contains(skill))
+            return false;
+
+        availableSkills.Add(skill);
+
+        if (autoEquipToFirstFreeSlot)
+        {
+            for (int i = 1; i < equippedSkills.Length; i++)
+            {
+                if (equippedSkills[i] == null)
+                {
+                    equippedSkills[i] = skill;
+                    break;
+                }
+            }
+        }
+
+        OnLoadoutChanged?.Invoke();
+        return true;
+    }
+
     public bool AssignSkillToSlot(SkillDefinition skill, int slotIndex)
     {
         if (skill == null)
@@ -63,15 +105,15 @@ public class PlayerSkillLoadout : MonoBehaviour
 
         EnsureSetup();
 
-        // Slotul 0 ramane Basic Attack
         if (slotIndex == 0)
             return skill == defaultBasicAttack;
 
-        // Basic Attack nu poate fi pus in alte sloturi
         if (skill == defaultBasicAttack)
             return false;
 
-        // Un skill apare o singura data in bara
+        if (!availableSkills.Contains(skill))
+            return false;
+
         for (int i = 1; i < equippedSkills.Length; i++)
         {
             if (equippedSkills[i] == skill)

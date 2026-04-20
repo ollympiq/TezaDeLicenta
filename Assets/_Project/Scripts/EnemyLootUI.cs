@@ -7,11 +7,13 @@ public class EnemyLootUI : MonoBehaviour
 
     [Header("References")]
     [SerializeField] private CharacterInventory playerInventory;
+    [SerializeField] private PlayerWallet playerWallet;
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private EnemyLootSlotUI[] slots;
 
     private EnemyLootContainer currentContainer;
+    private int lastCollectedGold;
 
     public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
     public EnemyLootContainer CurrentContainer => currentContainer;
@@ -28,6 +30,9 @@ public class EnemyLootUI : MonoBehaviour
 
         if (playerInventory == null)
             playerInventory = FindFirstObjectByType<CharacterInventory>();
+
+        if (playerWallet == null)
+            playerWallet = FindFirstObjectByType<PlayerWallet>();
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -47,9 +52,16 @@ public class EnemyLootUI : MonoBehaviour
         }
 
         currentContainer = container;
+        CollectGoldFromCurrentContainer();
+
+        if (currentContainer.ItemCount <= 0)
+        {
+            Hide();
+            return;
+        }
 
         if (titleText != null)
-            titleText.text = BuildTitle(container);
+            titleText.text = BuildTitle(currentContainer);
 
         panelRoot.SetActive(true);
         RefreshNow();
@@ -58,6 +70,7 @@ public class EnemyLootUI : MonoBehaviour
     public void Hide()
     {
         currentContainer = null;
+        lastCollectedGold = 0;
 
         if (panelRoot != null)
             panelRoot.SetActive(false);
@@ -82,7 +95,6 @@ public class EnemyLootUI : MonoBehaviour
                 continue;
 
             ItemInstance item = currentContainer.GetItemAt(i);
-
             if (item != null)
                 slots[i].Refresh(item);
             else
@@ -99,7 +111,6 @@ public class EnemyLootUI : MonoBehaviour
         if (item == null || !item.IsValid)
             return;
 
-        // verificam intai ca sa nu scoatem itemul degeaba
         if (!playerInventory.CanAddItemInstance(item))
         {
             Debug.Log("Inventarul este plin.");
@@ -126,6 +137,21 @@ public class EnemyLootUI : MonoBehaviour
             Hide();
     }
 
+    private void CollectGoldFromCurrentContainer()
+    {
+        lastCollectedGold = 0;
+
+        if (currentContainer == null || playerWallet == null)
+            return;
+
+        int gold = currentContainer.TakeGold();
+        if (gold <= 0)
+            return;
+
+        playerWallet.AddGold(gold);
+        lastCollectedGold = gold;
+    }
+
     private void ClearAll()
     {
         if (slots == null)
@@ -140,12 +166,25 @@ public class EnemyLootUI : MonoBehaviour
 
     private string BuildTitle(EnemyLootContainer container)
     {
-        string tierText = container.LootTier switch
+        string tierText;
+
+        switch (container.LootTier)
         {
-            EnemyLootTier.MiniBoss => "Mini Boss Loot",
-            EnemyLootTier.Boss => "Boss Loot",
-            _ => "Loot"
-        };
+            case EnemyLootTier.MiniBoss:
+                tierText = "Mini Boss Loot";
+                break;
+
+            case EnemyLootTier.Boss:
+                tierText = "Boss Loot";
+                break;
+
+            default:
+                tierText = "Loot";
+                break;
+        }
+
+        if (lastCollectedGold > 0)
+            return tierText + "  (+" + lastCollectedGold + " Gold)";
 
         return tierText;
     }

@@ -96,12 +96,8 @@ public class CharacterEquipment : MonoBehaviour
             if (item?.Definition == null)
                 continue;
 
-            var modifiers = item.Definition.StatModifiers;
-            for (int i = 0; i < modifiers.Count; i++)
-            {
-                if (modifiers[i].BonusType == bonusType)
-                    total += modifiers[i].Value;
-            }
+            total += GetDefinitionModifierTotal(item.Definition, bonusType);
+            total += item.GetRolledBonus(bonusType);
         }
 
         return total;
@@ -113,33 +109,37 @@ public class CharacterEquipment : MonoBehaviour
 
         foreach (ItemInstance item in GetAllEquippedItems())
         {
-            ArmorDefinition armor = item?.ArmorDefinition;
-            if (armor != null)
-                total += armor.ArmorValue;
+            if (item == null)
+                continue;
+
+            if (item.ArmorDefinition != null)
+                total += item.ArmorDefinition.ArmorValue;
+
+            total += Mathf.RoundToInt(GetDefinitionModifierTotal(item.Definition, ItemBonusType.Armor));
+            total += Mathf.RoundToInt(item.GetRolledBonus(ItemBonusType.Armor));
         }
 
-        return total;
+        return Mathf.Max(0, total);
     }
 
     public float GetResistanceBonus(DamageType damageType)
     {
         float total = 0f;
+        ItemBonusType resistanceBonusType = ToResistanceBonusType(damageType);
 
         foreach (ItemInstance item in GetAllEquippedItems())
         {
-            ArmorDefinition armor = item?.ArmorDefinition;
-            if (armor == null)
+            if (item == null)
                 continue;
 
-            switch (damageType)
-            {
-                case DamageType.Physical: total += armor.PhysicalResistance; break;
-                case DamageType.Fire: total += armor.FireResistance; break;
-                case DamageType.Earth: total += armor.EarthResistance; break;
-                case DamageType.Wind: total += armor.WindResistance; break;
-                case DamageType.Lightning: total += armor.LightningResistance; break;
-                case DamageType.Ice: total += armor.IceResistance; break;
-            }
+            ArmorDefinition armor = item.ArmorDefinition;
+            if (armor != null)
+                total += GetBaseArmorResistance(armor, damageType);
+
+            if (item.Definition != null)
+                total += GetDefinitionModifierTotal(item.Definition, resistanceBonusType);
+
+            total += item.GetRolledBonus(resistanceBonusType);
         }
 
         return total;
@@ -217,6 +217,50 @@ public class CharacterEquipment : MonoBehaviour
             case EquipmentSlot.Belt: beltItem = cleanItem; break;
             case EquipmentSlot.Ring: ringItem = cleanItem; break;
             case EquipmentSlot.Amulet: amuletItem = cleanItem; break;
+        }
+    }
+
+    private float GetDefinitionModifierTotal(ItemDefinition definition, ItemBonusType bonusType)
+    {
+        if (definition == null)
+            return 0f;
+
+        float total = 0f;
+        var modifiers = definition.StatModifiers;
+        for (int i = 0; i < modifiers.Count; i++)
+        {
+            if (modifiers[i].BonusType == bonusType)
+                total += modifiers[i].Value;
+        }
+
+        return total;
+    }
+
+    private float GetBaseArmorResistance(ArmorDefinition armor, DamageType damageType)
+    {
+        switch (damageType)
+        {
+            case DamageType.Physical: return armor.PhysicalResistance;
+            case DamageType.Fire: return armor.FireResistance;
+            case DamageType.Earth: return armor.EarthResistance;
+            case DamageType.Wind: return armor.WindResistance;
+            case DamageType.Lightning: return armor.LightningResistance;
+            case DamageType.Ice: return armor.IceResistance;
+            default: return 0f;
+        }
+    }
+
+    private ItemBonusType ToResistanceBonusType(DamageType damageType)
+    {
+        switch (damageType)
+        {
+            case DamageType.Physical: return ItemBonusType.PhysicalResistance;
+            case DamageType.Fire: return ItemBonusType.FireResistance;
+            case DamageType.Earth: return ItemBonusType.EarthResistance;
+            case DamageType.Wind: return ItemBonusType.WindResistance;
+            case DamageType.Lightning: return ItemBonusType.LightningResistance;
+            case DamageType.Ice: return ItemBonusType.IceResistance;
+            default: return ItemBonusType.PhysicalResistance;
         }
     }
 }
