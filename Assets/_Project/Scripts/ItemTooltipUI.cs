@@ -20,7 +20,7 @@ public class ItemTooltipUI : MonoBehaviour
     [SerializeField] private float screenPadding = 12f;
 
     private ItemInstance currentItem;
-
+    private string currentExtraDetails;
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -52,7 +52,7 @@ public class ItemTooltipUI : MonoBehaviour
         UpdatePosition();
     }
 
-    public void Show(ItemInstance item)
+    public void Show(ItemInstance item, string extraDetails = null)
     {
         if (item == null || item.Definition == null || panelRoot == null)
         {
@@ -61,12 +61,13 @@ public class ItemTooltipUI : MonoBehaviour
         }
 
         currentItem = item;
+        currentExtraDetails = extraDetails;
 
         if (nameText != null)
             nameText.text = UIRichTextColors.Paint(item.DisplayName, UIRichTextColors.RarityColor(item.Rarity));
 
         if (detailsText != null)
-            detailsText.text = BuildDetails(item);
+            detailsText.text = BuildDetails(item, currentExtraDetails);
 
         panelRoot.gameObject.SetActive(true);
         panelRoot.SetAsLastSibling();
@@ -79,12 +80,13 @@ public class ItemTooltipUI : MonoBehaviour
     public void Hide()
     {
         currentItem = null;
+        currentExtraDetails = null;
 
         if (panelRoot != null)
             panelRoot.gameObject.SetActive(false);
     }
 
-    private string BuildDetails(ItemInstance item)
+    private string BuildDetails(ItemInstance item, string extraDetails)
     {
         if (item == null || item.Definition == null)
             return string.Empty;
@@ -112,7 +114,11 @@ public class ItemTooltipUI : MonoBehaviour
             sb.AppendLine();
             sb.AppendLine(UIRichTextColors.Line("Stack", item.StackCount.ToString(), UIRichTextColors.White));
         }
-
+        if (!string.IsNullOrWhiteSpace(extraDetails))
+        {
+            sb.AppendLine();
+            sb.AppendLine(UIRichTextColors.Paint(extraDetails, UIRichTextColors.Gold));
+        }
         return sb.ToString().TrimEnd();
     }
 

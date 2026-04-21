@@ -386,4 +386,32 @@ public class LootGenerator : MonoBehaviour
             default: return 1f;
         }
     }
+
+    public List<ItemInstance> GenerateTraderItems(int itemCount, int itemLevel, EnemyLootTier tier)
+    {
+        List<ItemInstance> result = new List<ItemInstance>();
+
+        LootTierSettings settings = GetSettingsForTier(tier);
+        if (settings == null)
+        {
+            Debug.LogWarning("LootGenerator: lipsesc setarile pentru stock-ul traderului la tier-ul " + tier);
+            return result;
+        }
+
+        itemCount = Mathf.Max(0, itemCount);
+        itemLevel = Mathf.Max(1, itemLevel);
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            ItemDefinition definition = RollDefinition(settings);
+            if (definition == null)
+                continue;
+
+            ItemInstance item = CreateGeneratedItem(definition, settings, itemLevel);
+            if (item != null && item.IsValid)
+                result.Add(item);
+        }
+
+        return result;
+    }
 }

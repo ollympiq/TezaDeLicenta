@@ -6,6 +6,7 @@ public static class UIRichTextColors
 
     public const string HP = "#E74C3C";
     public const string AP = "#56CCF2";
+    public const string Gold = "#FFD700";
 
     public const string Strength = "#E67E22";
     public const string Constitution = "#FF6B6B";
