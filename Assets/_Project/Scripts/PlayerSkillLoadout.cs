@@ -67,7 +67,7 @@ public class PlayerSkillLoadout : MonoBehaviour
         return availableSkills.Contains(skill);
     }
 
-    public bool LearnSkill(SkillDefinition skill, bool autoEquipToFirstFreeSlot = false)
+    public bool LearnSkill(SkillDefinition skill, bool autoEquipToFirstFreeSlot = true)
     {
         if (skill == null)
             return false;
@@ -105,15 +105,19 @@ public class PlayerSkillLoadout : MonoBehaviour
 
         EnsureSetup();
 
+        // Slotul 0 ramane Basic Attack
         if (slotIndex == 0)
             return skill == defaultBasicAttack;
 
+        // Basic Attack nu poate fi pus in alte sloturi
         if (skill == defaultBasicAttack)
             return false;
 
+        // Skillul trebuie sa fie invatat inainte sa poata fi pus in bara
         if (!availableSkills.Contains(skill))
             return false;
 
+        // Un skill apare o singura data in bara
         for (int i = 1; i < equippedSkills.Length; i++)
         {
             if (equippedSkills[i] == skill)

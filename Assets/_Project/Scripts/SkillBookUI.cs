@@ -7,7 +7,7 @@ public class SkillBookUI : MonoBehaviour
     [SerializeField] private Canvas rootCanvas;
     [SerializeField] private SkillBookSlotUI[] slots;
 
-    private void Start()
+    private void Awake()
     {
         if (loadout == null)
             loadout = FindFirstObjectByType<PlayerSkillLoadout>();
@@ -15,6 +15,11 @@ public class SkillBookUI : MonoBehaviour
         if (rootCanvas == null)
             rootCanvas = GetComponentInParent<Canvas>();
 
+        AutoResolveSlots();
+    }
+
+    private void Start()
+    {
         if (loadout != null)
             loadout.OnLoadoutChanged += RefreshNow;
 
@@ -25,6 +30,14 @@ public class SkillBookUI : MonoBehaviour
     {
         if (loadout != null)
             loadout.OnLoadoutChanged -= RefreshNow;
+    }
+
+    private void AutoResolveSlots()
+    {
+        if (slots != null && slots.Length > 0)
+            return;
+
+        slots = GetComponentsInChildren<SkillBookSlotUI>(true);
     }
 
     public void RefreshNow()

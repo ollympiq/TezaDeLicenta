@@ -147,7 +147,6 @@ public class CharacterStats : MonoBehaviour
             (baseArmor + runtimeBaseArmorBonus) +
             Strength * armorPerStrength +
             GetClassArmorBonus() +
-            GetEquipmentBonus(ItemBonusType.Armor) +
             GetArmorFromEquipment()));
 
     public float PhysicalResistance =>
@@ -157,7 +156,6 @@ public class CharacterStats : MonoBehaviour
             Strength * physicalResistancePerStrength +
             Constitution * allResistancePerConstitution +
             GetClassPhysicalResistanceBonus() +
-            GetEquipmentBonus(ItemBonusType.PhysicalResistance) +
             GetResistanceFromEquipment(DamageType.Physical));
 
     public float FireResistance =>
@@ -165,7 +163,6 @@ public class CharacterStats : MonoBehaviour
             baseFireResistance +
             runtimeFireResistanceBonus +
             Constitution * allResistancePerConstitution +
-            GetEquipmentBonus(ItemBonusType.FireResistance) +
             GetResistanceFromEquipment(DamageType.Fire));
 
     public float EarthResistance =>
@@ -173,7 +170,6 @@ public class CharacterStats : MonoBehaviour
             baseEarthResistance +
             runtimeEarthResistanceBonus +
             Constitution * allResistancePerConstitution +
-            GetEquipmentBonus(ItemBonusType.EarthResistance) +
             GetResistanceFromEquipment(DamageType.Earth));
 
     public float WindResistance =>
@@ -181,7 +177,6 @@ public class CharacterStats : MonoBehaviour
             baseWindResistance +
             runtimeWindResistanceBonus +
             Constitution * allResistancePerConstitution +
-            GetEquipmentBonus(ItemBonusType.WindResistance) +
             GetResistanceFromEquipment(DamageType.Wind));
 
     public float LightningResistance =>
@@ -189,7 +184,6 @@ public class CharacterStats : MonoBehaviour
             baseLightningResistance +
             runtimeLightningResistanceBonus +
             Constitution * allResistancePerConstitution +
-            GetEquipmentBonus(ItemBonusType.LightningResistance) +
             GetResistanceFromEquipment(DamageType.Lightning));
 
     public float IceResistance =>
@@ -197,7 +191,6 @@ public class CharacterStats : MonoBehaviour
             baseIceResistance +
             runtimeIceResistanceBonus +
             Constitution * allResistancePerConstitution +
-            GetEquipmentBonus(ItemBonusType.IceResistance) +
             GetResistanceFromEquipment(DamageType.Ice));
 
     public float ElementalDamageBonusPercent =>

@@ -139,6 +139,7 @@ public class InventoryUI : MonoBehaviour
                 break;
 
             case ItemCategory.Consumable:
+            case ItemCategory.SkillBook:
                 bool used = inventory.UseAt(slotIndex, inventory.gameObject);
                 if (!used)
                     Debug.Log("Itemul nu a putut fi folosit.");

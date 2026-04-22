@@ -192,7 +192,7 @@ public class TraderShopUI : MonoBehaviour
             return;
 
         int gold = playerWallet != null ? playerWallet.CurrentGold : 0;
-        goldText.text = $"Gold: {gold}";
+        goldText.text = $": {gold}";
     }
 
     private void RefreshTitle()

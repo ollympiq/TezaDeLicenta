@@ -320,7 +320,15 @@ public class LootGenerator : MonoBehaviour
                 return Mathf.Round(Random.Range(8f + rarityIndex * 4f, 14f + rarityIndex * 8f) * levelScalar);
 
             case ItemBonusType.MaxAP:
-                return Mathf.Round(Random.Range(1f, 1f + Mathf.CeilToInt((rarityIndex + 1) * 0.5f)));
+                {
+                    // Max AP trebuie sa ramana mic.
+                    // Common / Uncommon / Rare => +1
+                    // Epic / Legendary / Unique => +1 sau +2
+                    if (rarity == ItemRarity.Epic || rarity == ItemRarity.Legendary || rarity == ItemRarity.Unique)
+                        return Random.value < 0.5f ? 1f : 2f;
+
+                    return 1f;
+                }
 
             case ItemBonusType.PhysicalPower:
             case ItemBonusType.MagicPower:

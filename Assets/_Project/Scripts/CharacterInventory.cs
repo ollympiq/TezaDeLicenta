@@ -43,7 +43,6 @@ public class CharacterInventory : MonoBehaviour
                 {
                     int freeSpace = existingStack.MaxStack - existingStack.StackCount;
                     int toAdd = Mathf.Min(freeSpace, amount);
-
                     existingStack.AddToStack(toAdd);
                     amount -= toAdd;
                     changed = true;
@@ -169,13 +168,9 @@ public class CharacterInventory : MonoBehaviour
         ItemInstance item = items[index];
 
         if (item.CanStack && item.StackCount > amount)
-        {
             item.RemoveFromStack(amount);
-        }
         else
-        {
             items.RemoveAt(index);
-        }
 
         OnInventoryChanged?.Invoke();
         return true;
@@ -204,6 +199,7 @@ public class CharacterInventory : MonoBehaviour
 
         return false;
     }
+
     private bool TryUsePotion(ItemInstance item, GameObject user)
     {
         PotionDefinition potion = item.PotionDefinition;
@@ -242,12 +238,13 @@ public class CharacterInventory : MonoBehaviour
 
         if (loadout.HasSkill(skillBook.TaughtSkill))
         {
-            Debug.Log("Player already knows this skill.");
+            Debug.Log("Jucatorul cunoaste deja acest skill.");
             return false;
         }
 
         return loadout.LearnSkill(skillBook.TaughtSkill, true);
     }
+
     private void AddStartingItems()
     {
         if (startingItems == null || startingItems.Count == 0)
@@ -267,8 +264,12 @@ public class CharacterInventory : MonoBehaviour
     {
         for (int i = 0; i < items.Count; i++)
         {
-            if (items[i].Definition == definition && items[i].CanStack && items[i].StackCount < items[i].MaxStack)
+            if (items[i].Definition == definition &&
+                items[i].CanStack &&
+                items[i].StackCount < items[i].MaxStack)
+            {
                 return items[i];
+            }
         }
 
         return null;
@@ -278,8 +279,11 @@ public class CharacterInventory : MonoBehaviour
     {
         for (int i = 0; i < items.Count; i++)
         {
-            if (items[i].CanStackWith(instance) && items[i].StackCount < items[i].MaxStack)
+            if (items[i].CanStackWith(instance) &&
+                items[i].StackCount < items[i].MaxStack)
+            {
                 return items[i];
+            }
         }
 
         return null;
