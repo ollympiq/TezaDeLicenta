@@ -243,10 +243,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   characterClass: 0
   level: 1
-  strength: 500
-  constitution: 50
-  dexterity: 50
-  intelligence: 50
+  strength: 10
+  constitution: 10
+  dexterity: 10
+  intelligence: 10
   baseMaxHP: 50
   baseMaxAP: 6
   baseArmor: 5

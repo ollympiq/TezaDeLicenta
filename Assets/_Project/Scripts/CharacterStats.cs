@@ -506,4 +506,23 @@ public class CharacterStats : MonoBehaviour
     {
         OnStatsChanged?.Invoke();
     }
+
+    public void SetCharacterClass(CharacterClass newClass, bool notify = true)
+    {
+        characterClass = newClass;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void SetBaseAttributes(int newStrength, int newConstitution, int newDexterity, int newIntelligence, bool notify = true)
+    {
+        strength = Mathf.Max(1, newStrength);
+        constitution = Mathf.Max(1, newConstitution);
+        dexterity = Mathf.Max(1, newDexterity);
+        intelligence = Mathf.Max(1, newIntelligence);
+
+        if (notify)
+            NotifyStatsChanged();
+    }
 }

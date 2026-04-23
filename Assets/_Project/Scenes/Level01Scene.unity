@@ -251,7 +251,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 63dcf16143e769645b5ce35ba3ff8743, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterEquipment
-  startingWeapon: {fileID: 11400000, guid: 493b95878c0ffad4295a38a88a19a1d4, type: 2}
+  startingWeapon: {fileID: 11400000, guid: b968e826ce9b99745b0512353e9f2be7, type: 2}
   weaponItem:
     definition: {fileID: 0}
     rarity: 0
@@ -412,7 +412,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67074976a814f944a5156c2985e0fe9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  followTarget: {fileID: 0}
+  followTarget: {fileID: 575665945}
 --- !u!114 &29811629
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -438,7 +438,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 171066c3c6af22a48ba38db4d4a69df8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
-  characterClass: 0
+  characterClass: 2
   level: 1
   strength: 10
   constitution: 10
@@ -1042,6 +1042,96 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 29811634}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &708894847
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 708894849}
+  - component: {fileID: 708894848}
+  m_Layer: 0
+  m_Name: PlayerClassInitializer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &708894848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708894847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bcd51239cda699489b1f365fbaffa5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerClassInitializer
+  characterStats: {fileID: 902157971}
+  characterHealth: {fileID: 902157975}
+  characterEquipment: {fileID: 902157980}
+  characterInventory: {fileID: 902157979}
+  playerSkillLoadout: {fileID: 902157977}
+  playerWallet: {fileID: 9064901159089817242}
+  presets:
+  - classType: 1
+    strength: 14
+    constitution: 12
+    dexterity: 9
+    intelligence: 5
+    startingWeapon: {fileID: 11400000, guid: 493b95878c0ffad4295a38a88a19a1d4, type: 2}
+    startingSkill1: {fileID: 11400000, guid: 771f21102a4c04c4696d741282d0195c, type: 2}
+    startingSkill2: {fileID: 0}
+    healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
+    healthPotionAmount: 3
+    apPotion: {fileID: 0}
+    apPotionAmount: 0
+    startingGold: 100
+  - classType: 2
+    strength: 8
+    constitution: 10
+    dexterity: 15
+    intelligence: 7
+    startingWeapon: {fileID: 11400000, guid: b968e826ce9b99745b0512353e9f2be7, type: 2}
+    startingSkill1: {fileID: 11400000, guid: ab355e13e11c4cf42ba20959fd692739, type: 2}
+    startingSkill2: {fileID: 0}
+    healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
+    healthPotionAmount: 3
+    apPotion: {fileID: 0}
+    apPotionAmount: 0
+    startingGold: 100
+  - classType: 3
+    strength: 5
+    constitution: 9
+    dexterity: 8
+    intelligence: 18
+    startingWeapon: {fileID: 11400000, guid: 376d83fe718ae2c43bbceab56882eb10, type: 2}
+    startingSkill1: {fileID: 11400000, guid: d2d63a17391bfd74e9e439236ca01f04, type: 2}
+    startingSkill2: {fileID: 0}
+    healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
+    healthPotionAmount: 3
+    apPotion: {fileID: 0}
+    apPotionAmount: 0
+    startingGold: 100
+--- !u!4 &708894849
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 708894847}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.05, y: 0, z: 0.54}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &784486569 stripped
 MonoBehaviour:
@@ -4313,7 +4403,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 709921458491817565, guid: 665deaac40dd079418de59d5efb6762e, type: 3}
       propertyPath: currentLevel
-      value: 5
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5520729452287497257, guid: 665deaac40dd079418de59d5efb6762e, type: 3}
       propertyPath: m_LocalPosition.x
@@ -4383,6 +4473,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2387611680329472502, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
+      propertyPath: characterClass
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2897547314050369447, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2.4983
@@ -4423,6 +4517,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4455891646213713085, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
+      propertyPath: followTarget
+      value: 
+      objectReference: {fileID: 6242392048384846478}
     - target: {fileID: 6186170036969366969, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
       propertyPath: m_Name
       value: Enemy_1
@@ -4444,6 +4542,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
+--- !u!4 &6242392048384846478 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6369573926880751711, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
+  m_PrefabInstance: {fileID: 6242392048384846477}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &8318528628084058039
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4452,6 +4555,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: skillBookPool.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: ba2c00af809928546bc7c689f797db82, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 029785fc9232ed94badc376d7087d1b7, type: 2}
     - target: {fileID: 5912864777754304172, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
       propertyPath: m_Name
       value: LootGenerator
@@ -4554,7 +4669,15 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 330585545}
     - target: {fileID: 2044817241257481745, guid: d237478957b972b469eec5d9238610ad, type: 3}
-      propertyPath: headItem.stackCount
+      propertyPath: startingWeapon
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2044817241257481745, guid: d237478957b972b469eec5d9238610ad, type: 3}
+      propertyPath: weaponItem.definition
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 2044817241257481745, guid: d237478957b972b469eec5d9238610ad, type: 3}
+      propertyPath: weaponItem.stackCount
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2478294489545475276, guid: d237478957b972b469eec5d9238610ad, type: 3}
@@ -4573,9 +4696,21 @@ PrefabInstance:
       propertyPath: mainCamera
       value: 
       objectReference: {fileID: 330585545}
+    - target: {fileID: 5848306282050854896, guid: d237478957b972b469eec5d9238610ad, type: 3}
+      propertyPath: availableSkills.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6397618289114745851, guid: d237478957b972b469eec5d9238610ad, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 7443605556733449951, guid: d237478957b972b469eec5d9238610ad, type: 3}
+      propertyPath: strength
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 9057515267152240072, guid: d237478957b972b469eec5d9238610ad, type: 3}
+      propertyPath: startingItems.Array.size
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -4613,3 +4748,4 @@ SceneRoots:
   - {fileID: 8318528628084058039}
   - {fileID: 5493636445774472377}
   - {fileID: 1893849842}
+  - {fileID: 708894849}

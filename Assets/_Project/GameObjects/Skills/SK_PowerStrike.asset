@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
+  m_Name: SK_PowerStrike
+  m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
+  skillId: powerstrike
+  displayName: PowerStrike
+  skillType: 1
+  targetingMode: 1
+  areaMode: 0
+  keepSelectedAfterUse: 0
+  icon: {fileID: 21300000, guid: 7e029ccd4fa2a9d4c849194f47c7028f, type: 3}
+  cursorTexture: {fileID: 2800000, guid: b9f4974f981cc2d4f9e3b6cfca29e104, type: 3}
+  cursorHotspot: {x: 0, y: 0}
+  damageType: 0
+  minDamage: 15
+  maxDamage: 30
+  powerScaling: 0.5
+  bonusAccuracy: 0
+  canCrit: 1
+  apCost: 2
+  range: 4
+  areaRadius: 0

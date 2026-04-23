@@ -4,6 +4,13 @@ using UnityEngine;
 
 public class GameSession : MonoBehaviour
 {
+
+    [SerializeField] private CharacterClass selectedPlayerClass = CharacterClass.Unassigned;
+    [SerializeField] private bool pendingClassSelection = false;
+
+    public CharacterClass SelectedPlayerClass => selectedPlayerClass;
+    public bool HasPendingClassSelection => pendingClassSelection;
+
     [Serializable]
     public class SavedRolledModifier
     {
@@ -101,6 +108,8 @@ public class GameSession : MonoBehaviour
         savedSkills = new SavedSkillLoadout();
 
         hasRestorablePlayerState = false;
+        selectedPlayerClass = CharacterClass.Unassigned;
+        pendingClassSelection = false;
     }
 
     public void BeginNewRun(int startingCombatLevel = 1)
@@ -425,5 +434,22 @@ public class GameSession : MonoBehaviour
 
             skillById[def.SkillId] = def;
         }
+    }
+
+    public void SetSelectedPlayerClass(CharacterClass classType)
+    {
+        selectedPlayerClass = classType;
+        pendingClassSelection = true;
+    }
+
+    public bool TryConsumeSelectedPlayerClass(out CharacterClass classType)
+    {
+        classType = selectedPlayerClass;
+
+        if (!pendingClassSelection)
+            return false;
+
+        pendingClassSelection = false;
+        return true;
     }
 }
