@@ -1647,6 +1647,8 @@ MonoBehaviour:
   currentLevelContext: {fileID: 5493636445774472378}
   playerProgression: {fileID: 902157987}
   playerWallet: {fileID: 9064901159089817242}
+  characterInventory: {fileID: 902157979}
+  playerSkillLoadout: {fileID: 902157977}
 --- !u!4 &1893849842
 Transform:
   m_ObjectHideFlags: 0

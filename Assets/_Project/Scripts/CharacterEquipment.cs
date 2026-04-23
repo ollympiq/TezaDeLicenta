@@ -58,7 +58,21 @@ public class CharacterEquipment : MonoBehaviour
         OnEquipmentChanged?.Invoke();
         return previous;
     }
+    public void ClearAllEquipped(bool notify = true)
+    {
+        weaponItem = null;
+        headItem = null;
+        chestItem = null;
+        handsItem = null;
+        legsItem = null;
+        feetItem = null;
+        beltItem = null;
+        ringItem = null;
+        amuletItem = null;
 
+        if (notify)
+            OnEquipmentChanged?.Invoke();
+    }
     public ItemInstance EquipDefinition(ItemDefinition definition)
     {
         if (definition == null)

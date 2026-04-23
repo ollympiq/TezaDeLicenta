@@ -1579,6 +1579,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LobbyEntryHandler
   playerProgression: {fileID: 902157987}
   playerWallet: {fileID: 9064901159089817242}
+  characterInventory: {fileID: 0}
+  playerSkillLoadout: {fileID: 0}
   statsPanelRoot: {fileID: 0}
   statAllocationUI: {fileID: 0}
   autoOpenStatsPanel: 1

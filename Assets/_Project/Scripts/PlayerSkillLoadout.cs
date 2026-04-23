@@ -50,6 +50,24 @@ public class PlayerSkillLoadout : MonoBehaviour
             equippedSkills[0] = defaultBasicAttack;
     }
 
+    public void ResetToDefaultState()
+    {
+        availableSkills.Clear();
+
+        if (equippedSkills == null || equippedSkills.Length != 8)
+            equippedSkills = new SkillDefinition[8];
+        else
+            Array.Clear(equippedSkills, 0, equippedSkills.Length);
+
+        if (defaultBasicAttack != null)
+        {
+            availableSkills.Add(defaultBasicAttack);
+            equippedSkills[0] = defaultBasicAttack;
+        }
+
+        OnLoadoutChanged?.Invoke();
+    }
+
     public SkillDefinition GetSkillInSlot(int slotIndex)
     {
         if (equippedSkills == null || slotIndex < 0 || slotIndex >= equippedSkills.Length)
@@ -67,7 +85,7 @@ public class PlayerSkillLoadout : MonoBehaviour
         return availableSkills.Contains(skill);
     }
 
-    public bool LearnSkill(SkillDefinition skill, bool autoEquipToFirstFreeSlot = true)
+    public bool LearnSkill(SkillDefinition skill, bool autoEquipToFirstFreeSlot = false)
     {
         if (skill == null)
             return false;
@@ -105,19 +123,15 @@ public class PlayerSkillLoadout : MonoBehaviour
 
         EnsureSetup();
 
-        // Slotul 0 ramane Basic Attack
         if (slotIndex == 0)
             return skill == defaultBasicAttack;
 
-        // Basic Attack nu poate fi pus in alte sloturi
         if (skill == defaultBasicAttack)
             return false;
 
-        // Skillul trebuie sa fie invatat inainte sa poata fi pus in bara
         if (!availableSkills.Contains(skill))
             return false;
 
-        // Un skill apare o singura data in bara
         for (int i = 1; i < equippedSkills.Length; i++)
         {
             if (equippedSkills[i] == skill)

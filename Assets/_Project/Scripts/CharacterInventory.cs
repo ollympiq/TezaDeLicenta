@@ -16,7 +16,8 @@ public class CharacterInventory : MonoBehaviour
 
     private void Awake()
     {
-        AddStartingItems();
+        if (GameSession.Instance == null || !GameSession.Instance.HasRestorablePlayerState)
+            AddStartingItems();
     }
 
     public ItemInstance GetItemAt(int index)
@@ -26,7 +27,11 @@ public class CharacterInventory : MonoBehaviour
 
         return items[index];
     }
-
+    public void ClearAll()
+    {
+        items.Clear();
+        OnInventoryChanged?.Invoke();
+    }
     public bool AddItem(ItemDefinition definition, int amount = 1)
     {
         if (definition == null || amount <= 0)

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ad6efd7c80bc5c4d8d05364d7afaf63, type: 3}
   m_Name: WPN_ArcaneStaff 4
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
-  itemId: arstaff
+  itemId: arstaff10
   displayName: Arcane Staff
   description: 
   icon: {fileID: 21300000, guid: 69952ff862566a54eb579cdcfce9814f, type: 3}
