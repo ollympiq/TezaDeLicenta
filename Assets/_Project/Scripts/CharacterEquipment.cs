@@ -58,21 +58,7 @@ public class CharacterEquipment : MonoBehaviour
         OnEquipmentChanged?.Invoke();
         return previous;
     }
-    public void ClearAllEquipped(bool notify = true)
-    {
-        weaponItem = null;
-        headItem = null;
-        chestItem = null;
-        handsItem = null;
-        legsItem = null;
-        feetItem = null;
-        beltItem = null;
-        ringItem = null;
-        amuletItem = null;
 
-        if (notify)
-            OnEquipmentChanged?.Invoke();
-    }
     public ItemInstance EquipDefinition(ItemDefinition definition)
     {
         if (definition == null)
@@ -172,6 +158,22 @@ public class CharacterEquipment : MonoBehaviour
         if (GetItemInSlot(EquipmentSlot.Amulet) != null) yield return GetItemInSlot(EquipmentSlot.Amulet);
     }
 
+    public void ClearAllEquipped(bool notify = true)
+    {
+        weaponItem = null;
+        headItem = null;
+        chestItem = null;
+        handsItem = null;
+        legsItem = null;
+        feetItem = null;
+        beltItem = null;
+        ringItem = null;
+        amuletItem = null;
+
+        if (notify)
+            OnEquipmentChanged?.Invoke();
+    }
+
     public void ForceRefresh()
     {
         NormalizeEquippedItems();
@@ -241,6 +243,7 @@ public class CharacterEquipment : MonoBehaviour
 
         float total = 0f;
         var modifiers = definition.StatModifiers;
+
         for (int i = 0; i < modifiers.Count; i++)
         {
             if (modifiers[i].BonusType == bonusType)

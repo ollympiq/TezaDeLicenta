@@ -1648,6 +1648,7 @@ MonoBehaviour:
   playerProgression: {fileID: 902157987}
   playerWallet: {fileID: 9064901159089817242}
   characterInventory: {fileID: 902157979}
+  characterEquipment: {fileID: 902157980}
   playerSkillLoadout: {fileID: 902157977}
 --- !u!4 &1893849842
 Transform:
@@ -4552,6 +4553,10 @@ PrefabInstance:
       propertyPath: mainCamera
       value: 
       objectReference: {fileID: 330585545}
+    - target: {fileID: 2044817241257481745, guid: d237478957b972b469eec5d9238610ad, type: 3}
+      propertyPath: headItem.stackCount
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2478294489545475276, guid: d237478957b972b469eec5d9238610ad, type: 3}
       propertyPath: mainCamera
       value: 

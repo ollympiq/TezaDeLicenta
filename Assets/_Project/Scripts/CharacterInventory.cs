@@ -27,11 +27,7 @@ public class CharacterInventory : MonoBehaviour
 
         return items[index];
     }
-    public void ClearAll()
-    {
-        items.Clear();
-        OnInventoryChanged?.Invoke();
-    }
+
     public bool AddItem(ItemDefinition definition, int amount = 1)
     {
         if (definition == null || amount <= 0)
@@ -181,6 +177,12 @@ public class CharacterInventory : MonoBehaviour
         return true;
     }
 
+    public void ClearAll()
+    {
+        items.Clear();
+        OnInventoryChanged?.Invoke();
+    }
+
     public bool UseAt(int index, GameObject user)
     {
         if (index < 0 || index >= items.Count || user == null)
@@ -247,7 +249,7 @@ public class CharacterInventory : MonoBehaviour
             return false;
         }
 
-        return loadout.LearnSkill(skillBook.TaughtSkill, true);
+        return loadout.LearnSkill(skillBook.TaughtSkill, false);
     }
 
     private void AddStartingItems()
