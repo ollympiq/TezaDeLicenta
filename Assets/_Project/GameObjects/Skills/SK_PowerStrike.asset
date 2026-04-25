@@ -28,5 +28,5 @@ MonoBehaviour:
   bonusAccuracy: 0
   canCrit: 1
   apCost: 2
-  range: 4
+  range: 3
   areaRadius: 0

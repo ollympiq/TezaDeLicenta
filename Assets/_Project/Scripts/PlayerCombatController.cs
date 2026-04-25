@@ -24,6 +24,8 @@ public class PlayerCombatController : MonoBehaviour
     private SkillDefinition selectedSkill;
     private int selectedSlotIndex = -1;
     private bool turnInputEnabled;
+    private bool blockMovementThisFrame;
+
     public event Action OnSelectedSkillChanged;
 
     public int SelectedSlotIndex => selectedSlotIndex;
@@ -31,6 +33,8 @@ public class PlayerCombatController : MonoBehaviour
     public bool HasTargetingSkillSelected =>
         selectedSkill != null &&
         selectedSkill.TargetingMode != SkillTargetingMode.None;
+
+    public bool BlockMovementThisFrame => blockMovementThisFrame;
 
     private void Awake()
     {
@@ -53,6 +57,8 @@ public class PlayerCombatController : MonoBehaviour
 
     private void Update()
     {
+        blockMovementThisFrame = false;
+
         if (health != null && health.IsDead)
             return;
 
@@ -63,6 +69,7 @@ public class PlayerCombatController : MonoBehaviour
 
             return;
         }
+
         if (!HasTargetingSkillSelected)
             return;
 
@@ -85,6 +92,8 @@ public class PlayerCombatController : MonoBehaviour
         {
             if (IsPointerOverUI())
                 return;
+
+            blockMovementThisFrame = true;
 
             switch (selectedSkill.TargetingMode)
             {
@@ -140,6 +149,7 @@ public class PlayerCombatController : MonoBehaviour
     {
         selectedSkill = null;
         selectedSlotIndex = -1;
+        blockMovementThisFrame = true;
 
         ApplyCursor();
         OnSelectedSkillChanged?.Invoke();

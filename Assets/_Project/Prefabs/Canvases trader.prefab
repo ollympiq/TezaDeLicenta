@@ -24575,7 +24575,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 50}
   m_SizeDelta: {x: 600, y: 700}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &466260303154741216
@@ -25650,6 +25650,9 @@ MonoBehaviour:
   equipment: {fileID: 0}
   toggleButton: {fileID: 6954218495513575257}
   skillBookUI: {fileID: 8614012614689763597}
+  playerMover: {fileID: 0}
+  playerCombatController: {fileID: 0}
+  playerTurnController: {fileID: 0}
   panelRoot: {fileID: 6737506162817211357}
   statsPanelRoot: {fileID: 3253893857322314750}
   skillBookPanelRoot: {fileID: 3429328549487670904}

@@ -7,6 +7,7 @@ public class DeadEnemyLootController : MonoBehaviour
     [Header("References")]
     [SerializeField] private Camera mainCamera;
     [SerializeField] private PlayerCombatController playerCombatController;
+    [SerializeField] private PlayerNavMeshMover playerMover;
     [SerializeField] private EnemyLootUI lootUI;
 
     [Header("Raycast")]
@@ -20,6 +21,9 @@ public class DeadEnemyLootController : MonoBehaviour
 
         if (playerCombatController == null)
             playerCombatController = FindFirstObjectByType<PlayerCombatController>();
+
+        if (playerMover == null)
+            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
 
         if (lootUI == null)
             lootUI = EnemyLootUI.Instance != null
@@ -50,9 +54,17 @@ public class DeadEnemyLootController : MonoBehaviour
         EnemyLootContainer clickedLoot = GetClickedDeadEnemyLoot();
 
         if (clickedLoot != null)
+        {
+            playerMover?.BlockMovementForCurrentFrame();
             lootUI.Show(clickedLoot);
+        }
         else
+        {
+            if (lootUI.IsOpen)
+                playerMover?.BlockMovementForCurrentFrame();
+
             lootUI.Hide();
+        }
     }
 
     private EnemyLootContainer GetClickedDeadEnemyLoot()

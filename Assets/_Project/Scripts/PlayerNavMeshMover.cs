@@ -24,6 +24,7 @@ public class PlayerNavMeshMover : MonoBehaviour
     private PlayerAP playerAP;
     private CharacterHealth health;
     private bool turnInputEnabled;
+    private bool blockMovementThisFrame;
 
     private void Awake()
     {
@@ -49,21 +50,47 @@ public class PlayerNavMeshMover : MonoBehaviour
         }
 
         if (!turnInputEnabled)
+        {
+            blockMovementThisFrame = false;
             return;
+        }
 
         if (Mouse.current == null || mainCamera == null)
+        {
+            blockMovementThisFrame = false;
             return;
+        }
 
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             if (IsPointerOverUI())
+            {
+                blockMovementThisFrame = false;
                 return;
+            }
+
+            if (blockMovementThisFrame)
+            {
+                blockMovementThisFrame = false;
+                return;
+            }
+
+            if (combatController != null && combatController.BlockMovementThisFrame)
+            {
+                blockMovementThisFrame = false;
+                return;
+            }
 
             if (combatController != null && combatController.HasTargetingSkillSelected)
+            {
+                blockMovementThisFrame = false;
                 return;
+            }
 
             TryMoveToMouse();
         }
+
+        blockMovementThisFrame = false;
     }
 
     private bool IsPointerOverUI()
@@ -143,5 +170,11 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (!enabled)
             StopMovementImmediately();
+    }
+
+    public void BlockMovementForCurrentFrame()
+    {
+        blockMovementThisFrame = true;
+        StopMovementImmediately();
     }
 }

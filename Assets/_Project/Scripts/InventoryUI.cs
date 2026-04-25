@@ -10,6 +10,11 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private Button toggleButton;
     [SerializeField] private SkillBookUI skillBookUI;
 
+    [Header("Gameplay References")]
+    [SerializeField] private PlayerNavMeshMover playerMover;
+    [SerializeField] private PlayerCombatController playerCombatController;
+    [SerializeField] private PlayerTurnController playerTurnController;
+
     [Header("Panels")]
     [SerializeField] private GameObject panelRoot;          // InventoryPanel
     [SerializeField] private GameObject statsPanelRoot;     // StatsPanel
@@ -33,6 +38,15 @@ public class InventoryUI : MonoBehaviour
         if (skillBookUI == null)
             skillBookUI = FindFirstObjectByType<SkillBookUI>(FindObjectsInactive.Include);
 
+        if (playerMover == null)
+            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
+
+        if (playerCombatController == null)
+            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
+
+        if (playerTurnController == null)
+            playerTurnController = FindFirstObjectByType<PlayerTurnController>();
+
         if (toggleButton != null)
             toggleButton.onClick.AddListener(TogglePanel);
 
@@ -55,6 +69,7 @@ public class InventoryUI : MonoBehaviour
         }
 
         SetPanelsVisible(startOpened);
+        ApplyGameplayInputState();
 
         if (startOpened)
             RefreshAll();
@@ -84,6 +99,7 @@ public class InventoryUI : MonoBehaviour
         bool willOpen = !isOpen;
 
         SetPanelsVisible(willOpen);
+        ApplyGameplayInputState();
 
         if (willOpen)
         {
@@ -111,6 +127,18 @@ public class InventoryUI : MonoBehaviour
 
         if (skillBookPanelRoot != null)
             skillBookPanelRoot.SetActive(visible);
+    }
+
+    private void ApplyGameplayInputState()
+    {
+        bool uiOpen = panelRoot != null && panelRoot.activeSelf;
+        bool allowGameplayInput = !uiOpen && playerTurnController != null && playerTurnController.IsTurnActive;
+
+        if (playerMover != null)
+            playerMover.SetTurnInputEnabled(allowGameplayInput);
+
+        if (playerCombatController != null)
+            playerCombatController.SetTurnInputEnabled(allowGameplayInput);
     }
 
     public void RefreshAll()
@@ -212,7 +240,7 @@ public class InventoryUI : MonoBehaviour
             if (inventorySlots[i] == null)
                 continue;
 
-            ItemInstance item = inventory.GetItemAt(i);
+            ItemInstance item = i < inventory.ItemCount ? inventory.GetItemAt(i) : null;
             inventorySlots[i].Refresh(item);
         }
     }

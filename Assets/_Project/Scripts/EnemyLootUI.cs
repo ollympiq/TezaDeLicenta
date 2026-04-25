@@ -12,6 +12,11 @@ public class EnemyLootUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private EnemyLootSlotUI[] slots;
 
+    [Header("Gameplay References")]
+    [SerializeField] private PlayerNavMeshMover playerMover;
+    [SerializeField] private PlayerCombatController playerCombatController;
+    [SerializeField] private PlayerTurnController playerTurnController;
+
     private EnemyLootContainer currentContainer;
     private int lastCollectedGold;
 
@@ -33,6 +38,15 @@ public class EnemyLootUI : MonoBehaviour
 
         if (playerWallet == null)
             playerWallet = FindFirstObjectByType<PlayerWallet>();
+
+        if (playerMover == null)
+            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
+
+        if (playerCombatController == null)
+            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
+
+        if (playerTurnController == null)
+            playerTurnController = FindFirstObjectByType<PlayerTurnController>();
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -64,6 +78,7 @@ public class EnemyLootUI : MonoBehaviour
             titleText.text = BuildTitle(currentContainer);
 
         panelRoot.SetActive(true);
+        ApplyGameplayInputState();
         RefreshNow();
     }
 
@@ -76,6 +91,7 @@ public class EnemyLootUI : MonoBehaviour
             panelRoot.SetActive(false);
 
         ClearAll();
+        ApplyGameplayInputState();
     }
 
     public void RefreshNow()
@@ -187,5 +203,17 @@ public class EnemyLootUI : MonoBehaviour
             return tierText + "  (+" + lastCollectedGold + " Gold)";
 
         return tierText;
+    }
+
+    private void ApplyGameplayInputState()
+    {
+        bool uiOpen = IsOpen;
+        bool allowGameplayInput = !uiOpen && playerTurnController != null && playerTurnController.IsTurnActive;
+
+        if (playerMover != null)
+            playerMover.SetTurnInputEnabled(allowGameplayInput);
+
+        if (playerCombatController != null)
+            playerCombatController.SetTurnInputEnabled(allowGameplayInput);
     }
 }
