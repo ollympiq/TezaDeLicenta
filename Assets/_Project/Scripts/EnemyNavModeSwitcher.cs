@@ -6,80 +6,35 @@ using UnityEngine.AI;
 [RequireComponent(typeof(CharacterHealth))]
 public class EnemyNavModeSwitcher : MonoBehaviour
 {
-    [SerializeField] private EnemyTurnController turnController;
     [SerializeField] private CharacterHealth health;
+    [SerializeField] private bool useObstacleOnlyWhenDead = true;
+    [SerializeField] private bool enableCarvingWhenDead = true;
 
     private NavMeshAgent agent;
     private NavMeshObstacle obstacle;
-    private bool usingAgentMode;
+    private bool deadModeApplied;
 
     private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         obstacle = GetComponent<NavMeshObstacle>();
 
-        if (turnController == null)
-            turnController = GetComponent<EnemyTurnController>();
-
         if (health == null)
             health = GetComponent<CharacterHealth>();
 
-        ApplyInitialMode();
-    }
-
-    private void OnEnable()
-    {
-        ApplyInitialMode();
+        if (obstacle != null)
+            obstacle.enabled = false;
     }
 
     private void Update()
     {
-        if (health != null && health.IsDead)
-        {
-            DisableAllNavigation();
-            return;
-        }
-
-        bool shouldUseAgent = turnController != null && turnController.IsTakingTurn;
-
-        if (shouldUseAgent == usingAgentMode)
+        if (health == null || !health.IsDead || deadModeApplied)
             return;
 
-        if (shouldUseAgent)
-            SetAgentModeInstant();
-        else
-            SetObstacleModeInstant();
+        ApplyDeadMode();
     }
 
-    private void ApplyInitialMode()
-    {
-        bool shouldUseAgent = turnController != null && turnController.IsTakingTurn;
-
-        if (shouldUseAgent)
-            SetAgentModeInstant();
-        else
-            SetObstacleModeInstant();
-    }
-
-    private void SetAgentModeInstant()
-    {
-        if (obstacle != null)
-            obstacle.enabled = false;
-
-        if (agent != null)
-        {
-            if (!agent.enabled)
-                agent.enabled = true;
-
-            agent.Warp(transform.position);
-            agent.isStopped = false;
-            agent.ResetPath();
-        }
-
-        usingAgentMode = true;
-    }
-
-    private void SetObstacleModeInstant()
+    private void ApplyDeadMode()
     {
         if (agent != null && agent.enabled)
         {
@@ -90,25 +45,17 @@ public class EnemyNavModeSwitcher : MonoBehaviour
 
         if (obstacle != null)
         {
-            obstacle.carving = true;
-            obstacle.enabled = true;
+            if (useObstacleOnlyWhenDead)
+            {
+                obstacle.carving = enableCarvingWhenDead;
+                obstacle.enabled = true;
+            }
+            else
+            {
+                obstacle.enabled = false;
+            }
         }
 
-        usingAgentMode = false;
-    }
-
-    private void DisableAllNavigation()
-    {
-        if (agent != null && agent.enabled)
-        {
-            agent.isStopped = true;
-            agent.ResetPath();
-            agent.enabled = false;
-        }
-
-        if (obstacle != null)
-            obstacle.enabled = false;
-
-        usingAgentMode = false;
+        deadModeApplied = true;
     }
 }

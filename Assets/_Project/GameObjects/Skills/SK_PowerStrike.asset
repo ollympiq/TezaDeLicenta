@@ -22,8 +22,8 @@ MonoBehaviour:
   cursorTexture: {fileID: 2800000, guid: b9f4974f981cc2d4f9e3b6cfca29e104, type: 3}
   cursorHotspot: {x: 0, y: 0}
   damageType: 0
-  minDamage: 15
-  maxDamage: 30
+  minDamage: 500
+  maxDamage: 599
   powerScaling: 0.5
   bonusAccuracy: 0
   canCrit: 1

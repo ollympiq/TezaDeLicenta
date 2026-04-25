@@ -48,7 +48,6 @@ public class PlayerTurnController : MonoBehaviour
             ap.RestoreAllAP();
 
         actionLimiter?.ResetTurnUsage();
-
         SetControlEnabled(true);
     }
 

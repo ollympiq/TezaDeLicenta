@@ -15,6 +15,7 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private CharacterStats targetStats;
     [SerializeField] private EnemyAnimationController animationController;
     [SerializeField] private TurnActionLimiter actionLimiter;
+    [SerializeField] private TurnAgentLock turnLock;
 
     [Header("Special Attacks")]
     [SerializeField] private AttackDefinition mediumAttack; // 4 AP
@@ -32,6 +33,7 @@ public class EnemyTurnController : MonoBehaviour
     [Header("Melee Positioning")]
     [SerializeField] private float attackRangeBuffer = 0.1f;
     [SerializeField] private float destinationTolerance = 0.08f;
+    [SerializeField] private float idleApproachGap = 0.25f;
 
     private const string MediumAttackKey = "ENEMY_MEDIUM_ATTACK";
     private const string HeavyAttackKey = "ENEMY_HEAVY_ATTACK";
@@ -57,6 +59,8 @@ public class EnemyTurnController : MonoBehaviour
         if (actionLimiter == null)
             actionLimiter = GetComponent<TurnActionLimiter>();
 
+        if (turnLock == null) turnLock = GetComponent<TurnAgentLock>();
+
         ap = GetComponent<PlayerAP>();
         basicAttack = GetComponent<CharacterBasicAttack>();
         health = GetComponent<CharacterHealth>();
@@ -73,7 +77,16 @@ public class EnemyTurnController : MonoBehaviour
         if (turnRoutine != null)
             StopCoroutine(turnRoutine);
 
-        turnRoutine = StartCoroutine(TurnRoutine(onTurnFinished));
+        turnRoutine = StartCoroutine(BeginTurnSequence(onTurnFinished));
+    }
+
+    private IEnumerator BeginTurnSequence(Action onTurnFinished)
+    {
+        if (turnLock != null)
+            yield return turnLock.UnlockForTurn();
+
+        yield return TurnRoutine(onTurnFinished);
+        turnRoutine = null;
     }
 
     private IEnumerator TurnRoutine(Action onTurnFinished)
@@ -245,7 +258,6 @@ public class EnemyTurnController : MonoBehaviour
             return false;
 
         AttackMovePlan plan = BuildBestMovePlan(currentAP, totalPathLength);
-
         int moveAPBudget = Mathf.Max(0, currentAP - plan.ReservedAP);
         if (moveAPBudget <= 0)
             return false;
@@ -254,28 +266,23 @@ public class EnemyTurnController : MonoBehaviour
         if (maxMoveDistance < minMoveDistance)
             return false;
 
-        float actualMoveDistance;
+        float desiredRemainingDistance = plan.CanAttackAfterMove
+            ? GetDesiredRemainingPathDistanceToAttack(plan.AttackRange)
+            : GetDesiredRemainingPathDistanceToIdleNearTarget();
 
-        if (plan.CanAttackAfterMove)
-        {
-            float desiredRemainingDistance = GetDesiredRemainingPathDistanceToAttack(plan.AttackRange);
-            float desiredMoveDistance = totalPathLength - desiredRemainingDistance;
+        float desiredMoveDistance = totalPathLength - desiredRemainingDistance;
+        if (desiredMoveDistance <= minMoveDistance)
+            return false;
 
-            if (desiredMoveDistance <= minMoveDistance)
-                return false;
-
-            actualMoveDistance = Mathf.Min(maxMoveDistance, desiredMoveDistance);
-        }
-        else
-        {
-            actualMoveDistance = Mathf.Min(maxMoveDistance, totalPathLength);
-        }
-
+        float actualMoveDistance = Mathf.Min(maxMoveDistance, desiredMoveDistance);
         if (actualMoveDistance < minMoveDistance)
             return false;
 
         Vector3 limitedDestination = GetPointAlongPath(path.corners, actualMoveDistance, out float sampledMoveDistance);
         if (sampledMoveDistance < minMoveDistance)
+            return false;
+
+        if (!NavMesh.SamplePosition(limitedDestination, out NavMeshHit hit, 1.0f, agent.areaMask))
             return false;
 
         int apCostForMove = Mathf.CeilToInt(sampledMoveDistance / metersPerAP);
@@ -284,9 +291,9 @@ public class EnemyTurnController : MonoBehaviour
         if (!ap.SpendAP(apCostForMove))
             return false;
 
-        agent.stoppingDistance = destinationTolerance;
+        agent.stoppingDistance = Mathf.Max(0.08f, destinationTolerance);
         agent.isStopped = false;
-        agent.SetDestination(limitedDestination);
+        agent.SetDestination(hit.position);
 
         return true;
     }
@@ -443,9 +450,17 @@ public class EnemyTurnController : MonoBehaviour
         while (agent.pathPending)
             yield return null;
 
-        while (agent.remainingDistance > agent.stoppingDistance + destinationTolerance ||
-               agent.velocity.sqrMagnitude > 0.01f)
+        while (true)
         {
+            bool reached =
+                !agent.pathPending &&
+                agent.remainingDistance <= agent.stoppingDistance + destinationTolerance;
+
+            bool almostStill = agent.velocity.sqrMagnitude <= 0.01f;
+
+            if (reached && almostStill)
+                break;
+
             yield return null;
         }
 
@@ -484,15 +499,24 @@ public class EnemyTurnController : MonoBehaviour
 
     private void EndTurn(Action onTurnFinished)
     {
-        isTakingTurn = false;
-
         if (agent != null && agent.enabled)
         {
-            agent.ResetPath();
             agent.isStopped = true;
+            agent.ResetPath();
         }
 
+        turnLock?.LockNow();
+
+        isTakingTurn = false;
         onTurnFinished?.Invoke();
+    }
+
+    private float GetDesiredRemainingPathDistanceToIdleNearTarget()
+    {
+        float attackerRadius = GetBodyRadius(transform);
+        float targetRadius = GetBodyRadius(targetStats.transform);
+
+        return attackerRadius + targetRadius + Mathf.Max(0.05f, idleApproachGap);
     }
 
     private readonly struct AttackMovePlan
