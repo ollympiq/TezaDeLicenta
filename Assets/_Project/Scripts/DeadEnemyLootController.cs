@@ -26,9 +26,11 @@ public class DeadEnemyLootController : MonoBehaviour
             playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
 
         if (lootUI == null)
+        {
             lootUI = EnemyLootUI.Instance != null
                 ? EnemyLootUI.Instance
                 : FindFirstObjectByType<EnemyLootUI>(FindObjectsInactive.Include);
+        }
     }
 
     private void Update()
@@ -38,6 +40,9 @@ public class DeadEnemyLootController : MonoBehaviour
 
         if (Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
         {
+            if (lootUI.IsOpen)
+                GameLog.Info("Ai inchis fereastra de loot.");
+
             lootUI.Hide();
             return;
         }
@@ -57,11 +62,15 @@ public class DeadEnemyLootController : MonoBehaviour
         {
             playerMover?.BlockMovementForCurrentFrame();
             lootUI.Show(clickedLoot);
+            GameLog.Info($"Ai deschis loot-ul de la {clickedLoot.name}.");
         }
         else
         {
             if (lootUI.IsOpen)
+            {
                 playerMover?.BlockMovementForCurrentFrame();
+                GameLog.Info("Ai inchis fereastra de loot.");
+            }
 
             lootUI.Hide();
         }

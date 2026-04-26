@@ -12,23 +12,28 @@ public class MoveRangeGridVisualizer : MonoBehaviour
     [SerializeField] private Transform center;
 
     [Header("Grid")]
-    [SerializeField] private float cellSize = 0.75f;
-    [SerializeField] private int maxRadiusCells = 30;
+    [SerializeField] private float cellSize = 0.3f;
+    [SerializeField] private int maxRadiusCells = 50;
+    [SerializeField] private float cellOverlap = 1.08f;
 
     [Header("Sampling")]
-    [SerializeField] private float sampleMaxDist = 0.45f;
-    [SerializeField] private float sampleSnapTolerance = 0.35f;
+    [SerializeField] private float sampleMaxDist = 0.22f;
+    [SerializeField] private float sampleSnapTolerance = 0.18f;
     [SerializeField] private float maxHeightDifference = 0.5f;
-    [SerializeField] private float yOffset = 0.05f;
+    [SerializeField] private float yOffset = 0.03f;
 
     [Header("Redraw")]
-    [SerializeField] private float redrawInterval = 0.2f;
-    [SerializeField] private float moveThreshold = 0.05f;
+    [SerializeField] private float redrawInterval = 0.15f;
+    [SerializeField] private float moveThreshold = 0.03f;
 
     private Mesh mesh;
     private float timer;
     private Vector3 lastCenterPos;
     private int lastAP = -1;
+
+    private readonly List<Vector3> vertices = new List<Vector3>(4096);
+    private readonly List<int> triangles = new List<int>(8192);
+    private readonly List<Vector3> normals = new List<Vector3>(4096);
 
     private void Awake()
     {
@@ -77,9 +82,7 @@ public class MoveRangeGridVisualizer : MonoBehaviour
         bool apChanged = playerAP.CurrentAP != lastAP;
 
         if (moved || apChanged || timer >= redrawInterval)
-        {
             Redraw(false);
-        }
     }
 
     private void OnAPChanged(int current, int max)
@@ -112,7 +115,7 @@ public class MoveRangeGridVisualizer : MonoBehaviour
         lastAP = currentAP;
 
         float maxMoveDistance = currentAP * mover.UnitsPerAP;
-        int radiusCells = Mathf.Min(maxRadiusCells, Mathf.CeilToInt(maxMoveDistance / cellSize) + 1);
+        int radiusCells = Mathf.Min(maxRadiusCells, Mathf.CeilToInt(maxMoveDistance / cellSize) + 2);
 
         BuildGridMesh(navCenter, maxMoveDistance, radiusCells);
     }
@@ -124,11 +127,12 @@ public class MoveRangeGridVisualizer : MonoBehaviour
         if (maxMoveDistance <= 0.01f)
             return;
 
-        List<Vector3> vertices = new List<Vector3>();
-        List<int> triangles = new List<int>();
-        List<Vector3> normals = new List<Vector3>();
+        vertices.Clear();
+        triangles.Clear();
+        normals.Clear();
 
-        float maxDistanceSqr = (maxMoveDistance + cellSize * 0.75f) * (maxMoveDistance + cellSize * 0.75f);
+        float extra = cellSize;
+        float maxDistanceSqr = (maxMoveDistance + extra) * (maxMoveDistance + extra);
 
         for (int x = -radiusCells; x <= radiusCells; x++)
         {
@@ -145,7 +149,7 @@ public class MoveRangeGridVisualizer : MonoBehaviour
                 if (!TryGetReachableCell(start, rawCenter, maxMoveDistance, out Vector3 cellCenter))
                     continue;
 
-                AddQuad(cellCenter, cellSize, vertices, triangles, normals);
+                AddQuad(cellCenter, cellSize * cellOverlap);
             }
         }
 
@@ -188,12 +192,7 @@ public class MoveRangeGridVisualizer : MonoBehaviour
         return true;
     }
 
-    private void AddQuad(
-        Vector3 centerPoint,
-        float size,
-        List<Vector3> vertices,
-        List<int> triangles,
-        List<Vector3> normals)
+    private void AddQuad(Vector3 centerPoint, float size)
     {
         float half = size * 0.5f;
         float y = centerPoint.y + yOffset;
@@ -230,11 +229,8 @@ public class MoveRangeGridVisualizer : MonoBehaviour
             return 0f;
 
         float total = 0f;
-
         for (int i = 1; i < path.corners.Length; i++)
-        {
             total += Vector3.Distance(path.corners[i - 1], path.corners[i]);
-        }
 
         return total;
     }

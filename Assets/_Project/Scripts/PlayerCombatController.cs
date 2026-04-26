@@ -106,7 +106,7 @@ public class PlayerCombatController : MonoBehaviour
                     break;
 
                 case SkillTargetingMode.Self:
-                    Debug.Log("Skill-urile Self nu sunt implementate inca.");
+                    GameLog.Warning("Skill-urile Self nu sunt implementate inca.");
                     break;
             }
         }
@@ -179,7 +179,7 @@ public class PlayerCombatController : MonoBehaviour
                 break;
 
             case SkillType.Passive:
-                Debug.Log($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
+                GameLog.Warning($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
                 break;
         }
 
@@ -203,11 +203,11 @@ public class PlayerCombatController : MonoBehaviour
                 break;
 
             case SkillType.BasicAttack:
-                Debug.Log("Basic Attack nu poate fi folosit pe ground.");
+                GameLog.Warning("Basic Attack nu poate fi folosit pe ground.");
                 break;
 
             case SkillType.Passive:
-                Debug.Log($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
+                GameLog.Warning($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
                 break;
         }
 
@@ -237,7 +237,7 @@ public class PlayerCombatController : MonoBehaviour
             }
             else
             {
-                Debug.LogWarning($"Cursor texture pentru skill-ul '{selectedSkill.DisplayName}' nu are setarile corecte de import.");
+                GameLog.Warning($"Cursor texture pentru skill-ul '{selectedSkill.DisplayName}' nu are setarile corecte de import.");
             }
         }
 

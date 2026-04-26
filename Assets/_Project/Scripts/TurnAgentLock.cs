@@ -44,7 +44,7 @@ public class TurnAgentLock : MonoBehaviour
         if (turnObstacleProxy != null)
             turnObstacleProxy.enabled = false;
 
-        // lasam un frame pentru refresh la navmesh carve
+        // Lasam un frame pentru refresh-ul carve-ului in NavMesh
         yield return null;
 
         UnlockImmediate();

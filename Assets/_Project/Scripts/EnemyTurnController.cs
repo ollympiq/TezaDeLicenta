@@ -18,8 +18,8 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private TurnAgentLock turnLock;
 
     [Header("Special Attacks")]
-    [SerializeField] private AttackDefinition mediumAttack; // 4 AP
-    [SerializeField] private AttackDefinition heavyAttack;  // 6 AP
+    [SerializeField] private AttackDefinition mediumAttack;
+    [SerializeField] private AttackDefinition heavyAttack;
 
     [Header("Turn")]
     [SerializeField] private float thinkDelay = 0.2f;
@@ -59,7 +59,8 @@ public class EnemyTurnController : MonoBehaviour
         if (actionLimiter == null)
             actionLimiter = GetComponent<TurnActionLimiter>();
 
-        if (turnLock == null) turnLock = GetComponent<TurnAgentLock>();
+        if (turnLock == null)
+            turnLock = GetComponent<TurnAgentLock>();
 
         ap = GetComponent<PlayerAP>();
         basicAttack = GetComponent<CharacterBasicAttack>();
@@ -109,9 +110,10 @@ public class EnemyTurnController : MonoBehaviour
         ap.RestoreAllAP();
         actionLimiter?.ResetTurnUsage();
 
+        GameLog.Info($"{name} isi incepe tura cu {ap.CurrentAP} AP.");
+
         yield return new WaitForSeconds(thinkDelay);
 
-        // 1. Daca e deja in range, foloseste cel mai bun atac si termina tura
         if (TryUseBestAvailableAttack())
         {
             yield return new WaitForSeconds(afterAttackDelay);
@@ -119,10 +121,10 @@ public class EnemyTurnController : MonoBehaviour
             yield break;
         }
 
-        // 2. Daca nu e in range, incearca o singura miscare
         bool moved = TryMoveTowardTargetWithinAP();
         if (!moved)
         {
+            GameLog.Warning($"{name} nu a putut efectua miscarea spre tinta.");
             EndTurn(onTurnFinished);
             yield break;
         }
@@ -130,7 +132,6 @@ public class EnemyTurnController : MonoBehaviour
         yield return WaitUntilMovementStops();
         yield return new WaitForSeconds(afterMoveDelay);
 
-        // 3. Dupa miscare, incearca inca o singura data sa atace
         targetHealth = targetStats != null ? targetStats.GetComponent<CharacterHealth>() : null;
         if (targetHealth != null && !targetHealth.IsDead)
         {
@@ -209,7 +210,7 @@ public class EnemyTurnController : MonoBehaviour
                 DamageNumberManager.Instance.ShowMiss(targetStats.transform);
         }
 
-        Debug.Log(BuildCombatLog(attack, targetStats.name, result, targetHealth));
+        GameLog.Combat(BuildCombatLog(attack, targetStats.name, result, targetHealth));
         return true;
     }
 
@@ -481,8 +482,10 @@ public class EnemyTurnController : MonoBehaviour
     {
         if (!result.Hit)
         {
-            return $"{name} used {attack.AttackName} on {targetName} but missed. " +
-                   $"Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+            return
+                $"{name} used {attack.AttackName} on {targetName} but missed. " +
+                $"Hit chance: {result.HitChance:F1}% | " +
+                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
         }
 
         string critText = result.WasCritical ? " CRITICAL!" : "";
@@ -508,6 +511,7 @@ public class EnemyTurnController : MonoBehaviour
         turnLock?.LockNow();
 
         isTakingTurn = false;
+        GameLog.Info($"{name} si-a terminat tura.");
         onTurnFinished?.Invoke();
     }
 

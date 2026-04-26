@@ -66,13 +66,13 @@ public class CharacterBasicAttack : MonoBehaviour
         WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
         if (weapon == null)
         {
-            Debug.Log("Nu ai nicio arma echipata.");
+            GameLog.Warning("Nu ai nicio arma echipata.");
             return false;
         }
 
         if (turnActionLimiter != null && !turnActionLimiter.CanUseBasicAttack())
         {
-            Debug.Log("Basic Attack a fost deja folosit in acest tur.");
+            GameLog.Warning("Basic Attack a fost deja folosit in acest tur.");
             return false;
         }
 
@@ -82,7 +82,7 @@ public class CharacterBasicAttack : MonoBehaviour
 
         if (!IsTargetInRange(targetStats.transform, weapon.Range))
         {
-            Debug.Log("Tinta este prea departe.");
+            GameLog.Warning("Tinta este prea departe pentru Basic Attack.");
             return false;
         }
 
@@ -90,7 +90,7 @@ public class CharacterBasicAttack : MonoBehaviour
         {
             if (!playerAP.HasEnoughAP(weapon.ApCost))
             {
-                Debug.Log("Nu ai destul AP pentru atac.");
+                GameLog.Warning("Nu ai destul AP pentru Basic Attack.");
                 return false;
             }
 
@@ -133,7 +133,7 @@ public class CharacterBasicAttack : MonoBehaviour
                 DamageNumberManager.Instance.ShowMiss(targetStats.transform);
         }
 
-        Debug.Log(BuildCombatLog(weapon, targetStats.name, result, targetHealth));
+        GameLog.Combat(BuildCombatLog(weapon, targetStats.name, result, targetHealth));
         return true;
     }
 
@@ -188,8 +188,12 @@ public class CharacterBasicAttack : MonoBehaviour
     private string BuildCombatLog(WeaponDefinition weapon, string targetName, DamageResult result, CharacterHealth targetHealth)
     {
         if (!result.Hit)
-            return $"{name} used {weapon.DisplayName} on {targetName} but missed. " +
-                   $"Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        {
+            return
+                $"{name} attacked with {weapon.DisplayName} on {targetName} but missed. " +
+                $"Hit chance: {result.HitChance:F1}% | " +
+                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        }
 
         string critText = result.WasCritical ? " CRITICAL!" : "";
 

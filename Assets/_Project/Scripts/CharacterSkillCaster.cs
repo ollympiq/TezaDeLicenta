@@ -36,7 +36,7 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
         {
-            Debug.Log($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
+            GameLog.Warning($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
             return false;
         }
 
@@ -49,15 +49,18 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (!IsPointInRange(primaryTarget.transform.position, skill.Range))
         {
-            Debug.Log("Tinta este prea departe pentru skill.");
+            GameLog.Warning($"Tinta este prea departe pentru skill-ul {skill.DisplayName}.");
             return false;
         }
 
         List<CharacterStats> targets = CollectTargetsFromTarget(skill, primaryTarget);
         if (targets.Count == 0)
+        {
+            GameLog.Warning($"Nu exista tinte valide pentru skill-ul {skill.DisplayName}.");
             return false;
+        }
 
-        if (!TrySpendAP(skill.ApCost))
+        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
@@ -81,24 +84,24 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
         {
-            Debug.Log($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
+            GameLog.Warning($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
             return false;
         }
 
         if (!IsPointInRange(point, skill.Range))
         {
-            Debug.Log("Punctul ales este prea departe pentru skill.");
+            GameLog.Warning($"Punctul ales este prea departe pentru skill-ul {skill.DisplayName}.");
             return false;
         }
 
         List<CharacterStats> targets = CollectTargetsFromPoint(skill, point);
         if (targets.Count == 0)
         {
-            Debug.Log("Nu exista tinte valide in aria skill-ului.");
+            GameLog.Warning($"Nu exista tinte valide in aria skill-ului {skill.DisplayName}.");
             return false;
         }
 
-        if (!TrySpendAP(skill.ApCost))
+        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
@@ -164,14 +167,14 @@ public class CharacterSkillCaster : MonoBehaviour
         return health != null && !health.IsDead;
     }
 
-    private bool TrySpendAP(int apCost)
+    private bool TrySpendAP(int apCost, string skillName)
     {
         if (playerAP == null)
             return true;
 
         if (!playerAP.HasEnoughAP(apCost))
         {
-            Debug.Log("Nu ai destul AP pentru skill.");
+            GameLog.Warning($"Nu ai destul AP pentru skill-ul {skillName}.");
             return false;
         }
 
@@ -180,7 +183,7 @@ public class CharacterSkillCaster : MonoBehaviour
 
     private void StopMovement()
     {
-        if (agent == null)
+        if (agent == null || !agent.enabled)
             return;
 
         agent.isStopped = true;
@@ -216,12 +219,14 @@ public class CharacterSkillCaster : MonoBehaviour
                 targetHealth.TakeDamage(result.FinalDamage);
 
                 if (DamageNumberManager.Instance != null)
+                {
                     DamageNumberManager.Instance.ShowDamage(
                         result.FinalDamage,
                         targetStats.transform,
                         result.DamageType,
                         result.WasCritical
                     );
+                }
             }
             else
             {
@@ -229,14 +234,19 @@ public class CharacterSkillCaster : MonoBehaviour
                     DamageNumberManager.Instance.ShowMiss(targetStats.transform);
             }
 
-            Debug.Log(BuildCombatLog(skill, targetStats.name, result, targetHealth));
+            GameLog.Combat(BuildCombatLog(skill, targetStats.name, result, targetHealth));
         }
     }
 
     private string BuildCombatLog(SkillDefinition skill, string targetName, DamageResult result, CharacterHealth targetHealth)
     {
         if (!result.Hit)
-            return $"{name} used {skill.DisplayName} on {targetName} but missed. Hit chance: {result.HitChance:F1}% | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        {
+            return
+                $"{name} used {skill.DisplayName} on {targetName} but missed. " +
+                $"Hit chance: {result.HitChance:F1}% | " +
+                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        }
 
         string critText = result.WasCritical ? " CRITICAL!" : "";
 

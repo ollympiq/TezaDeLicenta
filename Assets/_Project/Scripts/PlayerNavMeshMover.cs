@@ -129,7 +129,7 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (!playerAP.HasEnoughAP(apCost))
         {
-            Debug.Log("Nu ai destul AP.");
+            GameLog.Warning("Nu ai destul AP pentru deplasare.");
             return;
         }
 
@@ -140,7 +140,7 @@ public class PlayerNavMeshMover : MonoBehaviour
         agent.isStopped = false;
         agent.SetDestination(navHit.position);
 
-        Debug.Log($"Move cost: {apCost} AP | Path length: {pathLength:F2}");
+        GameLog.Info($"Deplasare efectuata | Cost: {apCost} AP | Lungime traseu: {pathLength:F2}");
     }
 
     private void StopMovementImmediately()

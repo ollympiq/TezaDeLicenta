@@ -12,22 +12,31 @@ public class EnemyLootUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private EnemyLootSlotUI[] slots;
 
-    [Header("Gameplay References")]
-    [SerializeField] private PlayerNavMeshMover playerMover;
-    [SerializeField] private PlayerCombatController playerCombatController;
-    [SerializeField] private PlayerTurnController playerTurnController;
-
     private EnemyLootContainer currentContainer;
     private int lastCollectedGold;
+    private bool initialized;
 
     public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
     public EnemyLootContainer CurrentContainer => currentContainer;
 
     private void Awake()
     {
+        EnsureInitialized();
+    }
+
+    private void OnEnable()
+    {
+        EnsureInitialized();
+    }
+
+    private void EnsureInitialized()
+    {
+        if (initialized)
+            return;
+
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
+            GameLog.Warning("Exista deja un EnemyLootUI activ in scena.");
             return;
         }
 
@@ -39,14 +48,8 @@ public class EnemyLootUI : MonoBehaviour
         if (playerWallet == null)
             playerWallet = FindFirstObjectByType<PlayerWallet>();
 
-        if (playerMover == null)
-            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
-
-        if (playerCombatController == null)
-            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
-
-        if (playerTurnController == null)
-            playerTurnController = FindFirstObjectByType<PlayerTurnController>();
+        if (panelRoot == null)
+            panelRoot = gameObject;
 
         for (int i = 0; i < slots.Length; i++)
         {
@@ -54,11 +57,15 @@ public class EnemyLootUI : MonoBehaviour
                 slots[i].Setup(this, i);
         }
 
-        Hide();
+        currentContainer = null;
+        lastCollectedGold = 0;
+        initialized = true;
     }
 
     public void Show(EnemyLootContainer container)
     {
+        EnsureInitialized();
+
         if (container == null || panelRoot == null)
         {
             Hide();
@@ -77,21 +84,23 @@ public class EnemyLootUI : MonoBehaviour
         if (titleText != null)
             titleText.text = BuildTitle(currentContainer);
 
-        panelRoot.SetActive(true);
-        ApplyGameplayInputState();
+        if (!panelRoot.activeSelf)
+            panelRoot.SetActive(true);
+
         RefreshNow();
     }
 
     public void Hide()
     {
+        EnsureInitialized();
+
         currentContainer = null;
         lastCollectedGold = 0;
 
-        if (panelRoot != null)
+        if (panelRoot != null && panelRoot.activeSelf)
             panelRoot.SetActive(false);
 
         ClearAll();
-        ApplyGameplayInputState();
     }
 
     public void RefreshNow()
@@ -129,7 +138,7 @@ public class EnemyLootUI : MonoBehaviour
 
         if (!playerInventory.CanAddItemInstance(item))
         {
-            Debug.Log("Inventarul este plin.");
+            GameLog.Warning("Inventarul este plin.");
             return;
         }
 
@@ -143,9 +152,15 @@ public class EnemyLootUI : MonoBehaviour
         bool added = playerInventory.AddItemInstance(takenItem);
         if (!added)
         {
-            Debug.Log("Inventarul este plin.");
+            GameLog.Warning("Inventarul este plin.");
             return;
         }
+
+        string itemName = takenItem.Definition != null
+            ? takenItem.Definition.DisplayName
+            : "obiect necunoscut";
+
+        GameLog.Success($"Ai adaugat in inventar: {itemName}.");
 
         RefreshNow();
 
@@ -166,6 +181,8 @@ public class EnemyLootUI : MonoBehaviour
 
         playerWallet.AddGold(gold);
         lastCollectedGold = gold;
+
+        GameLog.Success($"Ai primit {gold} gold.");
     }
 
     private void ClearAll()
@@ -203,17 +220,5 @@ public class EnemyLootUI : MonoBehaviour
             return tierText + "  (+" + lastCollectedGold + " Gold)";
 
         return tierText;
-    }
-
-    private void ApplyGameplayInputState()
-    {
-        bool uiOpen = IsOpen;
-        bool allowGameplayInput = !uiOpen && playerTurnController != null && playerTurnController.IsTurnActive;
-
-        if (playerMover != null)
-            playerMover.SetTurnInputEnabled(allowGameplayInput);
-
-        if (playerCombatController != null)
-            playerCombatController.SetTurnInputEnabled(allowGameplayInput);
     }
 }
