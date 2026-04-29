@@ -31,6 +31,9 @@ public class MoveRangeGridVisualizer : MonoBehaviour
     private Vector3 lastCenterPos;
     private int lastAP = -1;
 
+    private bool suppressWhileMoving;
+    private bool pendingRedrawAfterMove;
+
     private readonly List<Vector3> vertices = new List<Vector3>(4096);
     private readonly List<int> triangles = new List<int>(8192);
     private readonly List<Vector3> normals = new List<Vector3>(4096);
@@ -58,12 +61,24 @@ public class MoveRangeGridVisualizer : MonoBehaviour
     {
         if (playerAP != null)
             playerAP.OnAPChanged += OnAPChanged;
+
+        if (mover != null)
+        {
+            mover.OnMoveStarted += HandleMoveStarted;
+            mover.OnMoveFinished += HandleMoveFinished;
+        }
     }
 
     private void OnDisable()
     {
         if (playerAP != null)
             playerAP.OnAPChanged -= OnAPChanged;
+
+        if (mover != null)
+        {
+            mover.OnMoveStarted -= HandleMoveStarted;
+            mover.OnMoveFinished -= HandleMoveFinished;
+        }
     }
 
     private void Start()
@@ -74,6 +89,9 @@ public class MoveRangeGridVisualizer : MonoBehaviour
     private void Update()
     {
         if (center == null || playerAP == null || mover == null)
+            return;
+
+        if (suppressWhileMoving)
             return;
 
         timer += Time.deltaTime;
@@ -87,7 +105,36 @@ public class MoveRangeGridVisualizer : MonoBehaviour
 
     private void OnAPChanged(int current, int max)
     {
+        if (suppressWhileMoving)
+        {
+            pendingRedrawAfterMove = true;
+            return;
+        }
+
         Redraw(true);
+    }
+
+    public void BeginHideUntilMovementEnds()
+    {
+        suppressWhileMoving = true;
+        pendingRedrawAfterMove = true;
+        ClearMesh();
+    }
+
+    private void HandleMoveStarted()
+    {
+        BeginHideUntilMovementEnds();
+    }
+
+    private void HandleMoveFinished()
+    {
+        suppressWhileMoving = false;
+
+        if (pendingRedrawAfterMove)
+        {
+            pendingRedrawAfterMove = false;
+            Redraw(true);
+        }
     }
 
     private void Redraw(bool force)
@@ -97,7 +144,7 @@ public class MoveRangeGridVisualizer : MonoBehaviour
 
         if (!NavMesh.SamplePosition(center.position, out NavMeshHit centerHit, 2f, NavMesh.AllAreas))
         {
-            mesh.Clear();
+            ClearMesh();
             return;
         }
 
@@ -233,5 +280,11 @@ public class MoveRangeGridVisualizer : MonoBehaviour
             total += Vector3.Distance(path.corners[i - 1], path.corners[i]);
 
         return total;
+    }
+
+    private void ClearMesh()
+    {
+        if (mesh != null)
+            mesh.Clear();
     }
 }

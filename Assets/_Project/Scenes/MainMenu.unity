@@ -1842,7 +1842,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8577697166999259006, guid: d1ec15ba00448b5468dd33b0d0981b0e, type: 3}
       propertyPath: allItemDefinitions.Array.size
-      value: 38
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 8577697166999259006, guid: d1ec15ba00448b5468dd33b0d0981b0e, type: 3}
       propertyPath: allSkillDefinitions.Array.size
@@ -2000,6 +2000,14 @@ PrefabInstance:
       propertyPath: 'allItemDefinitions.Array.data[37]'
       value: 
       objectReference: {fileID: 11400000, guid: 6e694b19440eda342a9eea51c5b9f0d5, type: 2}
+    - target: {fileID: 8577697166999259006, guid: d1ec15ba00448b5468dd33b0d0981b0e, type: 3}
+      propertyPath: 'allItemDefinitions.Array.data[38]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 029785fc9232ed94badc376d7087d1b7, type: 2}
+    - target: {fileID: 8577697166999259006, guid: d1ec15ba00448b5468dd33b0d0981b0e, type: 3}
+      propertyPath: 'allItemDefinitions.Array.data[39]'
+      value: 
+      objectReference: {fileID: 11400000, guid: ba2c00af809928546bc7c689f797db82, type: 2}
     - target: {fileID: 8577697166999259006, guid: d1ec15ba00448b5468dd33b0d0981b0e, type: 3}
       propertyPath: 'allSkillDefinitions.Array.data[0]'
       value: 

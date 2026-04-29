@@ -1,7 +1,0 @@
-:root {
-  --cell-size: 100px;
-}
-
-.set-bag .debug-label {
-  display: flex;
-}

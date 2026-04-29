@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -25,6 +26,20 @@ public class LootGenerator : MonoBehaviour
         }
     }
 
+    [Serializable]
+    private class WeaponFamilyWeight
+    {
+        public WeaponFamily family;
+        public float weight = 1f;
+    }
+
+    [Serializable]
+    private class ArmorSlotWeight
+    {
+        public EquipmentSlot slot;
+        public float weight = 1f;
+    }
+
     [Header("Pools")]
     [SerializeField] private List<WeaponDefinition> weaponPool = new List<WeaponDefinition>();
     [SerializeField] private List<ArmorDefinition> armorPool = new List<ArmorDefinition>();
@@ -33,6 +48,32 @@ public class LootGenerator : MonoBehaviour
 
     [Header("Tier Settings")]
     [SerializeField] private List<LootTierSettings> tierSettings = new List<LootTierSettings>();
+
+    [Header("Weapon Family Weights")]
+    [SerializeField]
+    private List<WeaponFamilyWeight> weaponFamilyWeights = new List<WeaponFamilyWeight>
+    {
+        new WeaponFamilyWeight { family = WeaponFamily.Sword, weight = 1f },
+        new WeaponFamilyWeight { family = WeaponFamily.Bow, weight = 1f },
+        new WeaponFamilyWeight { family = WeaponFamily.Staff, weight = 1f }
+    };
+
+    [Header("Armor Slot Weights")]
+    [SerializeField]
+    private List<ArmorSlotWeight> armorSlotWeights = new List<ArmorSlotWeight>
+    {
+        new ArmorSlotWeight { slot = EquipmentSlot.Head, weight = 1f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Chest, weight = 1f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Hands, weight = 1f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Legs, weight = 1f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Feet, weight = 1f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Belt, weight = 0.8f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Ring, weight = 0.8f },
+        new ArmorSlotWeight { slot = EquipmentSlot.Amulet, weight = 0.8f }
+    };
+
+    private readonly Dictionary<WeaponFamily, List<WeaponDefinition>> weaponsByFamily = new Dictionary<WeaponFamily, List<WeaponDefinition>>();
+    private readonly Dictionary<EquipmentSlot, List<ArmorDefinition>> armorsBySlot = new Dictionary<EquipmentSlot, List<ArmorDefinition>>();
 
     private void Awake()
     {
@@ -43,6 +84,12 @@ public class LootGenerator : MonoBehaviour
         }
 
         Instance = this;
+        RebuildGroupedPools();
+    }
+
+    private void OnValidate()
+    {
+        RebuildGroupedPools();
     }
 
     public GeneratedLootResult GenerateLoot(EnemyLootTier tier, int itemLevel = 1)
@@ -56,9 +103,9 @@ public class LootGenerator : MonoBehaviour
             return result;
         }
 
-        result.SetGold(Random.Range(settings.MinGold, settings.MaxGold + 1));
+        result.SetGold(UnityEngine.Random.Range(settings.MinGold, settings.MaxGold + 1));
 
-        int itemCount = Random.Range(settings.MinItems, settings.MaxItems + 1);
+        int itemCount = UnityEngine.Random.Range(settings.MinItems, settings.MaxItems + 1);
         itemLevel = Mathf.Max(1, itemLevel);
 
         for (int i = 0; i < itemCount; i++)
@@ -73,6 +120,72 @@ public class LootGenerator : MonoBehaviour
         }
 
         return result;
+    }
+
+    public List<ItemInstance> GenerateTraderItems(int itemCount, int itemLevel, EnemyLootTier tier)
+    {
+        List<ItemInstance> result = new List<ItemInstance>();
+
+        LootTierSettings settings = GetSettingsForTier(tier);
+        if (settings == null)
+        {
+            Debug.LogWarning("LootGenerator: lipsesc setarile pentru stock-ul traderului la tier-ul " + tier);
+            return result;
+        }
+
+        itemCount = Mathf.Max(0, itemCount);
+        itemLevel = Mathf.Max(1, itemLevel);
+
+        for (int i = 0; i < itemCount; i++)
+        {
+            ItemDefinition definition = RollDefinition(settings);
+            if (definition == null)
+                continue;
+
+            ItemInstance item = CreateGeneratedItem(definition, settings, itemLevel);
+            if (item != null && item.IsValid)
+                result.Add(item);
+        }
+
+        return result;
+    }
+
+    private void RebuildGroupedPools()
+    {
+        weaponsByFamily.Clear();
+        armorsBySlot.Clear();
+
+        for (int i = 0; i < weaponPool.Count; i++)
+        {
+            WeaponDefinition weapon = weaponPool[i];
+            if (weapon == null)
+                continue;
+
+            if (!weaponsByFamily.TryGetValue(weapon.WeaponFamily, out List<WeaponDefinition> list))
+            {
+                list = new List<WeaponDefinition>();
+                weaponsByFamily.Add(weapon.WeaponFamily, list);
+            }
+
+            list.Add(weapon);
+        }
+
+        for (int i = 0; i < armorPool.Count; i++)
+        {
+            ArmorDefinition armor = armorPool[i];
+            if (armor == null)
+                continue;
+
+            EquipmentSlot slot = armor.EquipmentSlot;
+
+            if (!armorsBySlot.TryGetValue(slot, out List<ArmorDefinition> list))
+            {
+                list = new List<ArmorDefinition>();
+                armorsBySlot.Add(slot, list);
+            }
+
+            list.Add(armor);
+        }
     }
 
     private LootTierSettings GetSettingsForTier(EnemyLootTier tier)
@@ -109,7 +222,7 @@ public class LootGenerator : MonoBehaviour
         for (int i = 0; i < availableCategories.Count; i++)
             totalWeight += availableCategories[i].Weight;
 
-        float roll = Random.value * totalWeight;
+        float roll = UnityEngine.Random.value * totalWeight;
 
         for (int i = 0; i < availableCategories.Count; i++)
         {
@@ -120,20 +233,142 @@ public class LootGenerator : MonoBehaviour
             switch (availableCategories[i].Category)
             {
                 case LootCategory.Weapon:
-                    return weaponPool[Random.Range(0, weaponPool.Count)];
+                    return RollWeaponDefinitionBalanced();
 
                 case LootCategory.Armor:
-                    return armorPool[Random.Range(0, armorPool.Count)];
+                    return RollArmorDefinitionBalanced();
 
                 case LootCategory.Potion:
-                    return potionPool[Random.Range(0, potionPool.Count)];
+                    return potionPool[UnityEngine.Random.Range(0, potionPool.Count)];
 
                 case LootCategory.SkillBook:
-                    return skillBookPool[Random.Range(0, skillBookPool.Count)];
+                    return skillBookPool[UnityEngine.Random.Range(0, skillBookPool.Count)];
             }
         }
 
         return null;
+    }
+
+    private WeaponDefinition RollWeaponDefinitionBalanced()
+    {
+        WeaponFamily family = RollWeaponFamily();
+        if (!weaponsByFamily.TryGetValue(family, out List<WeaponDefinition> familyPool) || familyPool == null || familyPool.Count == 0)
+            return RollAnyWeaponFallback();
+
+        return familyPool[UnityEngine.Random.Range(0, familyPool.Count)];
+    }
+
+    private ArmorDefinition RollArmorDefinitionBalanced()
+    {
+        EquipmentSlot slot = RollArmorSlot();
+        if (!armorsBySlot.TryGetValue(slot, out List<ArmorDefinition> slotPool) || slotPool == null || slotPool.Count == 0)
+            return RollAnyArmorFallback();
+
+        return slotPool[UnityEngine.Random.Range(0, slotPool.Count)];
+    }
+
+    private WeaponFamily RollWeaponFamily()
+    {
+        float totalWeight = 0f;
+
+        for (int i = 0; i < weaponFamilyWeights.Count; i++)
+        {
+            WeaponFamilyWeight entry = weaponFamilyWeights[i];
+            if (entry == null || entry.weight <= 0f)
+                continue;
+
+            if (!weaponsByFamily.ContainsKey(entry.family))
+                continue;
+
+            if (weaponsByFamily[entry.family] == null || weaponsByFamily[entry.family].Count == 0)
+                continue;
+
+            totalWeight += entry.weight;
+        }
+
+        if (totalWeight <= 0f)
+            return RollAnyWeaponFallback()?.WeaponFamily ?? WeaponFamily.Sword;
+
+        float roll = UnityEngine.Random.value * totalWeight;
+
+        for (int i = 0; i < weaponFamilyWeights.Count; i++)
+        {
+            WeaponFamilyWeight entry = weaponFamilyWeights[i];
+            if (entry == null || entry.weight <= 0f)
+                continue;
+
+            if (!weaponsByFamily.ContainsKey(entry.family))
+                continue;
+
+            if (weaponsByFamily[entry.family] == null || weaponsByFamily[entry.family].Count == 0)
+                continue;
+
+            roll -= entry.weight;
+            if (roll <= 0f)
+                return entry.family;
+        }
+
+        return RollAnyWeaponFallback()?.WeaponFamily ?? WeaponFamily.Sword;
+    }
+
+    private EquipmentSlot RollArmorSlot()
+    {
+        float totalWeight = 0f;
+
+        for (int i = 0; i < armorSlotWeights.Count; i++)
+        {
+            ArmorSlotWeight entry = armorSlotWeights[i];
+            if (entry == null || entry.weight <= 0f)
+                continue;
+
+            if (!armorsBySlot.ContainsKey(entry.slot))
+                continue;
+
+            if (armorsBySlot[entry.slot] == null || armorsBySlot[entry.slot].Count == 0)
+                continue;
+
+            totalWeight += entry.weight;
+        }
+
+        if (totalWeight <= 0f)
+            return RollAnyArmorFallback()?.EquipmentSlot ?? EquipmentSlot.Head;
+
+        float roll = UnityEngine.Random.value * totalWeight;
+
+        for (int i = 0; i < armorSlotWeights.Count; i++)
+        {
+            ArmorSlotWeight entry = armorSlotWeights[i];
+            if (entry == null || entry.weight <= 0f)
+                continue;
+
+            if (!armorsBySlot.ContainsKey(entry.slot))
+                continue;
+
+            if (armorsBySlot[entry.slot] == null || armorsBySlot[entry.slot].Count == 0)
+                continue;
+
+            roll -= entry.weight;
+            if (roll <= 0f)
+                return entry.slot;
+        }
+
+        return RollAnyArmorFallback()?.EquipmentSlot ?? EquipmentSlot.Head;
+    }
+
+    private WeaponDefinition RollAnyWeaponFallback()
+    {
+        if (weaponPool == null || weaponPool.Count == 0)
+            return null;
+
+        return weaponPool[UnityEngine.Random.Range(0, weaponPool.Count)];
+    }
+
+    private ArmorDefinition RollAnyArmorFallback()
+    {
+        if (armorPool == null || armorPool.Count == 0)
+            return null;
+
+        return armorPool[UnityEngine.Random.Range(0, armorPool.Count)];
     }
 
     private ItemInstance CreateGeneratedItem(ItemDefinition definition, LootTierSettings settings, int itemLevel)
@@ -171,7 +406,7 @@ public class LootGenerator : MonoBehaviour
         if (total <= 0f)
             return ItemRarity.Common;
 
-        float roll = Random.value * total;
+        float roll = UnityEngine.Random.value * total;
 
         if ((roll -= common) <= 0f) return ItemRarity.Common;
         if ((roll -= uncommon) <= 0f) return ItemRarity.Uncommon;
@@ -217,7 +452,7 @@ public class LootGenerator : MonoBehaviour
 
         for (int i = 0; i < modifierCount && availableBonuses.Count > 0; i++)
         {
-            int index = Random.Range(0, availableBonuses.Count);
+            int index = UnityEngine.Random.Range(0, availableBonuses.Count);
             ItemBonusType bonusType = availableBonuses[index];
             availableBonuses.RemoveAt(index);
 
@@ -314,34 +549,26 @@ public class LootGenerator : MonoBehaviour
             case ItemBonusType.Constitution:
             case ItemBonusType.Dexterity:
             case ItemBonusType.Intelligence:
-                return Mathf.Round(Random.Range(1f + rarityIndex, 2f + rarityIndex * 2f) * levelScalar);
+                return Mathf.Round(UnityEngine.Random.Range(1f + rarityIndex, 2f + rarityIndex * 2f) * levelScalar);
 
             case ItemBonusType.MaxHP:
-                return Mathf.Round(Random.Range(8f + rarityIndex * 4f, 14f + rarityIndex * 8f) * levelScalar);
+                return Mathf.Round(UnityEngine.Random.Range(8f + rarityIndex * 4f, 14f + rarityIndex * 8f) * levelScalar);
 
             case ItemBonusType.MaxAP:
-                {
-                    // Max AP trebuie sa ramana mic.
-                    // Common / Uncommon / Rare => +1
-                    // Epic / Legendary / Unique => +1 sau +2
-                    if (rarity == ItemRarity.Epic || rarity == ItemRarity.Legendary || rarity == ItemRarity.Unique)
-                        return Random.value < 0.5f ? 1f : 2f;
-
-                    return 1f;
-                }
+                return Mathf.Round(UnityEngine.Random.Range(1f, 1f + Mathf.CeilToInt((rarityIndex + 1) * 0.5f)));
 
             case ItemBonusType.PhysicalPower:
             case ItemBonusType.MagicPower:
-                return Mathf.Round(Random.Range(2f + rarityIndex, 4f + rarityIndex * 3f) * levelScalar);
+                return Mathf.Round(UnityEngine.Random.Range(2f + rarityIndex, 4f + rarityIndex * 3f) * levelScalar);
 
             case ItemBonusType.Armor:
-                return Mathf.Round(Random.Range(1f + rarityIndex, 2f + rarityIndex * 2f) * levelScalar);
+                return Mathf.Round(UnityEngine.Random.Range(1f + rarityIndex, 2f + rarityIndex * 2f) * levelScalar);
 
             case ItemBonusType.Accuracy:
             case ItemBonusType.Evasion:
             case ItemBonusType.CritChance:
             case ItemBonusType.Initiative:
-                return Mathf.Round(Random.Range(1f, 2f + rarityIndex * 1.5f) * levelScalar);
+                return Mathf.Round(UnityEngine.Random.Range(1f, 2f + rarityIndex * 1.5f) * levelScalar);
 
             case ItemBonusType.PhysicalResistance:
             case ItemBonusType.FireResistance:
@@ -349,7 +576,7 @@ public class LootGenerator : MonoBehaviour
             case ItemBonusType.WindResistance:
             case ItemBonusType.LightningResistance:
             case ItemBonusType.IceResistance:
-                return Mathf.Round(Random.Range(2f + rarityIndex, 4f + rarityIndex * 2f) * resistScalar);
+                return Mathf.Round(UnityEngine.Random.Range(2f + rarityIndex, 4f + rarityIndex * 2f) * resistScalar);
 
             default:
                 return 0f;
@@ -393,33 +620,5 @@ public class LootGenerator : MonoBehaviour
             case ItemRarity.Unique: return 1.70f;
             default: return 1f;
         }
-    }
-
-    public List<ItemInstance> GenerateTraderItems(int itemCount, int itemLevel, EnemyLootTier tier)
-    {
-        List<ItemInstance> result = new List<ItemInstance>();
-
-        LootTierSettings settings = GetSettingsForTier(tier);
-        if (settings == null)
-        {
-            Debug.LogWarning("LootGenerator: lipsesc setarile pentru stock-ul traderului la tier-ul " + tier);
-            return result;
-        }
-
-        itemCount = Mathf.Max(0, itemCount);
-        itemLevel = Mathf.Max(1, itemLevel);
-
-        for (int i = 0; i < itemCount; i++)
-        {
-            ItemDefinition definition = RollDefinition(settings);
-            if (definition == null)
-                continue;
-
-            ItemInstance item = CreateGeneratedItem(definition, settings, itemLevel);
-            if (item != null && item.IsValid)
-                result.Add(item);
-        }
-
-        return result;
     }
 }
