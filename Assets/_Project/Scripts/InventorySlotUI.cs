@@ -39,16 +39,20 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (eventData.button != PointerEventData.InputButton.Left)
-            return;
-
-        owner?.HandleInventorySlotClicked(slotIndex);
+        owner?.HandleInventorySlotClicked(slotIndex, eventData.button);
     }
 
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (currentItem != null && ItemTooltipUI.Instance != null)
+        if (currentItem == null || ItemTooltipUI.Instance == null)
+            return;
+
+        string extraText = owner != null ? owner.GetTooltipExtraTextForSlot(slotIndex) : null;
+
+        if (string.IsNullOrWhiteSpace(extraText))
             ItemTooltipUI.Instance.Show(currentItem);
+        else
+            ItemTooltipUI.Instance.Show(currentItem, extraText);
     }
 
     public void OnPointerExit(PointerEventData eventData)

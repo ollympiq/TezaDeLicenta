@@ -1,5 +1,53 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2308254867114473774
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1138359213686304884}
+  - component: {fileID: 752162938103354780}
+  m_Layer: 7
+  m_Name: TurnObstacleProxy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1138359213686304884
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2308254867114473774}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2897547314050369447}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!208 &752162938103354780
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2308254867114473774}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 0.75, y: 0.85, z: 0.75}
+  m_MoveThreshold: 0.05
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0
 --- !u!1 &2309739815126183023
 GameObject:
   m_ObjectHideFlags: 0
@@ -53,14 +101,14 @@ GameObject:
   - component: {fileID: 5712535320361512284}
   - component: {fileID: 7212644644655484513}
   - component: {fileID: 8711321607046134101}
-  - component: {fileID: 9197481327376137818}
-  - component: {fileID: 3212938760756171729}
   - component: {fileID: 8118665123590443659}
   - component: {fileID: 5534684715710041663}
   - component: {fileID: 7888248510644979028}
   - component: {fileID: 4446810268556345438}
+  - component: {fileID: 4029717101211338168}
+  - component: {fileID: 3885169530351304686}
   m_Layer: 7
-  m_Name: Enemy_1
+  m_Name: Bear Boss
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -75,12 +123,13 @@ Transform:
   m_GameObject: {fileID: 6186170036969366969}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.4983, y: 1.04, z: -5.03}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6369573926880751711}
   - {fileID: 4292550288138186587}
+  - {fileID: 1138359213686304884}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &4403135647971359292
@@ -173,7 +222,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 171066c3c6af22a48ba38db4d4a69df8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStats
-  characterClass: 0
+  characterClass: 1
   level: 1
   strength: 10
   constitution: 10
@@ -282,12 +331,12 @@ NavMeshAgent:
   m_GameObject: {fileID: 6186170036969366969}
   m_Enabled: 1
   m_AgentTypeID: 0
-  m_Radius: 0.5
+  m_Radius: 0.7
   m_Speed: 3.5
   m_Acceleration: 8
-  avoidancePriority: 50
+  avoidancePriority: 55
   m_AngularSpeed: 120
-  m_StoppingDistance: 0.25
+  m_StoppingDistance: 0.12
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -436,6 +485,7 @@ MonoBehaviour:
   targetStats: {fileID: 0}
   animationController: {fileID: 5178149196260051078}
   actionLimiter: {fileID: 5534684715710041663}
+  turnLock: {fileID: 4029717101211338168}
   mediumAttack:
     attackName: Medium Attack
     damageType: 0
@@ -462,37 +512,8 @@ MonoBehaviour:
   metersPerAP: 1.5
   minMoveDistance: 0.2
   attackRangeBuffer: 0.2
-  destinationTolerance: 0.2
---- !u!208 &9197481327376137818
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6186170036969366969}
-  m_Enabled: 0
-  serializedVersion: 3
-  m_Shape: 1
-  m_Extents: {x: 0.75, y: 0.85, z: 1.2}
-  m_MoveThreshold: 0.05
-  m_Carve: 0
-  m_CarveOnlyStationary: 1
-  m_Center: {x: -0.02, y: -0.15, z: 0.18}
-  m_TimeToStationary: 0.02
---- !u!114 &3212938760756171729
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6186170036969366969}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 061f4e1a00eefc7468b89882b95a6e5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  turnController: {fileID: 8711321607046134101}
-  health: {fileID: 1408453558294041356}
+  destinationTolerance: 0.15
+  idleApproachGap: 0.35
 --- !u!114 &8118665123590443659
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -530,7 +551,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d25fa7d1987642743b87a29e98d28670, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLootContainer
-  lootTier: 0
+  lootTier: 2
   useGeneratedLoot: 1
   debugPreviewLootDefinitions: []
 --- !u!114 &4446810268556345438
@@ -546,7 +567,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyLevelScaler
   readTierFromLootContainer: 1
-  fallbackTier: 0
+  fallbackTier: 2
   autoApplyOnStart: 1
   refillHealthAfterScaling: 1
   strengthPerLevel: 1
@@ -560,6 +581,37 @@ MonoBehaviour:
   normalMultiplier: 1
   miniBossMultiplier: 1.5
   bossMultiplier: 2
+--- !u!114 &4029717101211338168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186170036969366969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01923d367b38aab4eae2d97ba89af4d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TurnAgentLock
+  agent: {fileID: 4962853259838866332}
+  turnObstacleProxy: {fileID: 752162938103354780}
+  startLocked: 1
+--- !u!114 &3885169530351304686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186170036969366969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b79cf72f42d1be40958ad28dbe52de7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HoverOutlineTarget
+  outlineMaterial: {fileID: 2100000, guid: 46cbcdff0d2b7dd4c8132b5648b36193, type: 2}
+  outlineScale: 1
+  sourceRenderers:
+  - {fileID: 2294810399900316104}
 --- !u!1 &8994492382622306187
 GameObject:
   m_ObjectHideFlags: 0
@@ -656,6 +708,11 @@ PrefabInstance:
 --- !u!95 &1869793998504098519 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 3734775969355451150, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
+  m_PrefabInstance: {fileID: 3037186780276634073}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &2294810399900316104 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3890701809362698257, guid: f5b41ba4c79702547a89de7544b80656, type: 3}
   m_PrefabInstance: {fileID: 3037186780276634073}
   m_PrefabAsset: {fileID: 0}
 --- !u!4 &5697892905600131245 stripped

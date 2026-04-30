@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
@@ -10,15 +11,15 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private Button toggleButton;
     [SerializeField] private SkillBookUI skillBookUI;
 
-    [Header("Gameplay References")]
-    [SerializeField] private PlayerNavMeshMover playerMover;
-    [SerializeField] private PlayerCombatController playerCombatController;
-    [SerializeField] private PlayerTurnController playerTurnController;
-
     [Header("Panels")]
-    [SerializeField] private GameObject panelRoot;          // InventoryPanel
-    [SerializeField] private GameObject statsPanelRoot;     // StatsPanel
-    [SerializeField] private GameObject skillBookPanelRoot; // SkillBookPanel
+    [SerializeField] private GameObject panelRoot;
+    [SerializeField] private GameObject statsPanelRoot;
+    [SerializeField] private GameObject skillBookPanelRoot;
+
+    [Header("Layout")]
+    [SerializeField] private RectTransform inventoryPanelRect;
+    [SerializeField] private Vector2 normalAnchoredPosition = Vector2.zero;
+    [SerializeField] private Vector2 traderAnchoredPosition = new Vector2(-320f, 0f);
 
     [Header("UI Slots")]
     [SerializeField] private EquipmentSlotUI[] equipmentSlots;
@@ -26,6 +27,13 @@ public class InventoryUI : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private bool startOpened = false;
+    [SerializeField] private bool hideStatsInTraderMode = true;
+    [SerializeField] private bool hideSkillBookInTraderMode = true;
+
+    private TraderShopUI activeTraderShop;
+    private bool cachedNormalPosition;
+
+    public bool IsTraderMode => activeTraderShop != null;
 
     private void Start()
     {
@@ -38,14 +46,14 @@ public class InventoryUI : MonoBehaviour
         if (skillBookUI == null)
             skillBookUI = FindFirstObjectByType<SkillBookUI>(FindObjectsInactive.Include);
 
-        if (playerMover == null)
-            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
+        if (inventoryPanelRect == null && panelRoot != null)
+            inventoryPanelRect = panelRoot.GetComponent<RectTransform>();
 
-        if (playerCombatController == null)
-            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
-
-        if (playerTurnController == null)
-            playerTurnController = FindFirstObjectByType<PlayerTurnController>();
+        if (!cachedNormalPosition && inventoryPanelRect != null)
+        {
+            normalAnchoredPosition = inventoryPanelRect.anchoredPosition;
+            cachedNormalPosition = true;
+        }
 
         if (toggleButton != null)
             toggleButton.onClick.AddListener(TogglePanel);
@@ -69,7 +77,6 @@ public class InventoryUI : MonoBehaviour
         }
 
         SetPanelsVisible(startOpened);
-        ApplyGameplayInputState();
 
         if (startOpened)
             RefreshAll();
@@ -89,17 +96,23 @@ public class InventoryUI : MonoBehaviour
 
     private void Update()
     {
+        if (IsTraderMode)
+            return;
+
         if (Keyboard.current != null && Keyboard.current.iKey.wasPressedThisFrame)
             TogglePanel();
     }
 
     public void TogglePanel()
     {
+        if (IsTraderMode)
+            return;
+
         bool isOpen = panelRoot != null && panelRoot.activeSelf;
         bool willOpen = !isOpen;
 
         SetPanelsVisible(willOpen);
-        ApplyGameplayInputState();
+        ApplyInventoryLayout(false);
 
         if (willOpen)
         {
@@ -107,38 +120,33 @@ public class InventoryUI : MonoBehaviour
         }
         else
         {
-            if (ItemTooltipUI.Instance != null)
-                ItemTooltipUI.Instance.Hide();
-
-            if (SkillTooltipUI.Instance != null)
-                SkillTooltipUI.Instance.Hide();
-
-            UISkillDragState.Clear();
+            HideTooltipsAndDrag();
         }
     }
 
-    private void SetPanelsVisible(bool visible)
+    public void OpenForTraderMode(TraderShopUI traderShop)
     {
+        activeTraderShop = traderShop;
+
         if (panelRoot != null)
-            panelRoot.SetActive(visible);
+            panelRoot.SetActive(true);
 
         if (statsPanelRoot != null)
-            statsPanelRoot.SetActive(visible);
+            statsPanelRoot.SetActive(!hideStatsInTraderMode);
 
         if (skillBookPanelRoot != null)
-            skillBookPanelRoot.SetActive(visible);
+            skillBookPanelRoot.SetActive(!hideSkillBookInTraderMode);
+
+        ApplyInventoryLayout(true);
+        RefreshAll();
     }
 
-    private void ApplyGameplayInputState()
+    public void CloseTraderMode()
     {
-        bool uiOpen = panelRoot != null && panelRoot.activeSelf;
-        bool allowGameplayInput = !uiOpen && playerTurnController != null && playerTurnController.IsTurnActive;
-
-        if (playerMover != null)
-            playerMover.SetTurnInputEnabled(allowGameplayInput);
-
-        if (playerCombatController != null)
-            playerCombatController.SetTurnInputEnabled(allowGameplayInput);
+        activeTraderShop = null;
+        ApplyInventoryLayout(false);
+        SetPanelsVisible(false);
+        HideTooltipsAndDrag();
     }
 
     public void RefreshAll()
@@ -150,13 +158,25 @@ public class InventoryUI : MonoBehaviour
             skillBookUI.RefreshNow();
     }
 
-    public void HandleInventorySlotClicked(int slotIndex)
+    public void HandleInventorySlotClicked(int slotIndex, PointerEventData.InputButton button)
     {
         if (inventory == null || equipment == null)
             return;
 
+        if (slotIndex < 0 || slotIndex >= inventory.ItemCount)
+            return;
+
         ItemInstance item = inventory.GetItemAt(slotIndex);
         if (item == null || item.Definition == null)
+            return;
+
+        if (button == PointerEventData.InputButton.Right && IsTraderMode)
+        {
+            activeTraderShop?.TrySellInventoryItem(slotIndex);
+            return;
+        }
+
+        if (button != PointerEventData.InputButton.Left)
             return;
 
         switch (item.Definition.Category)
@@ -170,9 +190,22 @@ public class InventoryUI : MonoBehaviour
             case ItemCategory.SkillBook:
                 bool used = inventory.UseAt(slotIndex, inventory.gameObject);
                 if (!used)
-                    Debug.Log("Itemul nu a putut fi folosit.");
+                    GameLog.Warning("Itemul nu a putut fi folosit.");
                 break;
         }
+    }
+
+    public string GetTooltipExtraTextForSlot(int slotIndex)
+    {
+        if (!IsTraderMode || activeTraderShop == null || inventory == null)
+            return null;
+
+        ItemInstance item = inventory.GetItemAt(slotIndex);
+        if (item == null || !item.IsValid)
+            return null;
+
+        int sellPrice = activeTraderShop.CalculateSellPrice(item);
+        return $"Sell: {sellPrice} Gold\nRight Click: Sell";
     }
 
     public void HandleEquipmentSlotClicked(EquipmentSlot slot)
@@ -188,7 +221,7 @@ public class InventoryUI : MonoBehaviour
         if (!added)
         {
             equipment.EquipItem(removed);
-            Debug.Log("Inventarul este plin.");
+            GameLog.Warning("Inventarul este plin.");
         }
     }
 
@@ -210,7 +243,7 @@ public class InventoryUI : MonoBehaviour
             {
                 equipment.EquipItem(previous);
                 inventory.AddItemInstance(itemToEquip);
-                Debug.Log("Inventarul este plin. Nu se poate face schimbul.");
+                GameLog.Warning("Inventarul este plin. Nu se poate face schimbul.");
             }
         }
     }
@@ -243,5 +276,36 @@ public class InventoryUI : MonoBehaviour
             ItemInstance item = i < inventory.ItemCount ? inventory.GetItemAt(i) : null;
             inventorySlots[i].Refresh(item);
         }
+    }
+
+    private void SetPanelsVisible(bool visible)
+    {
+        if (panelRoot != null)
+            panelRoot.SetActive(visible);
+
+        if (statsPanelRoot != null)
+            statsPanelRoot.SetActive(visible);
+
+        if (skillBookPanelRoot != null)
+            skillBookPanelRoot.SetActive(visible);
+    }
+
+    private void ApplyInventoryLayout(bool traderMode)
+    {
+        if (inventoryPanelRect == null)
+            return;
+
+        inventoryPanelRect.anchoredPosition = traderMode ? traderAnchoredPosition : normalAnchoredPosition;
+    }
+
+    private void HideTooltipsAndDrag()
+    {
+        if (ItemTooltipUI.Instance != null)
+            ItemTooltipUI.Instance.Hide();
+
+        if (SkillTooltipUI.Instance != null)
+            SkillTooltipUI.Instance.Hide();
+
+        UISkillDragState.Clear();
     }
 }

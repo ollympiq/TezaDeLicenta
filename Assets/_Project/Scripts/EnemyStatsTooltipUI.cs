@@ -20,6 +20,7 @@ public class EnemyStatsTooltipUI : MonoBehaviour
 
     private CharacterStats currentStats;
     private CharacterHealth currentHealth;
+    private PlayerAP currentAP;
 
     private void Awake()
     {
@@ -63,6 +64,7 @@ public class EnemyStatsTooltipUI : MonoBehaviour
 
         currentStats = stats;
         currentHealth = health != null ? health : stats.GetComponent<CharacterHealth>();
+        currentAP = stats.GetComponent<PlayerAP>();
 
         RefreshCurrentTooltip();
 
@@ -78,6 +80,7 @@ public class EnemyStatsTooltipUI : MonoBehaviour
     {
         currentStats = null;
         currentHealth = null;
+        currentAP = null;
 
         if (panelRoot != null)
             panelRoot.gameObject.SetActive(false);
@@ -89,15 +92,21 @@ public class EnemyStatsTooltipUI : MonoBehaviour
             return;
 
         if (nameText != null)
-            nameText.text = currentStats.gameObject.name;
+            nameText.text = GetCleanDisplayName(currentStats.gameObject);
 
         if (detailsText != null)
-            detailsText.text = BuildDetails(currentStats, currentHealth);
+            detailsText.text = BuildDetails(currentStats, currentHealth, currentAP);
     }
 
-    private string BuildDetails(CharacterStats stats, CharacterHealth health)
+    private string BuildDetails(CharacterStats stats, CharacterHealth health, PlayerAP ap)
     {
         StringBuilder sb = new StringBuilder();
+
+        string typeLabel = GetEnemyTypeLabel(stats.gameObject);
+        if (!string.IsNullOrEmpty(typeLabel))
+        {
+            sb.AppendLine(UIRichTextColors.DualLine("Type", typeLabel, UIRichTextColors.White, UIRichTextColors.White));
+        }
 
         sb.AppendLine(UIRichTextColors.DualLine("Class", stats.Class.ToString(), UIRichTextColors.White, UIRichTextColors.ClassColor(stats.Class)));
 
@@ -106,7 +115,10 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         else
             sb.AppendLine(UIRichTextColors.Line("HP", $"{stats.MaxHP}/{stats.MaxHP}", UIRichTextColors.HP));
 
-        sb.AppendLine(UIRichTextColors.Line("AP", $"{stats.MaxAP}", UIRichTextColors.AP));
+        if (ap != null)
+            sb.AppendLine(UIRichTextColors.Line("AP", $"{ap.CurrentAP}/{ap.MaxAP}", UIRichTextColors.AP));
+        else
+            sb.AppendLine(UIRichTextColors.Line("AP", $"{stats.MaxAP}", UIRichTextColors.AP));
 
         sb.AppendLine();
         sb.AppendLine(UIRichTextColors.Line("Strength", $"{stats.Strength}", UIRichTextColors.Strength));
@@ -132,6 +144,70 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         sb.AppendLine(UIRichTextColors.Line("Ice Resistance", $"{stats.IceResistance:F1}%", UIRichTextColors.Ice));
 
         return sb.ToString();
+    }
+
+    private string GetCleanDisplayName(GameObject targetObject)
+    {
+        if (targetObject == null)
+            return "Unknown";
+
+        string rawName = targetObject.name;
+        if (string.IsNullOrWhiteSpace(rawName))
+            return "Unknown";
+
+        string name = rawName.Replace("(Clone)", "").Trim();
+
+        string[] parts = name.Split('_');
+
+        if (parts.Length >= 3)
+        {
+            // Ex:
+            // Normal_3_Bear -> Bear
+            // MiniBoss_1_Bear MB -> Bear MB
+            // Boss_1_Bear Boss -> Bear Boss
+            StringBuilder sb = new StringBuilder();
+            for (int i = 2; i < parts.Length; i++)
+            {
+                if (sb.Length > 0)
+                    sb.Append(' ');
+
+                sb.Append(parts[i]);
+            }
+
+            name = sb.ToString();
+        }
+
+        name = name.Replace('_', ' ').Trim();
+
+        if (name.EndsWith(" MB"))
+            name = name.Substring(0, name.Length - 3).Trim();
+
+        if (name.EndsWith(" Boss"))
+            name = name.Substring(0, name.Length - 5).Trim();
+
+        return string.IsNullOrWhiteSpace(name) ? "Unknown" : name;
+    }
+
+    private string GetEnemyTypeLabel(GameObject targetObject)
+    {
+        if (targetObject == null)
+            return string.Empty;
+
+        EnemyLootContainer lootContainer = targetObject.GetComponent<EnemyLootContainer>();
+        if (lootContainer == null)
+            return string.Empty;
+
+        switch (lootContainer.LootTier)
+        {
+            case EnemyLootTier.MiniBoss:
+                return "Mini Boss";
+
+            case EnemyLootTier.Boss:
+                return "Boss";
+
+            default:
+                return "Normal";
+        }
     }
 
     private void UpdatePosition()

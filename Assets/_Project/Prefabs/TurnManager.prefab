@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 121657053307781816}
   - component: {fileID: 4050539838413252823}
+  - component: {fileID: 7965694538727195623}
   m_Layer: 0
   m_Name: TurnManager
   m_TagString: Untagged
@@ -45,10 +46,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   playerTurn: {fileID: 0}
-  enemyTurns:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  enemyTurns: []
   endTurnButton: {fileID: 0}
   autoStartOnStart: 1
   nextTurnDelay: 0.2
+--- !u!114 &7965694538727195623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8730507779577995284}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a5425d7c93e4b5d47a6f8dd26faec448, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHoverOutlineController
+  mainCamera: {fileID: 0}
+  enemyMask:
+    serializedVersion: 2
+    m_Bits: 128
+  rayDistance: 500

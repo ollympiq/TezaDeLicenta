@@ -10,6 +10,8 @@ public class TurnAgentLock : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField] private bool startLocked = true;
+    [SerializeField] private bool snapToNavMeshWhenLocked = true;
+    [SerializeField] private float snapSampleDistance = 2f;
 
     public bool IsLocked { get; private set; }
 
@@ -26,6 +28,8 @@ public class TurnAgentLock : MonoBehaviour
 
     public void LockNow()
     {
+        SnapLockedTransformToNavMesh();
+
         if (agent != null && agent.enabled)
         {
             agent.isStopped = true;
@@ -44,27 +48,50 @@ public class TurnAgentLock : MonoBehaviour
         if (turnObstacleProxy != null)
             turnObstacleProxy.enabled = false;
 
-        // Lasam un frame pentru refresh-ul carve-ului in NavMesh
         yield return null;
-
         UnlockImmediate();
+    }
+
+    public void SnapLockedTransformToNavMesh()
+    {
+        if (!snapToNavMeshWhenLocked || agent == null)
+            return;
+
+        int areaMask = agent.areaMask != 0 ? agent.areaMask : NavMesh.AllAreas;
+
+        if (!NavMesh.SamplePosition(transform.position, out NavMeshHit hit, snapSampleDistance, areaMask))
+            return;
+
+        Vector3 snapped = hit.position;
+        snapped.y += agent.baseOffset;
+        transform.position = snapped;
     }
 
     private void UnlockImmediate()
     {
-        if (agent != null && !agent.enabled)
+        if (agent == null)
+        {
+            IsLocked = false;
+            return;
+        }
+
+        if (!agent.enabled)
             agent.enabled = true;
 
-        if (agent != null)
-        {
-            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 1.0f, agent.areaMask))
-                agent.Warp(hit.position);
-            else
-                agent.Warp(transform.position);
+        int areaMask = agent.areaMask != 0 ? agent.areaMask : NavMesh.AllAreas;
 
-            agent.isStopped = true;
-            agent.ResetPath();
+        if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, snapSampleDistance, areaMask))
+        {
+            agent.Warp(hit.position);
         }
+        else
+        {
+            Vector3 fallback = transform.position - Vector3.up * agent.baseOffset;
+            agent.Warp(fallback);
+        }
+
+        agent.isStopped = true;
+        agent.ResetPath();
 
         IsLocked = false;
     }

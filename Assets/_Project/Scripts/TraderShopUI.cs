@@ -11,9 +11,15 @@ public class TraderShopUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI goldText;
     [SerializeField] private TraderShopSlotUI[] stockSlots;
 
+    [Header("Layout")]
+    [SerializeField] private RectTransform shopPanelRect;
+    [SerializeField] private Vector2 normalAnchoredPosition = Vector2.zero;
+    [SerializeField] private Vector2 traderAnchoredPosition = new Vector2(320f, 0f);
+
     [Header("References")]
     [SerializeField] private PlayerWallet playerWallet;
     [SerializeField] private CharacterInventory playerInventory;
+    [SerializeField] private InventoryUI playerInventoryUI;
 
     [Header("Stock")]
     [SerializeField, Min(1)] private int fallbackStockItemCount = 24;
@@ -27,6 +33,7 @@ public class TraderShopUI : MonoBehaviour
     private TraderInteractable currentTrader;
     private readonly List<TraderShopStockEntry> stockEntries = new List<TraderShopStockEntry>();
     private bool stockGeneratedForThisLobby;
+    private bool cachedNormalPosition;
 
     public bool IsOpen => panelRoot != null && panelRoot.activeSelf;
     public TraderInteractable CurrentTrader => currentTrader;
@@ -38,6 +45,18 @@ public class TraderShopUI : MonoBehaviour
 
         if (playerInventory == null)
             playerInventory = FindFirstObjectByType<CharacterInventory>();
+
+        if (playerInventoryUI == null)
+            playerInventoryUI = FindFirstObjectByType<InventoryUI>(FindObjectsInactive.Include);
+
+        if (shopPanelRect == null && panelRoot != null)
+            shopPanelRect = panelRoot.GetComponent<RectTransform>();
+
+        if (!cachedNormalPosition && shopPanelRect != null)
+        {
+            normalAnchoredPosition = shopPanelRect.anchoredPosition;
+            cachedNormalPosition = true;
+        }
 
         if (stockSlots != null)
         {
@@ -87,6 +106,8 @@ public class TraderShopUI : MonoBehaviour
         if (panelRoot != null)
             panelRoot.SetActive(true);
 
+        ApplyShopLayout(true);
+        playerInventoryUI?.OpenForTraderMode(this);
         RefreshAll();
     }
 
@@ -96,6 +117,9 @@ public class TraderShopUI : MonoBehaviour
 
         if (panelRoot != null)
             panelRoot.SetActive(false);
+
+        ApplyShopLayout(false);
+        playerInventoryUI?.CloseTraderMode();
 
         if (ItemTooltipUI.Instance != null)
             ItemTooltipUI.Instance.Hide();
@@ -112,19 +136,19 @@ public class TraderShopUI : MonoBehaviour
 
         if (playerInventory == null)
         {
-            Debug.Log("Lipseste CharacterInventory pentru cumparare.");
+            GameLog.Warning("Lipseste CharacterInventory pentru cumparare.");
             return;
         }
 
         if (!playerInventory.CanAddItemInstance(entry.Item))
         {
-            Debug.Log("Inventarul este plin.");
+            GameLog.Warning("Inventarul este plin.");
             return;
         }
 
         if (playerWallet == null || !playerWallet.SpendGold(entry.BuyPrice))
         {
-            Debug.Log("Nu ai destul gold.");
+            GameLog.Warning("Nu ai destul gold.");
             return;
         }
 
@@ -134,12 +158,54 @@ public class TraderShopUI : MonoBehaviour
             if (playerWallet != null)
                 playerWallet.AddGold(entry.BuyPrice);
 
-            Debug.Log("Cumpararea a esuat.");
+            GameLog.Warning("Cumpararea a esuat.");
             return;
         }
 
         stockEntries.RemoveAt(slotIndex);
+        GameLog.Success($"Ai cumparat {purchasedItem.DisplayName} pentru {entry.BuyPrice} Gold.");
         RefreshAll();
+        playerInventoryUI?.RefreshAll();
+    }
+
+    public bool TrySellInventoryItem(int slotIndex)
+    {
+        if (playerInventory == null || playerWallet == null)
+            return false;
+
+        ItemInstance item = playerInventory.GetItemAt(slotIndex);
+        if (item == null || !item.IsValid)
+            return false;
+
+        int sellPrice = CalculateSellPrice(item);
+        if (sellPrice <= 0)
+        {
+            GameLog.Warning("Acest item nu poate fi vandut.");
+            return false;
+        }
+
+        ItemInstance removed = playerInventory.TakeAt(slotIndex);
+        if (removed == null || !removed.IsValid)
+            return false;
+
+        playerWallet.AddGold(sellPrice);
+        GameLog.Success($"Ai vandut {removed.DisplayName} pentru {sellPrice} Gold.");
+
+        RefreshAll();
+        playerInventoryUI?.RefreshAll();
+        return true;
+    }
+
+    public int CalculateSellPrice(ItemInstance item)
+    {
+        if (item == null || item.Definition == null)
+            return 0;
+
+        int basePrice = Mathf.Max(1, item.Definition.SellPrice);
+        float rarityMultiplier = GetSellRarityMultiplier(item.Rarity);
+        float levelMultiplier = 1f + Mathf.Max(0, item.ItemLevel - 1) * 0.10f;
+
+        return Mathf.Max(1, Mathf.RoundToInt(basePrice * rarityMultiplier * levelMultiplier));
     }
 
     public void GenerateLobbyStock()
@@ -150,14 +216,11 @@ public class TraderShopUI : MonoBehaviour
         LootGenerator generator = LootGenerator.Instance;
         if (generator == null)
         {
-            Debug.LogWarning("Nu exista LootGenerator in scena pentru trader.");
+            GameLog.Warning("Nu exista LootGenerator in scena pentru trader.");
             return;
         }
 
-        int desiredCount = stockSlots != null && stockSlots.Length > 0
-            ? stockSlots.Length
-            : fallbackStockItemCount;
-
+        int desiredCount = stockSlots != null && stockSlots.Length > 0 ? stockSlots.Length : fallbackStockItemCount;
         desiredCount = Mathf.Max(1, desiredCount);
 
         for (int i = 0; i < desiredCount; i++)
@@ -224,11 +287,10 @@ public class TraderShopUI : MonoBehaviour
     private int RollShopItemLevel()
     {
         int baseLevel = ResolveBaseShopLevel();
-
         int minOffset = Mathf.Max(0, minItemLevelOffset);
         int maxOffset = Mathf.Max(minOffset, maxItemLevelOffset);
-
         int offset = Random.Range(minOffset, maxOffset + 1);
+
         return Mathf.Max(1, baseLevel + offset);
     }
 
@@ -246,13 +308,13 @@ public class TraderShopUI : MonoBehaviour
             return 1;
 
         int basePrice = Mathf.Max(1, item.Definition.BuyPrice);
-        float rarityMultiplier = GetRarityMultiplier(item.Rarity);
+        float rarityMultiplier = GetBuyRarityMultiplier(item.Rarity);
         float levelMultiplier = 1f + Mathf.Max(0, item.ItemLevel - 1) * 0.15f;
 
         return Mathf.Max(1, Mathf.RoundToInt(basePrice * rarityMultiplier * levelMultiplier));
     }
 
-    private float GetRarityMultiplier(ItemRarity rarity)
+    private float GetBuyRarityMultiplier(ItemRarity rarity)
     {
         switch (rarity)
         {
@@ -263,5 +325,26 @@ public class TraderShopUI : MonoBehaviour
             case ItemRarity.Unique: return 4f;
             default: return 1f;
         }
+    }
+
+    private float GetSellRarityMultiplier(ItemRarity rarity)
+    {
+        switch (rarity)
+        {
+            case ItemRarity.Uncommon: return 1.15f;
+            case ItemRarity.Rare: return 1.35f;
+            case ItemRarity.Epic: return 1.7f;
+            case ItemRarity.Legendary: return 2.4f;
+            case ItemRarity.Unique: return 3.2f;
+            default: return 1f;
+        }
+    }
+
+    private void ApplyShopLayout(bool traderMode)
+    {
+        if (shopPanelRect == null)
+            return;
+
+        shopPanelRect.anchoredPosition = traderMode ? traderAnchoredPosition : normalAnchoredPosition;
     }
 }
