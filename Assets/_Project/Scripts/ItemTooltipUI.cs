@@ -306,6 +306,11 @@ public class ItemTooltipUI : MonoBehaviour
             case ItemBonusType.LightningResistance:
             case ItemBonusType.IceResistance:
             case ItemBonusType.ElementalDamageBonusPercent:
+            case ItemBonusType.FireDamageBonusPercent:
+            case ItemBonusType.EarthDamageBonusPercent:
+            case ItemBonusType.WindDamageBonusPercent:
+            case ItemBonusType.LightningDamageBonusPercent:
+            case ItemBonusType.IceDamageBonusPercent:
                 return true;
 
             default:
@@ -329,6 +334,11 @@ public class ItemTooltipUI : MonoBehaviour
             case ItemBonusType.LightningResistance: return "Lightning Resistance";
             case ItemBonusType.IceResistance: return "Ice Resistance";
             case ItemBonusType.ElementalDamageBonusPercent: return "Elemental Damage";
+            case ItemBonusType.FireDamageBonusPercent: return "Fire Damage";
+            case ItemBonusType.EarthDamageBonusPercent: return "Earth Damage";
+            case ItemBonusType.WindDamageBonusPercent: return "Wind Damage";
+            case ItemBonusType.LightningDamageBonusPercent: return "Lightning Damage";
+            case ItemBonusType.IceDamageBonusPercent: return "Ice Damage";
             default: return bonusType.ToString();
         }
     }

@@ -85,10 +85,13 @@ public static class DamageCalculator
         bool canCrit,
         float classBonusPercent)
     {
-        DamageResult result = new DamageResult();
-        result.DamageType = damageType;
-        result.ScalingBonus = scalingBonus;
-        result.ClassBonusPercent = classBonusPercent;
+        DamageResult result = new DamageResult
+        {
+            DamageType = damageType,
+            ScalingBonus = scalingBonus,
+            ClassBonusPercent = classBonusPercent,
+            CritMultiplier = 2f
+        };
 
         float hitChance = Mathf.Clamp(attacker.Accuracy + bonusAccuracy - defender.Evasion, 5f, 95f);
         result.HitChance = hitChance;
@@ -103,6 +106,7 @@ public static class DamageCalculator
         }
 
         int rolledDamage = Random.Range(minDamage, maxDamage + 1);
+        result.RolledDamage = rolledDamage;
 
         float rawDamage = rolledDamage + scalingBonus;
 
@@ -113,18 +117,20 @@ public static class DamageCalculator
 
         if (damageType != DamageType.Physical)
         {
-            elementalBonusPercent = attacker.ElementalDamageBonusPercent;
+            elementalBonusPercent = attacker.GetDamageBonusPercent(damageType);
             rawDamage *= 1f + elementalBonusPercent / 100f;
         }
 
         result.ElementalBonusPercent = elementalBonusPercent;
-        result.BaseDamage = Mathf.RoundToInt(rawDamage);
+        result.PreCritDamage = Mathf.Max(1, Mathf.RoundToInt(rawDamage));
 
         bool wasCrit = canCrit && Random.Range(0f, 100f) <= attacker.CritChance;
         result.WasCritical = wasCrit;
 
         if (wasCrit)
-            rawDamage *= 2f;
+            rawDamage *= result.CritMultiplier;
+
+        result.PostCritDamage = Mathf.Max(1, Mathf.RoundToInt(rawDamage));
 
         float armorReduction = 0f;
 
@@ -135,6 +141,7 @@ public static class DamageCalculator
         }
 
         result.ArmorReductionPercent = armorReduction;
+        result.PostArmorDamage = Mathf.Max(1, Mathf.RoundToInt(rawDamage));
 
         float resistance = GetResistance(defender, damageType);
         result.ResistancePercent = resistance;

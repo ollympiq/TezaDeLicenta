@@ -132,6 +132,21 @@ public static class UIRichTextColors
             case ItemBonusType.ElementalDamageBonusPercent:
                 return MagicPower;
 
+            case ItemBonusType.FireDamageBonusPercent:
+                return Fire;
+
+            case ItemBonusType.EarthDamageBonusPercent:
+                return Earth;
+
+            case ItemBonusType.WindDamageBonusPercent:
+                return Wind;
+
+            case ItemBonusType.LightningDamageBonusPercent:
+                return Lightning;
+
+            case ItemBonusType.IceDamageBonusPercent:
+                return Ice;
+
             case ItemBonusType.Armor:
                 return Armor;
 

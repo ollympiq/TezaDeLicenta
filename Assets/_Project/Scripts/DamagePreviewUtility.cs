@@ -90,7 +90,7 @@ public static class DamagePreviewUtility
 
         if (damageType != DamageType.Physical)
         {
-            float elementalMultiplier = 1f + attacker.ElementalDamageBonusPercent / 100f;
+            float elementalMultiplier = 1f + attacker.GetDamageBonusPercent(damageType) / 100f;
             minRaw *= elementalMultiplier;
             maxRaw *= elementalMultiplier;
         }

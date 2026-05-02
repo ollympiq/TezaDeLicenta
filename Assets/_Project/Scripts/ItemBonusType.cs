@@ -10,7 +10,13 @@ public enum ItemBonusType
 
     PhysicalPower,
     MagicPower,
+
     ElementalDamageBonusPercent,
+    FireDamageBonusPercent,
+    EarthDamageBonusPercent,
+    WindDamageBonusPercent,
+    LightningDamageBonusPercent,
+    IceDamageBonusPercent,
 
     Armor,
     Accuracy,

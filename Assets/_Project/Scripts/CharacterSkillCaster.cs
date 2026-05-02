@@ -60,7 +60,7 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
         }
 
-        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
+        if (!TrySpendAP(skill.ApCost))
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
@@ -101,7 +101,7 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
         }
 
-        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
+        if (!TrySpendAP(skill.ApCost))
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
@@ -167,14 +167,14 @@ public class CharacterSkillCaster : MonoBehaviour
         return health != null && !health.IsDead;
     }
 
-    private bool TrySpendAP(int apCost, string skillName)
+    private bool TrySpendAP(int apCost)
     {
         if (playerAP == null)
             return true;
 
         if (!playerAP.HasEnoughAP(apCost))
         {
-            GameLog.Warning($"Nu ai destul AP pentru skill-ul {skillName}.");
+            GameLog.Warning("Nu ai destul AP pentru skill.");
             return false;
         }
 
@@ -183,7 +183,7 @@ public class CharacterSkillCaster : MonoBehaviour
 
     private void StopMovement()
     {
-        if (agent == null || !agent.enabled)
+        if (agent == null)
             return;
 
         agent.isStopped = true;
@@ -234,30 +234,21 @@ public class CharacterSkillCaster : MonoBehaviour
                     DamageNumberManager.Instance.ShowMiss(targetStats.transform);
             }
 
-            GameLog.Combat(BuildCombatLog(skill, targetStats.name, result, targetHealth));
+            LogSkillResult(skill, targetStats, targetHealth, result);
         }
     }
 
-    private string BuildCombatLog(SkillDefinition skill, string targetName, DamageResult result, CharacterHealth targetHealth)
+    private void LogSkillResult(SkillDefinition skill, CharacterStats targetStats, CharacterHealth targetHealth, DamageResult result)
     {
-        if (!result.Hit)
-        {
-            return
-                $"{name} used {skill.DisplayName} on {targetName} but missed. " +
-                $"Hit chance: {result.HitChance:F1}% | " +
-                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
-        }
+        string attackerName = CompareTag("Player") ? "Player" : gameObject.name;
+        string targetName = targetStats != null ? targetStats.gameObject.name : "Target";
 
-        string critText = result.WasCritical ? " CRITICAL!" : "";
+        string line = result.BuildLogLine(attackerName, skill.DisplayName, targetName);
 
-        return
-            $"{name} used {skill.DisplayName} on {targetName} | " +
-            $"Type: {result.DamageType} | " +
-            $"Base: {result.BaseDamage} | " +
-            $"Armor Reduction: {result.ArmorReductionPercent:F1}% | " +
-            $"Resistance: {result.ResistancePercent:F1}% | " +
-            $"Final Damage: {result.FinalDamage}{critText} | " +
-            $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        if (targetHealth != null)
+            line += $" | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+
+        GameLog.Combat(line);
     }
 
 #if UNITY_EDITOR

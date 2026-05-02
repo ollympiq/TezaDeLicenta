@@ -104,9 +104,7 @@ public class EnemyStatsTooltipUI : MonoBehaviour
 
         string typeLabel = GetEnemyTypeLabel(stats.gameObject);
         if (!string.IsNullOrEmpty(typeLabel))
-        {
             sb.AppendLine(UIRichTextColors.DualLine("Type", typeLabel, UIRichTextColors.White, UIRichTextColors.White));
-        }
 
         sb.AppendLine(UIRichTextColors.DualLine("Class", stats.Class.ToString(), UIRichTextColors.White, UIRichTextColors.ClassColor(stats.Class)));
 
@@ -135,6 +133,14 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         sb.AppendLine(UIRichTextColors.Line("Evasion", $"{stats.Evasion:F1}%", UIRichTextColors.Evasion));
 
         sb.AppendLine();
+        sb.AppendLine(UIRichTextColors.Line("Elemental Bonus (All)", $"{stats.ElementalDamageBonusPercent:F1}%", UIRichTextColors.MagicPower));
+        sb.AppendLine(UIRichTextColors.Line("Fire Damage Bonus", $"{stats.FireDamageBonusPercent:F1}%", UIRichTextColors.Fire));
+        sb.AppendLine(UIRichTextColors.Line("Earth Damage Bonus", $"{stats.EarthDamageBonusPercent:F1}%", UIRichTextColors.Earth));
+        sb.AppendLine(UIRichTextColors.Line("Wind Damage Bonus", $"{stats.WindDamageBonusPercent:F1}%", UIRichTextColors.Wind));
+        sb.AppendLine(UIRichTextColors.Line("Lightning Damage Bonus", $"{stats.LightningDamageBonusPercent:F1}%", UIRichTextColors.Lightning));
+        sb.AppendLine(UIRichTextColors.Line("Ice Damage Bonus", $"{stats.IceDamageBonusPercent:F1}%", UIRichTextColors.Ice));
+
+        sb.AppendLine();
         sb.AppendLine(UIRichTextColors.Line("Armor", $"{stats.Armor}", UIRichTextColors.Armor));
         sb.AppendLine(UIRichTextColors.Line("Physical Resistance", $"{stats.PhysicalResistance:F1}%", UIRichTextColors.Physical));
         sb.AppendLine(UIRichTextColors.Line("Fire Resistance", $"{stats.FireResistance:F1}%", UIRichTextColors.Fire));
@@ -158,13 +164,8 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         string name = rawName.Replace("(Clone)", "").Trim();
 
         string[] parts = name.Split('_');
-
         if (parts.Length >= 3)
         {
-            // Ex:
-            // Normal_3_Bear -> Bear
-            // MiniBoss_1_Bear MB -> Bear MB
-            // Boss_1_Bear Boss -> Bear Boss
             StringBuilder sb = new StringBuilder();
             for (int i = 2; i < parts.Length; i++)
             {
@@ -201,10 +202,8 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         {
             case EnemyLootTier.MiniBoss:
                 return "Mini Boss";
-
             case EnemyLootTier.Boss:
                 return "Boss";
-
             default:
                 return "Normal";
         }
@@ -223,18 +222,10 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
 
         Vector2 mouseScreenPos = Mouse.current.position.ReadValue();
-        Camera uiCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay
-            ? null
-            : rootCanvas.worldCamera;
+        Camera uiCamera = rootCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : rootCanvas.worldCamera;
 
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRect,
-                mouseScreenPos,
-                uiCamera,
-                out Vector2 localMousePos))
-        {
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, mouseScreenPos, uiCamera, out Vector2 localMousePos))
             return;
-        }
 
         float panelWidth = panelRoot.rect.width;
         float panelHeight = panelRoot.rect.height;

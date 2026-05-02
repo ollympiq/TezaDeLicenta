@@ -133,8 +133,21 @@ public class CharacterBasicAttack : MonoBehaviour
                 DamageNumberManager.Instance.ShowMiss(targetStats.transform);
         }
 
-        GameLog.Combat(BuildCombatLog(weapon, targetStats.name, result, targetHealth));
+        LogAttackResult(weapon, targetStats, targetHealth, result);
         return true;
+    }
+
+    private void LogAttackResult(WeaponDefinition weapon, CharacterStats targetStats, CharacterHealth targetHealth, DamageResult result)
+    {
+        string attackerName = CompareTag("Player") ? "Player" : gameObject.name;
+        string targetName = targetStats != null ? targetStats.gameObject.name : "Target";
+
+        string line = result.BuildLogLine(attackerName, weapon.DisplayName, targetName);
+
+        if (targetHealth != null)
+            line += $" | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+
+        GameLog.Combat(line);
     }
 
     private bool IsTargetInRange(Transform target, float range)
@@ -183,28 +196,5 @@ public class CharacterBasicAttack : MonoBehaviour
             return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
 
         return 0.5f;
-    }
-
-    private string BuildCombatLog(WeaponDefinition weapon, string targetName, DamageResult result, CharacterHealth targetHealth)
-    {
-        if (!result.Hit)
-        {
-            return
-                $"{name} attacked with {weapon.DisplayName} on {targetName} but missed. " +
-                $"Hit chance: {result.HitChance:F1}% | " +
-                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
-        }
-
-        string critText = result.WasCritical ? " CRITICAL!" : "";
-
-        return
-            $"{name} attacked with {weapon.DisplayName} on {targetName} | " +
-            $"Type: {result.DamageType} | " +
-            $"Base: {result.BaseDamage} | " +
-            $"Scaling Bonus: {result.ScalingBonus:F1} | " +
-            $"Class Bonus: {result.ClassBonusPercent:F1}% | " +
-            $"Resistance: {result.ResistancePercent:F1}% | " +
-            $"Final Damage: {result.FinalDamage}{critText} | " +
-            $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
     }
 }

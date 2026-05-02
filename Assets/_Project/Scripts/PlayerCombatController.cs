@@ -29,7 +29,7 @@ public class PlayerCombatController : MonoBehaviour
     public event Action OnSelectedSkillChanged;
 
     public int SelectedSlotIndex => selectedSlotIndex;
-
+    public SkillDefinition CurrentSelectedSkill => selectedSkill;
     public bool HasTargetingSkillSelected =>
         selectedSkill != null &&
         selectedSkill.TargetingMode != SkillTargetingMode.None;

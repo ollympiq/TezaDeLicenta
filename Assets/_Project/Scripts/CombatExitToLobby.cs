@@ -16,6 +16,33 @@ public class CombatExitToLobby : MonoBehaviour
 
     public void GoToLobby()
     {
+        ResolveReferences();
+
+        int completedLevel = currentLevelContext != null ? currentLevelContext.CurrentLevel : 1;
+
+        if (GameSession.Instance != null)
+        {
+            GameSession.Instance.SaveFromPlayer(
+                playerProgression,
+                playerWallet,
+                characterInventory,
+                characterEquipment,
+                playerSkillLoadout);
+
+            GameSession.Instance.MarkCombatLevelCompleted(completedLevel);
+        }
+
+        if (RunLevelFlow.Instance != null)
+        {
+            RunLevelFlow.Instance.LoadLobbyAfterCombat(completedLevel);
+            return;
+        }
+
+        SceneManager.LoadScene(lobbySceneName);
+    }
+
+    private void ResolveReferences()
+    {
         if (currentLevelContext == null)
             currentLevelContext = FindFirstObjectByType<CurrentLevelContext>();
 
@@ -33,21 +60,5 @@ public class CombatExitToLobby : MonoBehaviour
 
         if (playerSkillLoadout == null)
             playerSkillLoadout = FindFirstObjectByType<PlayerSkillLoadout>();
-
-        if (GameSession.Instance != null)
-        {
-            int completedLevel = currentLevelContext != null ? currentLevelContext.CurrentLevel : 1;
-
-            GameSession.Instance.SaveFromPlayer(
-                playerProgression,
-                playerWallet,
-                characterInventory,
-                characterEquipment,
-                playerSkillLoadout);
-
-            GameSession.Instance.MarkCombatLevelCompleted(completedLevel);
-        }
-
-        SceneManager.LoadScene(lobbySceneName);
     }
 }

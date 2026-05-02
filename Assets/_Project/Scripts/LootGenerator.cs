@@ -482,6 +482,27 @@ public class LootGenerator : MonoBehaviour
             {
                 result.Add(ItemBonusType.Intelligence);
                 result.Add(ItemBonusType.MagicPower);
+                result.Add(ItemBonusType.ElementalDamageBonusPercent);
+
+                switch (weapon.DamageType)
+                {
+                    case DamageType.Fire:
+                        result.Add(ItemBonusType.FireDamageBonusPercent);
+                        break;
+                    case DamageType.Earth:
+                        result.Add(ItemBonusType.EarthDamageBonusPercent);
+                        break;
+                    case DamageType.Wind:
+                        result.Add(ItemBonusType.WindDamageBonusPercent);
+                        break;
+                    case DamageType.Lightning:
+                        result.Add(ItemBonusType.LightningDamageBonusPercent);
+                        break;
+                    case DamageType.Ice:
+                        result.Add(ItemBonusType.IceDamageBonusPercent);
+                        break;
+                }
+
                 result.Add(ItemBonusType.Accuracy);
                 result.Add(ItemBonusType.CritChance);
                 result.Add(ItemBonusType.Initiative);
@@ -517,6 +538,12 @@ public class LootGenerator : MonoBehaviour
                     result.Add(ItemBonusType.WindResistance);
                     result.Add(ItemBonusType.LightningResistance);
                     result.Add(ItemBonusType.IceResistance);
+                    result.Add(ItemBonusType.ElementalDamageBonusPercent);
+                    result.Add(ItemBonusType.FireDamageBonusPercent);
+                    result.Add(ItemBonusType.EarthDamageBonusPercent);
+                    result.Add(ItemBonusType.WindDamageBonusPercent);
+                    result.Add(ItemBonusType.LightningDamageBonusPercent);
+                    result.Add(ItemBonusType.IceDamageBonusPercent);
                     break;
 
                 default:
@@ -530,6 +557,12 @@ public class LootGenerator : MonoBehaviour
                     result.Add(ItemBonusType.WindResistance);
                     result.Add(ItemBonusType.LightningResistance);
                     result.Add(ItemBonusType.IceResistance);
+                    result.Add(ItemBonusType.ElementalDamageBonusPercent);
+                    result.Add(ItemBonusType.FireDamageBonusPercent);
+                    result.Add(ItemBonusType.EarthDamageBonusPercent);
+                    result.Add(ItemBonusType.WindDamageBonusPercent);
+                    result.Add(ItemBonusType.LightningDamageBonusPercent);
+                    result.Add(ItemBonusType.IceDamageBonusPercent);
                     break;
             }
         }
@@ -555,11 +588,26 @@ public class LootGenerator : MonoBehaviour
                 return Mathf.Round(UnityEngine.Random.Range(8f + rarityIndex * 4f, 14f + rarityIndex * 8f) * levelScalar);
 
             case ItemBonusType.MaxAP:
-                return Mathf.Round(UnityEngine.Random.Range(1f, 1f + Mathf.CeilToInt((rarityIndex + 1) * 0.5f)));
+                {
+                    if (rarity == ItemRarity.Epic || rarity == ItemRarity.Legendary || rarity == ItemRarity.Unique)
+                        return UnityEngine.Random.value < 0.5f ? 1f : 2f;
+
+                    return 1f;
+                }
 
             case ItemBonusType.PhysicalPower:
             case ItemBonusType.MagicPower:
                 return Mathf.Round(UnityEngine.Random.Range(2f + rarityIndex, 4f + rarityIndex * 3f) * levelScalar);
+
+            case ItemBonusType.ElementalDamageBonusPercent:
+                return Mathf.Round(UnityEngine.Random.Range(3f + rarityIndex, 5f + rarityIndex * 1.5f) * resistScalar);
+
+            case ItemBonusType.FireDamageBonusPercent:
+            case ItemBonusType.EarthDamageBonusPercent:
+            case ItemBonusType.WindDamageBonusPercent:
+            case ItemBonusType.LightningDamageBonusPercent:
+            case ItemBonusType.IceDamageBonusPercent:
+                return Mathf.Round(UnityEngine.Random.Range(4f + rarityIndex, 7f + rarityIndex * 2f) * resistScalar);
 
             case ItemBonusType.Armor:
                 return Mathf.Round(UnityEngine.Random.Range(1f + rarityIndex, 2f + rarityIndex * 2f) * levelScalar);

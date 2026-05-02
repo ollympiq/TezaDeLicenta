@@ -112,6 +112,9 @@ public class EnemySpawner : MonoBehaviour
 
         if (refreshTurnManagerAfterSpawn && TurnManager.Instance != null)
             TurnManager.Instance.RefreshEnemyList();
+
+        if (TurnManager.Instance != null && !TurnManager.Instance.IsCombatActive)
+            TurnManager.Instance.StartCombat();
     }
 
     [ContextMenu("Clear Spawned Enemies")]

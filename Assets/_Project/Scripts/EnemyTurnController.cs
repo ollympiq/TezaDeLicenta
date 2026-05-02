@@ -22,18 +22,18 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private AttackDefinition heavyAttack;
 
     [Header("Turn")]
-    [SerializeField] private float thinkDelay = 0.2f;
+    [SerializeField] private float thinkDelay = 0.1f;
     [SerializeField] private float afterMoveDelay = 0.15f;
-    [SerializeField] private float afterAttackDelay = 0.6f;
+    [SerializeField] private float afterAttackDelay = 1f;
 
     [Header("Movement AP")]
     [SerializeField] private float metersPerAP = 1.5f;
     [SerializeField] private float minMoveDistance = 0.2f;
 
     [Header("Melee Positioning")]
-    [SerializeField] private float attackRangeBuffer = 0.1f;
-    [SerializeField] private float destinationTolerance = 0.08f;
-    [SerializeField] private float idleApproachGap = 0.25f;
+    [SerializeField] private float attackRangeBuffer = 0.2f;
+    [SerializeField] private float destinationTolerance = 0.15f;
+    [SerializeField] private float idleApproachGap = 0.35f;
 
     private const string MediumAttackKey = "ENEMY_MEDIUM_ATTACK";
     private const string HeavyAttackKey = "ENEMY_HEAVY_ATTACK";
@@ -210,8 +210,21 @@ public class EnemyTurnController : MonoBehaviour
                 DamageNumberManager.Instance.ShowMiss(targetStats.transform);
         }
 
-        GameLog.Combat(BuildCombatLog(attack, targetStats.name, result, targetHealth));
+        LogSpecialAttackResult(attack, targetStats, targetHealth, result);
         return true;
+    }
+
+    private void LogSpecialAttackResult(AttackDefinition attack, CharacterStats target, CharacterHealth targetHealth, DamageResult result)
+    {
+        string attackerName = gameObject.name;
+        string targetName = target != null ? target.gameObject.name : "Target";
+
+        string line = result.BuildLogLine(attackerName, attack.AttackName, targetName);
+
+        if (targetHealth != null)
+            line += $" | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+
+        GameLog.Combat(line);
     }
 
     private void PlayAttackAnimation(EnemyAttackAnimationType type)
@@ -478,28 +491,6 @@ public class EnemyTurnController : MonoBehaviour
         agent.ResetPath();
     }
 
-    private string BuildCombatLog(AttackDefinition attack, string targetName, DamageResult result, CharacterHealth targetHealth)
-    {
-        if (!result.Hit)
-        {
-            return
-                $"{name} used {attack.AttackName} on {targetName} but missed. " +
-                $"Hit chance: {result.HitChance:F1}% | " +
-                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
-        }
-
-        string critText = result.WasCritical ? " CRITICAL!" : "";
-
-        return
-            $"{name} used {attack.AttackName} on {targetName} | " +
-            $"Type: {result.DamageType} | " +
-            $"Base: {result.BaseDamage} | " +
-            $"Armor Reduction: {result.ArmorReductionPercent:F1}% | " +
-            $"Resistance: {result.ResistancePercent:F1}% | " +
-            $"Final Damage: {result.FinalDamage}{critText} | " +
-            $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
-    }
-
     private void EndTurn(Action onTurnFinished)
     {
         if (agent != null && agent.enabled)
@@ -511,7 +502,6 @@ public class EnemyTurnController : MonoBehaviour
         turnLock?.LockNow();
 
         isTakingTurn = false;
-        GameLog.Info($"{name} si-a terminat tura.");
         onTurnFinished?.Invoke();
     }
 

@@ -194,11 +194,17 @@ public class CharacterStats : MonoBehaviour
             GetResistanceFromEquipment(DamageType.Ice));
 
     public float ElementalDamageBonusPercent =>
-        Mathf.Max(
-            0f,
-            Intelligence * elementalDamageBonusPerIntelligence +
-            GetClassElementalDamageBonus() +
-            GetEquipmentBonus(ItemBonusType.ElementalDamageBonusPercent));
+    Mathf.Max(
+        0f,
+        Intelligence * elementalDamageBonusPerIntelligence +
+        GetClassElementalDamageBonus() +
+        GetEquipmentBonus(ItemBonusType.ElementalDamageBonusPercent));
+
+    public float FireDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.FireDamageBonusPercent);
+    public float EarthDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.EarthDamageBonusPercent);
+    public float WindDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.WindDamageBonusPercent);
+    public float LightningDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.LightningDamageBonusPercent);
+    public float IceDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.IceDamageBonusPercent);
 
     public float ArmorPhysicalReductionPercent => Mathf.Clamp(Armor * 0.2f, 0f, 70f);
 
@@ -405,7 +411,12 @@ public class CharacterStats : MonoBehaviour
         sb.AppendLine($"Max AP: {MaxAP}");
         sb.AppendLine($"Physical Power: {PhysicalPower}");
         sb.AppendLine($"Magic Power: {MagicPower}");
-        sb.AppendLine($"Elemental Bonus: {ElementalDamageBonusPercent:F1}%");
+        sb.AppendLine($"Elemental Bonus (All): {ElementalDamageBonusPercent:F1}%");
+        sb.AppendLine($"Fire Damage Bonus: {FireDamageBonusPercent:F1}%");
+        sb.AppendLine($"Earth Damage Bonus: {EarthDamageBonusPercent:F1}%");
+        sb.AppendLine($"Wind Damage Bonus: {WindDamageBonusPercent:F1}%");
+        sb.AppendLine($"Lightning Damage Bonus: {LightningDamageBonusPercent:F1}%");
+        sb.AppendLine($"Ice Damage Bonus: {IceDamageBonusPercent:F1}%");
         sb.AppendLine($"Crit Chance: {CritChance:F1}%");
         sb.AppendLine($"Initiative: {Initiative}");
         sb.AppendLine($"Accuracy: {Accuracy:F1}%");
@@ -443,6 +454,24 @@ public class CharacterStats : MonoBehaviour
         return equipment != null ? equipment.GetResistanceBonus(damageType) : 0f;
     }
 
+    public float GetDamageBonusPercent(DamageType damageType)
+    {
+        switch (damageType)
+        {
+            case DamageType.Fire:
+                return FireDamageBonusPercent;
+            case DamageType.Earth:
+                return EarthDamageBonusPercent;
+            case DamageType.Wind:
+                return WindDamageBonusPercent;
+            case DamageType.Lightning:
+                return LightningDamageBonusPercent;
+            case DamageType.Ice:
+                return IceDamageBonusPercent;
+            default:
+                return 0f;
+        }
+    }
     private void ClampValues()
     {
         level = Mathf.Max(1, level);
