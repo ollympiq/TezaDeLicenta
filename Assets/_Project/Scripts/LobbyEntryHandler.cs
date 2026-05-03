@@ -48,6 +48,7 @@ public class LobbyEntryHandler : MonoBehaviour
                 playerSkillLoadout);
 
             GameSession.Instance.ApplySavedClassTo(characterStats);
+            GameSession.Instance.ApplySavedPrimaryAttributesTo(characterStats);
 
             if (GameSession.Instance.PendingLobbyLevelUp && playerProgression != null)
             {
@@ -60,8 +61,6 @@ public class LobbyEntryHandler : MonoBehaviour
                     characterInventory,
                     characterEquipment,
                     playerSkillLoadout);
-
-                GameSession.Instance.ApplySavedClassTo(characterStats);
             }
         }
 

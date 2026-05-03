@@ -25,6 +25,7 @@ public class TurnManager : MonoBehaviour
 
     private bool combatActive;
     private bool playerTurnActive;
+    private bool combatStartedOnce;
     private Coroutine advanceRoutine;
 
     public bool IsCombatActive => combatActive;
@@ -65,7 +66,7 @@ public class TurnManager : MonoBehaviour
     private void Start()
     {
         if (autoStartOnStart)
-            StartCombat();
+            StartCombatOnce();
     }
 
     private void OnDestroy()
@@ -77,19 +78,68 @@ public class TurnManager : MonoBehaviour
             endTurnButton.onClick.RemoveListener(EndPlayerTurn);
     }
 
+    public void ResetCombatState()
+    {
+        if (advanceRoutine != null)
+        {
+            StopCoroutine(advanceRoutine);
+            advanceRoutine = null;
+        }
+
+        combatActive = false;
+        playerTurnActive = false;
+        combatStartedOnce = false;
+
+        currentTurnIndex = -1;
+        roundNumber = 0;
+        roundOrder.Clear();
+
+        if (playerTurn != null)
+            playerTurn.EndTurn();
+
+        UpdateEndTurnButton(false);
+        NotifyTurnStateChanged();
+    }
+
+    public void SetEnemyTurns(IEnumerable<EnemyTurnController> newEnemyTurns)
+    {
+        enemyTurns = newEnemyTurns != null
+            ? newEnemyTurns.Where(e => e != null).Distinct().ToList()
+            : new List<EnemyTurnController>();
+    }
+
     public void StartCombat()
     {
-        if (combatActive)
+        StartCombatOnce();
+    }
+
+    public void StartCombatOnce()
+    {
+        if (combatStartedOnce || combatActive)
+        {
+            Debug.Log("TurnManager: StartCombatOnce ignorat, combatul este deja pornit.");
             return;
+        }
 
         RefreshEnemyList();
 
+        combatStartedOnce = true;
         combatActive = true;
         playerTurnActive = false;
         roundNumber = 0;
         currentTurnIndex = -1;
 
         BuildRoundOrder(forcePlayerFirst: true);
+
+        if (roundOrder.Count == 0)
+        {
+            combatActive = false;
+            combatStartedOnce = false;
+            UpdateEndTurnButton(false);
+            NotifyTurnStateChanged();
+            return;
+        }
+
         AdvanceToNextActor();
     }
 
@@ -98,9 +148,7 @@ public class TurnManager : MonoBehaviour
         enemyTurns.RemoveAll(e => e == null);
 
         if (enemyTurns.Count == 0)
-        {
             enemyTurns = FindObjectsByType<EnemyTurnController>(FindObjectsSortMode.None).ToList();
-        }
     }
 
     public void EndPlayerTurn()
@@ -135,8 +183,7 @@ public class TurnManager : MonoBehaviour
 
         HashSet<CharacterHealth> addedActors = new HashSet<CharacterHealth>();
 
-        // 1. Adauga actorii ramasi din runda curenta, incepand cu actorul curent
-        int startIndex = Mathf.Clamp(currentTurnIndex, 0, roundOrder.Count - 1);
+        int startIndex = Mathf.Clamp(currentTurnIndex, 0, Mathf.Max(0, roundOrder.Count - 1));
 
         for (int i = startIndex; i < roundOrder.Count; i++)
         {
@@ -145,7 +192,6 @@ public class TurnManager : MonoBehaviour
                 result.Add(BuildPortraitData(actor));
         }
 
-        // 2. Adauga actorii care ar veni dupa wrap-around, dar fara duplicate
         for (int i = 0; i < startIndex; i++)
         {
             TurnActor actor = roundOrder[i];
@@ -158,6 +204,9 @@ public class TurnManager : MonoBehaviour
 
     private void QueueAdvance()
     {
+        if (!combatActive)
+            return;
+
         if (advanceRoutine != null)
             StopCoroutine(advanceRoutine);
 
@@ -220,7 +269,10 @@ public class TurnManager : MonoBehaviour
         {
             playerTurnActive = true;
             UpdateEndTurnButton(true);
-            playerTurn.BeginTurn();
+
+            if (playerTurn != null)
+                playerTurn.BeginTurn();
+
             NotifyTurnStateChanged();
             return;
         }
@@ -401,7 +453,9 @@ public class TurnManager : MonoBehaviour
         bool playerDead = playerTurn == null || playerTurn.Health == null || playerTurn.Health.IsDead;
         bool anyEnemyAlive = enemyTurns.Any(e =>
         {
-            if (e == null) return false;
+            if (e == null)
+                return false;
+
             CharacterHealth h = e.GetComponent<CharacterHealth>();
             return h != null && !h.IsDead;
         });

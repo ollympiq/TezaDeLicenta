@@ -19,7 +19,7 @@ public class MainMenuController : MonoBehaviour
 
     public void OpenChooseClass()
     {
-        EnsureGameSessionExists();
+        EnsurePersistentSessionExists();
 
         SetMainMenuVisible(false);
         SetSettingsVisible(false);
@@ -50,17 +50,26 @@ public class MainMenuController : MonoBehaviour
 
     public void OpenLobbyDebugWithLevelUp()
     {
-        EnsureGameSessionExists();
+        EnsurePersistentSessionExists();
 
-        GameSession.Instance.BeginNewRun(1);
-        GameSession.Instance.MarkCombatLevelCompleted(1);
+        if (GameSession.Instance != null)
+        {
+            GameSession.Instance.BeginNewRun(1);
+            GameSession.Instance.MarkCombatLevelCompleted(1);
+        }
+
+        if (RunLevelFlow.Instance != null)
+        {
+            RunLevelFlow.Instance.StartNewRun(1);
+            RunLevelFlow.Instance.EnterLobbyAfterCombat(1);
+        }
 
         SceneManager.LoadScene(lobbySceneName);
     }
 
     public void LoadSavePlaceholder()
     {
-        EnsureGameSessionExists();
+        EnsurePersistentSessionExists();
 
         Debug.Log("Load Save este placeholder momentan.");
         SceneManager.LoadScene(lobbySceneName);
@@ -98,21 +107,32 @@ public class MainMenuController : MonoBehaviour
 
     private void BeginNewRunWithClass(CharacterClass classType)
     {
-        EnsureGameSessionExists();
+        EnsurePersistentSessionExists();
 
-        GameSession.Instance.BeginNewRun(1);
-        GameSession.Instance.SetSelectedPlayerClass(classType);
+        if (GameSession.Instance != null)
+        {
+            GameSession.Instance.BeginNewRun(1);
+            GameSession.Instance.SetSelectedPlayerClass(classType);
+        }
+
+        if (RunLevelFlow.Instance != null)
+            RunLevelFlow.Instance.StartNewRun(1);
 
         SceneManager.LoadScene(firstCombatSceneName);
     }
 
-    private void EnsureGameSessionExists()
+    private void EnsurePersistentSessionExists()
     {
         if (GameSession.Instance != null)
             return;
 
+        GameSession existing = FindFirstObjectByType<GameSession>();
+        if (existing != null)
+            return;
+
         GameObject go = new GameObject("GameSession");
         go.AddComponent<GameSession>();
+        go.AddComponent<RunLevelFlow>();
     }
 
     private void SetMainMenuVisible(bool visible)

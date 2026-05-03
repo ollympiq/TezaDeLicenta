@@ -56,6 +56,12 @@ public class GameSession : MonoBehaviour
     [SerializeField] private int savedUnspentStatPoints = 0;
     [SerializeField] private int savedGold = 0;
 
+    [Header("Saved Primary Attributes")]
+    [SerializeField] private int savedStrength = 10;
+    [SerializeField] private int savedConstitution = 10;
+    [SerializeField] private int savedDexterity = 10;
+    [SerializeField] private int savedIntelligence = 10;
+
     [Header("Runtime Saved Data")]
     [SerializeField] private List<SavedItemInstance> savedInventory = new List<SavedItemInstance>();
     [SerializeField] private List<SavedEquippedItem> savedEquipment = new List<SavedEquippedItem>();
@@ -102,6 +108,11 @@ public class GameSession : MonoBehaviour
         savedUnspentStatPoints = 0;
         savedGold = 0;
 
+        savedStrength = 10;
+        savedConstitution = 10;
+        savedDexterity = 10;
+        savedIntelligence = 10;
+
         savedInventory.Clear();
         savedEquipment.Clear();
         savedSkills = new SavedSkillLoadout();
@@ -141,10 +152,18 @@ public class GameSession : MonoBehaviour
             equipment,
             skillLoadout);
 
-        if (stats != null && stats.Class != CharacterClass.Unassigned)
+        if (stats != null)
         {
-            selectedPlayerClass = stats.Class;
-            pendingClassSelection = false;
+            if (stats.Class != CharacterClass.Unassigned)
+            {
+                selectedPlayerClass = stats.Class;
+                pendingClassSelection = false;
+            }
+
+            savedStrength = stats.Strength;
+            savedConstitution = stats.Constitution;
+            savedDexterity = stats.Dexterity;
+            savedIntelligence = stats.Intelligence;
         }
 
         if (progression != null)
@@ -193,6 +212,22 @@ public class GameSession : MonoBehaviour
             return;
 
         stats.SetCharacterClass(selectedPlayerClass, true);
+    }
+
+    public void ApplySavedPrimaryAttributesTo(CharacterStats stats)
+    {
+        if (stats == null)
+            return;
+
+        if (!hasRestorablePlayerState)
+            return;
+
+        stats.SetBaseAttributes(
+            savedStrength,
+            savedConstitution,
+            savedDexterity,
+            savedIntelligence,
+            true);
     }
 
     public void RememberAppliedPlayerClass(CharacterClass classType)

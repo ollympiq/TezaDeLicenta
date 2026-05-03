@@ -1226,6 +1226,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Canvases trader
       objectReference: {fileID: 0}
+    - target: {fileID: 6995139192771789929, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: stats
+      value: 
+      objectReference: {fileID: 1390205760}
+    - target: {fileID: 6995139192771789929, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: progression
+      value: 
+      objectReference: {fileID: 902157987}
     - target: {fileID: 7378397140604546695, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -1461,6 +1469,14 @@ PrefabInstance:
     - target: {fileID: 8906431216822227268, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8990259459166411431, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1463572892}
+    - target: {fileID: 8990259459166411431, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ContinueToNextCombat
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
@@ -2128,6 +2144,12 @@ MonoBehaviour:
   mainMenuSceneName: MainMenuScene
   statsPanelRoot: {fileID: 788259679}
   traderPanelRoot: {fileID: 788259680}
+  playerProgression: {fileID: 902157987}
+  playerWallet: {fileID: 9064901159089817242}
+  characterInventory: {fileID: 9064901159089817246}
+  characterEquipment: {fileID: 9064901159089817245}
+  playerSkillLoadout: {fileID: 9064901159089817244}
+  characterStats: {fileID: 1390205760}
 --- !u!114 &1463572893
 MonoBehaviour:
   m_ObjectHideFlags: 0

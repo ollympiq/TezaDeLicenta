@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -38,6 +40,10 @@ public class EnemySpawner : MonoBehaviour
 
     private readonly List<GameObject> spawnedEnemies = new List<GameObject>();
     private readonly List<Vector3> usedPositions = new List<Vector3>();
+    private readonly List<EnemyTurnController> spawnedEnemyTurns = new List<EnemyTurnController>();
+
+    private bool hasSpawnedThisScene;
+    private Coroutine delayedStartRoutine;
 
     private void Reset()
     {
@@ -72,12 +78,26 @@ public class EnemySpawner : MonoBehaviour
     private void Start()
     {
         if (spawnOnStart)
-            SpawnForCurrentLevel();
+            delayedStartRoutine = StartCoroutine(SpawnAfterOneFrame());
+    }
+
+    private IEnumerator SpawnAfterOneFrame()
+    {
+        yield return null;
+        delayedStartRoutine = null;
+        SpawnForCurrentLevel();
     }
 
     [ContextMenu("Spawn For Current Level")]
     public void SpawnForCurrentLevel()
     {
+        if (hasSpawnedThisScene)
+        {
+            if (debugLogs)
+                Debug.Log("EnemySpawner: spawn ignorat, a fost deja facut pentru scena curenta.");
+            return;
+        }
+
         if (spawnVolume == null)
         {
             Debug.LogWarning("EnemySpawner: lipseste BoxCollider-ul de spawn.");
@@ -90,6 +110,8 @@ public class EnemySpawner : MonoBehaviour
             ClearSpawnedEnemies();
 
         usedPositions.Clear();
+        spawnedEnemies.Clear();
+        spawnedEnemyTurns.Clear();
 
         int currentLevel = ResolveCurrentLevel();
         bool isBossLevel = bossLevels != null && bossLevels.Contains(currentLevel);
@@ -110,18 +132,31 @@ public class EnemySpawner : MonoBehaviour
         SpawnCategory(miniBossEnemies, miniBossCount, "MiniBoss");
         SpawnCategory(bossEnemies, bossCount, "Boss");
 
-        if (refreshTurnManagerAfterSpawn && TurnManager.Instance != null)
-            TurnManager.Instance.RefreshEnemyList();
+        hasSpawnedThisScene = true;
 
-        if (TurnManager.Instance != null && !TurnManager.Instance.IsCombatActive)
-            TurnManager.Instance.StartCombat();
+        if (TurnManager.Instance != null)
+        {
+            TurnManager.Instance.ResetCombatState();
+
+            if (refreshTurnManagerAfterSpawn)
+                TurnManager.Instance.SetEnemyTurns(spawnedEnemyTurns);
+            else
+                TurnManager.Instance.RefreshEnemyList();
+
+            TurnManager.Instance.StartCombatOnce();
+        }
     }
 
     [ContextMenu("Clear Spawned Enemies")]
     public void ClearSpawnedEnemies()
     {
+        hasSpawnedThisScene = false;
         spawnedEnemies.Clear();
+        spawnedEnemyTurns.Clear();
         usedPositions.Clear();
+
+        if (TurnManager.Instance != null)
+            TurnManager.Instance.ResetCombatState();
 
         Transform parent = spawnParent != null ? spawnParent : transform;
 
@@ -173,6 +208,10 @@ public class EnemySpawner : MonoBehaviour
                 instance.name = $"{categoryLabel}_{i + 1}_{prefab.name}";
 
             ConfigureSpawnedEnemy(instance);
+
+            EnemyTurnController enemyTurn = instance.GetComponent<EnemyTurnController>();
+            if (enemyTurn != null)
+                spawnedEnemyTurns.Add(enemyTurn);
 
             spawnedEnemies.Add(instance);
             usedPositions.Add(instance.transform.position);
@@ -311,6 +350,15 @@ public class EnemySpawner : MonoBehaviour
 
         if (playerStats == null)
             playerStats = FindFirstObjectByType<CharacterStats>();
+    }
+
+    private void OnDisable()
+    {
+        if (delayedStartRoutine != null)
+        {
+            StopCoroutine(delayedStartRoutine);
+            delayedStartRoutine = null;
+        }
     }
 
     private void OnDrawGizmosSelected()
