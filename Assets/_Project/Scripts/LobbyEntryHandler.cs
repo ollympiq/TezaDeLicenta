@@ -8,6 +8,7 @@ public class LobbyEntryHandler : MonoBehaviour
     [SerializeField] private CharacterInventory characterInventory;
     [SerializeField] private CharacterEquipment characterEquipment;
     [SerializeField] private PlayerSkillLoadout playerSkillLoadout;
+    [SerializeField] private CharacterStats characterStats;
     [SerializeField] private GameObject statsPanelRoot;
     [SerializeField] private PlayerStatAllocationUI statAllocationUI;
 
@@ -31,6 +32,9 @@ public class LobbyEntryHandler : MonoBehaviour
         if (playerSkillLoadout == null)
             playerSkillLoadout = FindFirstObjectByType<PlayerSkillLoadout>();
 
+        if (characterStats == null)
+            characterStats = FindFirstObjectByType<CharacterStats>();
+
         if (statAllocationUI == null)
             statAllocationUI = FindFirstObjectByType<PlayerStatAllocationUI>(FindObjectsInactive.Include);
 
@@ -43,6 +47,8 @@ public class LobbyEntryHandler : MonoBehaviour
                 characterEquipment,
                 playerSkillLoadout);
 
+            GameSession.Instance.ApplySavedClassTo(characterStats);
+
             if (GameSession.Instance.PendingLobbyLevelUp && playerProgression != null)
             {
                 playerProgression.LevelUpOnce();
@@ -54,6 +60,8 @@ public class LobbyEntryHandler : MonoBehaviour
                     characterInventory,
                     characterEquipment,
                     playerSkillLoadout);
+
+                GameSession.Instance.ApplySavedClassTo(characterStats);
             }
         }
 

@@ -2081,6 +2081,17 @@ SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 5041438989261591438, guid: d3dc725b6d47d7248ae345beaa472ba5, type: 3}
   m_PrefabInstance: {fileID: 1001374695}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1390205760 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7443605556733449951, guid: d237478957b972b469eec5d9238610ad, type: 3}
+  m_PrefabInstance: {fileID: 9064901159089817241}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 171066c3c6af22a48ba38db4d4a69df8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &1463572891
 GameObject:
   m_ObjectHideFlags: 0
@@ -2134,6 +2145,7 @@ MonoBehaviour:
   characterInventory: {fileID: 9064901159089817246}
   characterEquipment: {fileID: 9064901159089817245}
   playerSkillLoadout: {fileID: 9064901159089817244}
+  characterStats: {fileID: 1390205760}
   statsPanelRoot: {fileID: 788259679}
   statAllocationUI: {fileID: 788259678}
   autoOpenStatsPanel: 1

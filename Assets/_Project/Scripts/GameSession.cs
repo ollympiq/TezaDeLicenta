@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class GameSession : MonoBehaviour
 {
-
     [SerializeField] private CharacterClass selectedPlayerClass = CharacterClass.Unassigned;
     [SerializeField] private bool pendingClassSelection = false;
 
@@ -136,6 +135,18 @@ public class GameSession : MonoBehaviour
         CharacterEquipment equipment,
         PlayerSkillLoadout skillLoadout)
     {
+        CharacterStats stats = FindStatsReference(
+            progression,
+            inventory,
+            equipment,
+            skillLoadout);
+
+        if (stats != null && stats.Class != CharacterClass.Unassigned)
+        {
+            selectedPlayerClass = stats.Class;
+            pendingClassSelection = false;
+        }
+
         if (progression != null)
         {
             savedPlayerLevel = progression.CurrentLevel;
@@ -173,6 +184,80 @@ public class GameSession : MonoBehaviour
         LoadSkills(skillLoadout);
     }
 
+    public void ApplySavedClassTo(CharacterStats stats)
+    {
+        if (stats == null)
+            return;
+
+        if (selectedPlayerClass == CharacterClass.Unassigned)
+            return;
+
+        stats.SetCharacterClass(selectedPlayerClass, true);
+    }
+
+    public void RememberAppliedPlayerClass(CharacterClass classType)
+    {
+        if (classType == CharacterClass.Unassigned)
+            return;
+
+        selectedPlayerClass = classType;
+        pendingClassSelection = false;
+    }
+
+    public void SetSelectedPlayerClass(CharacterClass classType)
+    {
+        selectedPlayerClass = classType;
+        pendingClassSelection = true;
+    }
+
+    public bool TryConsumeSelectedPlayerClass(out CharacterClass classType)
+    {
+        classType = selectedPlayerClass;
+
+        if (!pendingClassSelection)
+            return false;
+
+        pendingClassSelection = false;
+        return true;
+    }
+
+    private CharacterStats FindStatsReference(
+        PlayerProgression progression,
+        CharacterInventory inventory,
+        CharacterEquipment equipment,
+        PlayerSkillLoadout skillLoadout)
+    {
+        if (progression != null)
+        {
+            CharacterStats stats = progression.GetComponent<CharacterStats>();
+            if (stats != null)
+                return stats;
+        }
+
+        if (inventory != null)
+        {
+            CharacterStats stats = inventory.GetComponent<CharacterStats>();
+            if (stats != null)
+                return stats;
+        }
+
+        if (equipment != null)
+        {
+            CharacterStats stats = equipment.GetComponent<CharacterStats>();
+            if (stats != null)
+                return stats;
+        }
+
+        if (skillLoadout != null)
+        {
+            CharacterStats stats = skillLoadout.GetComponent<CharacterStats>();
+            if (stats != null)
+                return stats;
+        }
+
+        return FindFirstObjectByType<CharacterStats>();
+    }
+
     private void SaveInventory(CharacterInventory inventory)
     {
         savedInventory.Clear();
@@ -180,7 +265,7 @@ public class GameSession : MonoBehaviour
         if (inventory == null)
             return;
 
-        var items = inventory.Items;
+        IReadOnlyList<ItemInstance> items = inventory.Items;
         for (int i = 0; i < items.Count; i++)
         {
             SavedItemInstance saved = BuildSavedItem(items[i]);
@@ -276,7 +361,7 @@ public class GameSession : MonoBehaviour
         if (skillLoadout == null)
             return;
 
-        var available = skillLoadout.AvailableSkills;
+        IReadOnlyList<SkillDefinition> available = skillLoadout.AvailableSkills;
         for (int i = 0; i < available.Count; i++)
         {
             SkillDefinition skill = available[i];
@@ -352,7 +437,7 @@ public class GameSession : MonoBehaviour
             saved.rolledMaxDamage = item.GetWeaponMaxDamage();
         }
 
-        var rolledMods = item.RolledModifiers;
+        IReadOnlyList<ItemRolledModifier> rolledMods = item.RolledModifiers;
         if (rolledMods != null)
         {
             for (int i = 0; i < rolledMods.Count; i++)
@@ -434,22 +519,5 @@ public class GameSession : MonoBehaviour
 
             skillById[def.SkillId] = def;
         }
-    }
-
-    public void SetSelectedPlayerClass(CharacterClass classType)
-    {
-        selectedPlayerClass = classType;
-        pendingClassSelection = true;
-    }
-
-    public bool TryConsumeSelectedPlayerClass(out CharacterClass classType)
-    {
-        classType = selectedPlayerClass;
-
-        if (!pendingClassSelection)
-            return false;
-
-        pendingClassSelection = false;
-        return true;
     }
 }

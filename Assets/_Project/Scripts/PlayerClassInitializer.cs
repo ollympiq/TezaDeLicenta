@@ -105,6 +105,9 @@ public class PlayerClassInitializer : MonoBehaviour
                 true);
         }
 
+        if (GameSession.Instance != null)
+            GameSession.Instance.RememberAppliedPlayerClass(preset.classType);
+
         if (characterEquipment != null)
         {
             characterEquipment.ClearAllEquipped(false);
