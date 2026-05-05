@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "SkillDefinition", menuName = "Game/Skills/Skill Definition")]
@@ -18,16 +19,22 @@ public class SkillDefinition : ScriptableObject
     [SerializeField] private Texture2D cursorTexture;
     [SerializeField] private Vector2 cursorHotspot = Vector2.zero;
 
-    [Header("Combat")]
+    [Header("Combat Damage")]
+    [SerializeField] private bool dealsDamage = true;
     [SerializeField] private DamageType damageType = DamageType.Physical;
     [SerializeField] private int minDamage = 10;
     [SerializeField] private int maxDamage = 16;
     [SerializeField, Range(0f, 3f)] private float powerScaling = 0.35f;
     [SerializeField, Range(0f, 100f)] private float bonusAccuracy = 0f;
     [SerializeField] private bool canCrit = true;
+
+    [Header("Usage")]
     [SerializeField] private int apCost = 2;
     [SerializeField] private float range = 6f;
     [SerializeField] private float areaRadius = 2.5f;
+
+    [Header("Effects")]
+    [SerializeField] private List<SkillEffectData> effects = new List<SkillEffectData>();
 
     public string SkillId => skillId;
     public string DisplayName => displayName;
@@ -40,6 +47,7 @@ public class SkillDefinition : ScriptableObject
     public Texture2D CursorTexture => cursorTexture;
     public Vector2 CursorHotspot => cursorHotspot;
 
+    public bool DealsDamage => dealsDamage;
     public DamageType DamageType => damageType;
     public int MinDamage => minDamage;
     public int MaxDamage => maxDamage;
@@ -49,6 +57,9 @@ public class SkillDefinition : ScriptableObject
     public int ApCost => apCost;
     public float Range => range;
     public float AreaRadius => areaRadius;
+
+    public IReadOnlyList<SkillEffectData> Effects => effects;
+    public bool HasAnyPayload => dealsDamage || (effects != null && effects.Count > 0);
 
     private void OnValidate()
     {
@@ -63,5 +74,20 @@ public class SkillDefinition : ScriptableObject
 
         if (areaRadius < 0f)
             areaRadius = 0f;
+
+        if (targetingMode == SkillTargetingMode.Self)
+        {
+            areaMode = SkillAreaMode.SingleTarget;
+            range = 0f;
+        }
+
+        if (effects != null)
+        {
+            for (int i = 0; i < effects.Count; i++)
+            {
+                if (effects[i] != null)
+                    effects[i].ClampValues();
+            }
+        }
     }
 }

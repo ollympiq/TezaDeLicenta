@@ -88,6 +88,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 83def13f9c7b32f49a32b0eab4de33bd, type: 2}
   - {fileID: 11400000, guid: ba2c00af809928546bc7c689f797db82, type: 2}
   - {fileID: 11400000, guid: 029785fc9232ed94badc376d7087d1b7, type: 2}
+  - {fileID: 11400000, guid: ec3178538d9713d4ba85e6715079c710, type: 2}
+  - {fileID: 11400000, guid: cabc003b6d176de43a2c3f7b66572ede, type: 2}
+  - {fileID: 11400000, guid: a3caf0c3136d2554d93c6d7e0302ce2b, type: 2}
+  - {fileID: 11400000, guid: 94dc75b658010264eb783e3107d7a385, type: 2}
+  - {fileID: 11400000, guid: 553668361158491418d746946377defa, type: 2}
   tierSettings:
   - tier: 0
     minGold: 5

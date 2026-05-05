@@ -22,18 +22,18 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private AttackDefinition heavyAttack;
 
     [Header("Turn")]
-    [SerializeField] private float thinkDelay = 0.1f;
+    [SerializeField] private float thinkDelay = 0.2f;
     [SerializeField] private float afterMoveDelay = 0.15f;
-    [SerializeField] private float afterAttackDelay = 1f;
+    [SerializeField] private float afterAttackDelay = 0.6f;
 
     [Header("Movement AP")]
     [SerializeField] private float metersPerAP = 1.5f;
     [SerializeField] private float minMoveDistance = 0.2f;
 
     [Header("Melee Positioning")]
-    [SerializeField] private float attackRangeBuffer = 0.2f;
-    [SerializeField] private float destinationTolerance = 0.15f;
-    [SerializeField] private float idleApproachGap = 0.35f;
+    [SerializeField] private float attackRangeBuffer = 0.1f;
+    [SerializeField] private float destinationTolerance = 0.08f;
+    [SerializeField] private float idleApproachGap = 0.25f;
 
     private const string MediumAttackKey = "ENEMY_MEDIUM_ATTACK";
     private const string HeavyAttackKey = "ENEMY_HEAVY_ATTACK";
@@ -42,6 +42,7 @@ public class EnemyTurnController : MonoBehaviour
     private CharacterBasicAttack basicAttack;
     private CharacterHealth health;
     private CharacterStats selfStats;
+    private CharacterStatusEffects statusEffects;
 
     private Coroutine turnRoutine;
     private bool isTakingTurn;
@@ -66,6 +67,10 @@ public class EnemyTurnController : MonoBehaviour
         basicAttack = GetComponent<CharacterBasicAttack>();
         health = GetComponent<CharacterHealth>();
         selfStats = GetComponent<CharacterStats>();
+
+        statusEffects = GetComponent<CharacterStatusEffects>();
+        if (statusEffects == null)
+            statusEffects = gameObject.AddComponent<CharacterStatusEffects>();
     }
 
     public void SetTarget(CharacterStats newTarget)
@@ -103,6 +108,21 @@ public class EnemyTurnController : MonoBehaviour
         CharacterHealth targetHealth = targetStats.GetComponent<CharacterHealth>();
         if (targetHealth == null || targetHealth.IsDead)
         {
+            EndTurn(onTurnFinished);
+            yield break;
+        }
+
+        bool survivedStartEffects = statusEffects == null || statusEffects.ProcessStartOfOwnerTurn();
+        if (!survivedStartEffects || health == null || health.IsDead)
+        {
+            yield return new WaitForSeconds(0.2f);
+            EndTurn(onTurnFinished);
+            yield break;
+        }
+
+        if (statusEffects != null && statusEffects.IsCurrentTurnBlocked)
+        {
+            yield return new WaitForSeconds(0.25f);
             EndTurn(onTurnFinished);
             yield break;
         }
@@ -210,21 +230,8 @@ public class EnemyTurnController : MonoBehaviour
                 DamageNumberManager.Instance.ShowMiss(targetStats.transform);
         }
 
-        LogSpecialAttackResult(attack, targetStats, targetHealth, result);
+        GameLog.Combat(BuildCombatLog(attack, targetStats.name, result, targetHealth));
         return true;
-    }
-
-    private void LogSpecialAttackResult(AttackDefinition attack, CharacterStats target, CharacterHealth targetHealth, DamageResult result)
-    {
-        string attackerName = gameObject.name;
-        string targetName = target != null ? target.gameObject.name : "Target";
-
-        string line = result.BuildLogLine(attackerName, attack.AttackName, targetName);
-
-        if (targetHealth != null)
-            line += $" | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
-
-        GameLog.Combat(line);
     }
 
     private void PlayAttackAnimation(EnemyAttackAnimationType type)
@@ -276,7 +283,8 @@ public class EnemyTurnController : MonoBehaviour
         if (moveAPBudget <= 0)
             return false;
 
-        float maxMoveDistance = moveAPBudget * metersPerAP;
+        float effectiveMetersPerAP = GetEffectiveMetersPerAP();
+        float maxMoveDistance = moveAPBudget * effectiveMetersPerAP;
         if (maxMoveDistance < minMoveDistance)
             return false;
 
@@ -299,7 +307,7 @@ public class EnemyTurnController : MonoBehaviour
         if (!NavMesh.SamplePosition(limitedDestination, out NavMeshHit hit, 1.0f, agent.areaMask))
             return false;
 
-        int apCostForMove = Mathf.CeilToInt(sampledMoveDistance / metersPerAP);
+        int apCostForMove = Mathf.CeilToInt(sampledMoveDistance / effectiveMetersPerAP);
         apCostForMove = Mathf.Clamp(apCostForMove, 1, ap.CurrentAP);
 
         if (!ap.SpendAP(apCostForMove))
@@ -341,7 +349,8 @@ public class EnemyTurnController : MonoBehaviour
         if (moveAPBudget <= 0)
             return false;
 
-        float maxMoveDistance = moveAPBudget * metersPerAP;
+        float effectiveMetersPerAP = GetEffectiveMetersPerAP();
+        float maxMoveDistance = moveAPBudget * effectiveMetersPerAP;
         float desiredRemainingDistance = GetDesiredRemainingPathDistanceToAttack(attack.Range);
         float requiredMoveDistance = totalPathLength - desiredRemainingDistance;
 
@@ -364,7 +373,8 @@ public class EnemyTurnController : MonoBehaviour
         if (moveAPBudget <= 0)
             return false;
 
-        float maxMoveDistance = moveAPBudget * metersPerAP;
+        float effectiveMetersPerAP = GetEffectiveMetersPerAP();
+        float maxMoveDistance = moveAPBudget * effectiveMetersPerAP;
         float desiredRemainingDistance = GetDesiredRemainingPathDistanceToAttack(basicAttack.GetAttackRange());
         float requiredMoveDistance = totalPathLength - desiredRemainingDistance;
 
@@ -491,6 +501,27 @@ public class EnemyTurnController : MonoBehaviour
         agent.ResetPath();
     }
 
+    private string BuildCombatLog(AttackDefinition attack, string targetName, DamageResult result, CharacterHealth targetHealth)
+    {
+        if (!result.Hit)
+        {
+            return
+                $"{name} used {attack.AttackName} on {targetName} but missed. " +
+                $"Hit chance: {result.HitChance:F1}% | " +
+                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        }
+
+        string critText = result.WasCritical ? " CRITICAL!" : "";
+
+        return
+            $"{name} used {attack.AttackName} on {targetName} | " +
+            $"Type: {result.DamageType} | " +
+            $"Armor Reduction: {result.ArmorReductionPercent:F1}% | " +
+            $"Resistance: {result.ResistancePercent:F1}% | " +
+            $"Final Damage: {result.FinalDamage}{critText} | " +
+            $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+    }
+
     private void EndTurn(Action onTurnFinished)
     {
         if (agent != null && agent.enabled)
@@ -499,9 +530,13 @@ public class EnemyTurnController : MonoBehaviour
             agent.ResetPath();
         }
 
+        if (isTakingTurn)
+            statusEffects?.ProcessEndOfOwnerTurn();
+
         turnLock?.LockNow();
 
         isTakingTurn = false;
+        GameLog.Info($"{name} si-a terminat tura.");
         onTurnFinished?.Invoke();
     }
 
@@ -511,6 +546,16 @@ public class EnemyTurnController : MonoBehaviour
         float targetRadius = GetBodyRadius(targetStats.transform);
 
         return attackerRadius + targetRadius + Mathf.Max(0.05f, idleApproachGap);
+    }
+
+    private float GetMovementCostMultiplier()
+    {
+        return statusEffects != null ? statusEffects.MovementCostMultiplier : 1f;
+    }
+
+    private float GetEffectiveMetersPerAP()
+    {
+        return metersPerAP / Mathf.Max(1f, GetMovementCostMultiplier());
     }
 
     private readonly struct AttackMovePlan

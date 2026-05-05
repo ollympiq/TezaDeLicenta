@@ -188,6 +188,12 @@ public class CharacterInventory : MonoBehaviour
         if (index < 0 || index >= items.Count || user == null)
             return false;
 
+        if (!CanUseItemsNow())
+        {
+            GameLog.Warning("Nu poti folosi iteme in tura inamicilor.");
+            return false;
+        }
+
         ItemInstance item = items[index];
         if (item == null || !item.IsValid)
             return false;
@@ -245,38 +251,54 @@ public class CharacterInventory : MonoBehaviour
 
         if (loadout.HasSkill(skillBook.TaughtSkill))
         {
-            Debug.Log("Jucatorul cunoaste deja acest skill.");
+            GameLog.Warning("Skill-ul este deja invatat.");
             return false;
         }
 
-        return loadout.LearnSkill(skillBook.TaughtSkill, false);
+        loadout.LearnSkill(skillBook.TaughtSkill, true);
+        return true;
+    }
+
+    private bool CanUseItemsNow()
+    {
+        if (TurnManager.Instance == null)
+            return true;
+
+        if (!TurnManager.Instance.IsCombatActive)
+            return true;
+
+        return TurnManager.Instance.IsPlayerTurnActive;
     }
 
     private void AddStartingItems()
     {
-        if (startingItems == null || startingItems.Count == 0)
-            return;
+        bool changed = false;
 
         for (int i = 0; i < startingItems.Count; i++)
         {
             StartingInventoryEntry entry = startingItems[i];
-            if (entry == null || entry.ItemDefinition == null)
+            if (entry == null || entry.ItemDefinition == null || entry.Amount <= 0)
                 continue;
 
-            AddItem(entry.ItemDefinition, entry.Amount);
+            int beforeCount = items.Count;
+            bool fullyAdded = AddItem(entry.ItemDefinition, entry.Amount);
+            changed |= fullyAdded || items.Count != beforeCount;
         }
+
+        if (changed)
+            OnInventoryChanged?.Invoke();
     }
 
     private ItemInstance FindStack(ItemDefinition definition)
     {
         for (int i = 0; i < items.Count; i++)
         {
-            if (items[i].Definition == definition &&
-                items[i].CanStack &&
-                items[i].StackCount < items[i].MaxStack)
-            {
-                return items[i];
-            }
+            ItemInstance item = items[i];
+            if (item == null || !item.IsValid)
+                continue;
+
+            if (item.Definition == definition && item.CanStack && item.StackCount < item.MaxStack)
+                return item;
         }
 
         return null;
@@ -286,11 +308,12 @@ public class CharacterInventory : MonoBehaviour
     {
         for (int i = 0; i < items.Count; i++)
         {
-            if (items[i].CanStackWith(instance) &&
-                items[i].StackCount < items[i].MaxStack)
-            {
-                return items[i];
-            }
+            ItemInstance existing = items[i];
+            if (existing == null || !existing.IsValid)
+                continue;
+
+            if (existing.CanStackWith(instance) && existing.StackCount < existing.MaxStack)
+                return existing;
         }
 
         return null;

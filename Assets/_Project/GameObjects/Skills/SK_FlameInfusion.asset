@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
+  m_Name: SK_FlameInfusion
+  m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
+  skillId: flameinfusion
+  displayName: Flame Infusion
+  skillType: 1
+  targetingMode: 3
+  areaMode: 0
+  keepSelectedAfterUse: 1
+  icon: {fileID: 21300000, guid: b00564e353aca3e4a853c66d5568c6ca, type: 3}
+  cursorTexture: {fileID: 2800000, guid: a81d248bdb1ce974aac77fec689c96ca, type: 3}
+  cursorHotspot: {x: 0, y: 0}
+  dealsDamage: 0
+  damageType: 0
+  minDamage: 10
+  maxDamage: 16
+  powerScaling: 0.35
+  bonusAccuracy: 0
+  canCrit: 1
+  apCost: 2
+  range: 0
+  areaRadius: 2.5
+  effects:
+  - effectType: 4
+    durationTurns: 2
+    flatMinValue: 0
+    flatMaxValue: 0
+    powerScaling: 0
+    useMagicPower: 0
+    bonusStrength: 0
+    bonusConstitution: 0
+    bonusDexterity: 0
+    bonusIntelligence: 0
+    critChanceBonusPercent: 0
+    elementalDamageBonusPercent: 25
+    affectAllElements: 0
+    elementalDamageType: 1

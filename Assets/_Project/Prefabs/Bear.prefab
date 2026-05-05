@@ -107,6 +107,7 @@ GameObject:
   - component: {fileID: 4446810268556345438}
   - component: {fileID: 4029717101211338168}
   - component: {fileID: 3885169530351304686}
+  - component: {fileID: -917758261259992998}
   m_Layer: 7
   m_Name: Bear
   m_TagString: Untagged
@@ -596,6 +597,8 @@ MonoBehaviour:
   agent: {fileID: 4962853259838866332}
   turnObstacleProxy: {fileID: 752162938103354780}
   startLocked: 1
+  snapToNavMeshWhenLocked: 1
+  snapSampleDistance: 2
 --- !u!114 &3885169530351304686
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -612,6 +615,19 @@ MonoBehaviour:
   outlineScale: 1
   sourceRenderers:
   - {fileID: 2294810399900316104}
+--- !u!114 &-917758261259992998
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6186170036969366969}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01d80dfe431c6114888ddccde7d1b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterStatusEffects
+  activeEffects: []
 --- !u!1 &8994492382622306187
 GameObject:
   m_ObjectHideFlags: 0

@@ -2589,6 +2589,38 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: skillBookPool.Array.size
+      value: 12
+      objectReference: {fileID: 0}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[5]'
+      value: 
+      objectReference: {fileID: 11400000, guid: ec3178538d9713d4ba85e6715079c710, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[6]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 94dc75b658010264eb783e3107d7a385, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[7]'
+      value: 
+      objectReference: {fileID: 11400000, guid: cabc003b6d176de43a2c3f7b66572ede, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[8]'
+      value: 
+      objectReference: {fileID: 11400000, guid: a3caf0c3136d2554d93c6d7e0302ce2b, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[9]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 553668361158491418d746946377defa, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[10]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 9daee72a78a4eab49a1bec1ab6fc87d5, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[11]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 672ef5846a5811247a2d2b3564f8d416, type: 2}
     - target: {fileID: 5912864777754304172, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
       propertyPath: m_Name
       value: LootGenerator

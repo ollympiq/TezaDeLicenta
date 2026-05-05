@@ -29,6 +29,7 @@ public class PlayerNavMeshMover : MonoBehaviour
     private NavMeshAgent agent;
     private PlayerAP playerAP;
     private CharacterHealth health;
+    private CharacterStatusEffects statusEffects;
     private bool turnInputEnabled;
     private bool blockMovementThisFrame;
     private Coroutine movementWatchRoutine;
@@ -40,6 +41,7 @@ public class PlayerNavMeshMover : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         playerAP = GetComponent<PlayerAP>();
         health = GetComponent<CharacterHealth>();
+        statusEffects = GetComponent<CharacterStatusEffects>();
 
         if (mainCamera == null)
             mainCamera = Camera.main;
@@ -131,12 +133,12 @@ public class PlayerNavMeshMover : MonoBehaviour
             return;
         }
 
-        OnMoveStarted?.Invoke();
-        moveRangeVisualizer?.BeginHideUntilMovementEnds();
-
         bool spent = playerAP.SpendAP(apCost);
         if (!spent)
             return;
+
+        OnMoveStarted?.Invoke();
+        moveRangeVisualizer?.BeginHideUntilMovementEnds();
 
         agent.isStopped = false;
         agent.SetDestination(destination);
@@ -184,7 +186,7 @@ public class PlayerNavMeshMover : MonoBehaviour
         if (pathLength < 0.05f)
             return false;
 
-        apCost = Mathf.CeilToInt(pathLength / unitsPerAP);
+        apCost = Mathf.CeilToInt(pathLength / GetEffectiveUnitsPerAP());
         destination = navHit.position;
         return true;
     }
@@ -262,5 +264,15 @@ public class PlayerNavMeshMover : MonoBehaviour
     {
         blockMovementThisFrame = true;
         StopMovementImmediately(false);
+    }
+
+    public float GetMovementCostMultiplier()
+    {
+        return statusEffects != null ? statusEffects.MovementCostMultiplier : 1f;
+    }
+
+    public float GetEffectiveUnitsPerAP()
+    {
+        return unitsPerAP / Mathf.Max(1f, GetMovementCostMultiplier());
     }
 }

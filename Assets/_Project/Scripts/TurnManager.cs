@@ -270,8 +270,20 @@ public class TurnManager : MonoBehaviour
             playerTurnActive = true;
             UpdateEndTurnButton(true);
 
-            if (playerTurn != null)
-                playerTurn.BeginTurn();
+            bool playerCanAct = playerTurn != null && playerTurn.BeginTurn();
+
+            if (!playerCanAct)
+            {
+                playerTurnActive = false;
+                UpdateEndTurnButton(false);
+                NotifyTurnStateChanged();
+
+                if (CheckCombatEnded())
+                    return;
+
+                QueueAdvance();
+                return;
+            }
 
             NotifyTurnStateChanged();
             return;

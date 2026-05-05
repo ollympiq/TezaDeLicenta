@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b6be339a33028f4698c88e723340973, type: 3}
+  m_Name: SlowdownBook
+  m_EditorClassIdentifier: Assembly-CSharp::SkillBookDefinition
+  itemId: slowdownbook
+  displayName: Slowdown Book
+  description: 
+  icon: {fileID: 21300000, guid: 513d2090ba754a7438ffc867ebc2e8f2, type: 3}
+  baseRarity: 0
+  buyPrice: 30
+  sellPrice: 10
+  stackable: 0
+  maxStack: 1
+  statModifiers: []
+  taughtSkill: {fileID: 11400000, guid: d3c648a2ff33f32468490acdb5b55084, type: 2}

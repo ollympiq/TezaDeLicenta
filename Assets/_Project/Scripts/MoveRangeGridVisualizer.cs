@@ -161,7 +161,7 @@ public class MoveRangeGridVisualizer : MonoBehaviour
         lastCenterPos = navCenter;
         lastAP = currentAP;
 
-        float maxMoveDistance = currentAP * mover.UnitsPerAP;
+        float maxMoveDistance = currentAP * mover.GetEffectiveUnitsPerAP();
         int radiusCells = Mathf.Min(maxRadiusCells, Mathf.CeilToInt(maxMoveDistance / cellSize) + 2);
 
         BuildGridMesh(navCenter, maxMoveDistance, radiusCells);

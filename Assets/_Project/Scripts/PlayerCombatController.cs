@@ -106,7 +106,7 @@ public class PlayerCombatController : MonoBehaviour
                     break;
 
                 case SkillTargetingMode.Self:
-                    GameLog.Warning("Skill-urile Self nu sunt implementate inca.");
+                    TryUseSelectedSkillOnSelf();
                     break;
             }
         }
@@ -204,6 +204,29 @@ public class PlayerCombatController : MonoBehaviour
 
             case SkillType.BasicAttack:
                 GameLog.Warning("Basic Attack nu poate fi folosit pe ground.");
+                break;
+
+            case SkillType.Passive:
+                GameLog.Warning($"{selectedSkill.DisplayName} este un skill pasiv si nu poate fi folosit prin click.");
+                break;
+        }
+
+        if (usedSuccessfully && !selectedSkill.KeepSelectedAfterUse)
+            ClearSelectedSkill();
+    }
+
+    private void TryUseSelectedSkillOnSelf()
+    {
+        bool usedSuccessfully = false;
+
+        switch (selectedSkill.SkillType)
+        {
+            case SkillType.Active:
+                usedSuccessfully = skillCaster != null && skillCaster.TryUseSkillOnSelf(selectedSkill);
+                break;
+
+            case SkillType.BasicAttack:
+                GameLog.Warning("Basic Attack nu poate fi folosit pe self.");
                 break;
 
             case SkillType.Passive:

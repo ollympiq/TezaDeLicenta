@@ -18,6 +18,8 @@ public class PlayerTurnController : MonoBehaviour
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private TurnActionLimiter actionLimiter;
 
+    private CharacterStatusEffects statusEffects;
+
     public CharacterHealth Health => health;
     public CharacterStats Stats => stats;
     public int Initiative => stats != null ? stats.Initiative : 0;
@@ -34,25 +36,48 @@ public class PlayerTurnController : MonoBehaviour
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (actionLimiter == null) actionLimiter = GetComponent<TurnActionLimiter>();
 
+        statusEffects = GetComponent<CharacterStatusEffects>();
+        if (statusEffects == null)
+            statusEffects = gameObject.AddComponent<CharacterStatusEffects>();
+
         SetControlEnabled(false);
     }
 
-    public void BeginTurn()
+    public bool BeginTurn()
     {
         if (!IsAlive)
-            return;
+            return false;
 
         IsTurnActive = true;
+
+        bool survivedStartEffects = statusEffects == null || statusEffects.ProcessStartOfOwnerTurn();
+        if (!survivedStartEffects || !IsAlive)
+        {
+            IsTurnActive = false;
+            SetControlEnabled(false);
+            StopMovement();
+            return false;
+        }
+
+        if (statusEffects != null && statusEffects.IsCurrentTurnBlocked)
+        {
+            EndTurn();
+            return false;
+        }
 
         if (ap != null)
             ap.RestoreAllAP();
 
         actionLimiter?.ResetTurnUsage();
         SetControlEnabled(true);
+        return true;
     }
 
     public void EndTurn()
     {
+        if (IsTurnActive)
+            statusEffects?.ProcessEndOfOwnerTurn();
+
         IsTurnActive = false;
         SetControlEnabled(false);
         StopMovement();

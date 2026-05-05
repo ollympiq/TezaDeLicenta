@@ -26,6 +26,35 @@ public class CharacterSkillCaster : MonoBehaviour
         turnActionLimiter = GetComponent<TurnActionLimiter>();
     }
 
+    public bool TryUseSkillOnSelf(SkillDefinition skill)
+    {
+        if (selfHealth != null && selfHealth.IsDead)
+            return false;
+
+        if (skill == null || skill.SkillType != SkillType.Active)
+            return false;
+
+        if (!skill.HasAnyPayload)
+        {
+            GameLog.Warning($"Skill-ul {skill.DisplayName} nu are niciun efect configurat.");
+            return false;
+        }
+
+        if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
+        {
+            GameLog.Warning($"Skill-ul {skill.DisplayName} a fost deja folosit in acest tur.");
+            return false;
+        }
+
+        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
+            return false;
+
+        turnActionLimiter?.MarkSkillUsed(skill);
+        StopMovement();
+
+        return ApplySkillToTargets(skill, new List<CharacterStats> { casterStats });
+    }
+
     public bool TryUseSkillOnTarget(SkillDefinition skill, CharacterStats primaryTarget)
     {
         if (selfHealth != null && selfHealth.IsDead)
@@ -33,6 +62,12 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (skill == null || skill.SkillType != SkillType.Active)
             return false;
+
+        if (!skill.HasAnyPayload)
+        {
+            GameLog.Warning($"Skill-ul {skill.DisplayName} nu are niciun efect configurat.");
+            return false;
+        }
 
         if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
         {
@@ -60,7 +95,7 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
         }
 
-        if (!TrySpendAP(skill.ApCost))
+        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
@@ -70,8 +105,7 @@ public class CharacterSkillCaster : MonoBehaviour
         if (animationController != null)
             animationController.PlayAttackAnimation(primaryTarget.transform);
 
-        ApplySkillToTargets(skill, targets);
-        return true;
+        return ApplySkillToTargets(skill, targets);
     }
 
     public bool TryUseSkillAtPoint(SkillDefinition skill, Vector3 point)
@@ -81,6 +115,12 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (skill == null || skill.SkillType != SkillType.Active)
             return false;
+
+        if (!skill.HasAnyPayload)
+        {
+            GameLog.Warning($"Skill-ul {skill.DisplayName} nu are niciun efect configurat.");
+            return false;
+        }
 
         if (turnActionLimiter != null && !turnActionLimiter.CanUseSkill(skill))
         {
@@ -101,14 +141,13 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
         }
 
-        if (!TrySpendAP(skill.ApCost))
+        if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
 
         StopMovement();
-        ApplySkillToTargets(skill, targets);
-        return true;
+        return ApplySkillToTargets(skill, targets);
     }
 
     private List<CharacterStats> CollectTargetsFromTarget(SkillDefinition skill, CharacterStats primaryTarget)
@@ -167,14 +206,14 @@ public class CharacterSkillCaster : MonoBehaviour
         return health != null && !health.IsDead;
     }
 
-    private bool TrySpendAP(int apCost)
+    private bool TrySpendAP(int apCost, string skillName)
     {
         if (playerAP == null)
             return true;
 
         if (!playerAP.HasEnoughAP(apCost))
         {
-            GameLog.Warning("Nu ai destul AP pentru skill.");
+            GameLog.Warning($"Nu ai destul AP pentru skill-ul {skillName}.");
             return false;
         }
 
@@ -183,7 +222,7 @@ public class CharacterSkillCaster : MonoBehaviour
 
     private void StopMovement()
     {
-        if (agent == null)
+        if (agent == null || !agent.enabled)
             return;
 
         agent.isStopped = true;
@@ -202,60 +241,92 @@ public class CharacterSkillCaster : MonoBehaviour
         return distance <= maxRange;
     }
 
-    private void ApplySkillToTargets(SkillDefinition skill, List<CharacterStats> targets)
+    private bool ApplySkillToTargets(SkillDefinition skill, List<CharacterStats> targets)
     {
+        bool anyApplied = false;
+
         for (int i = 0; i < targets.Count; i++)
         {
             CharacterStats targetStats = targets[i];
-            CharacterHealth targetHealth = targetStats.GetComponent<CharacterHealth>();
+            if (targetStats == null)
+                continue;
 
+            CharacterHealth targetHealth = targetStats.GetComponent<CharacterHealth>();
             if (targetHealth == null || targetHealth.IsDead)
                 continue;
 
-            DamageResult result = DamageCalculator.ResolveSkill(casterStats, targetStats, skill);
+            bool dealtDamage = false;
+            bool appliedEffects = false;
 
-            if (result.Hit)
+            if (skill.DealsDamage)
             {
-                targetHealth.TakeDamage(result.FinalDamage);
+                DamageResult result = DamageCalculator.ResolveSkill(casterStats, targetStats, skill);
 
-                if (DamageNumberManager.Instance != null)
+                if (result.Hit)
                 {
-                    DamageNumberManager.Instance.ShowDamage(
-                        result.FinalDamage,
-                        targetStats.transform,
-                        result.DamageType,
-                        result.WasCritical
-                    );
+                    targetHealth.TakeDamage(result.FinalDamage);
+                    dealtDamage = true;
+
+                    if (DamageNumberManager.Instance != null)
+                    {
+                        DamageNumberManager.Instance.ShowDamage(
+                            result.FinalDamage,
+                            targetStats.transform,
+                            result.DamageType,
+                            result.WasCritical
+                        );
+                    }
                 }
+                else
+                {
+                    if (DamageNumberManager.Instance != null)
+                        DamageNumberManager.Instance.ShowMiss(targetStats.transform);
+                }
+
+                GameLog.Combat(BuildCombatLog(skill, targetStats.name, result, targetHealth));
             }
-            else
+
+            if (!targetHealth.IsDead && skill.Effects != null && skill.Effects.Count > 0)
             {
-                if (DamageNumberManager.Instance != null)
-                    DamageNumberManager.Instance.ShowMiss(targetStats.transform);
+                CharacterStatusEffects statusEffects = EnsureStatusEffects(targetStats);
+                if (statusEffects != null)
+                    appliedEffects = statusEffects.ApplySkillEffects(skill, casterStats);
             }
 
-            LogSkillResult(skill, targetStats, targetHealth, result);
+            if (dealtDamage || appliedEffects)
+                anyApplied = true;
         }
+
+        return anyApplied;
     }
 
-    private void LogSkillResult(SkillDefinition skill, CharacterStats targetStats, CharacterHealth targetHealth, DamageResult result)
+    private CharacterStatusEffects EnsureStatusEffects(CharacterStats targetStats)
     {
-        string attackerName = CompareTag("Player") ? "Player" : gameObject.name;
-        string targetName = targetStats != null ? targetStats.gameObject.name : "Target";
+        CharacterStatusEffects statusEffects = targetStats.GetComponent<CharacterStatusEffects>();
+        if (statusEffects == null)
+            statusEffects = targetStats.gameObject.AddComponent<CharacterStatusEffects>();
 
-        string line = result.BuildLogLine(attackerName, skill.DisplayName, targetName);
-
-        if (targetHealth != null)
-            line += $" | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
-
-        GameLog.Combat(line);
+        return statusEffects;
     }
 
-#if UNITY_EDITOR
-    private void OnDrawGizmosSelected()
+    private string BuildCombatLog(SkillDefinition skill, string targetName, DamageResult result, CharacterHealth targetHealth)
     {
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, 1f);
+        if (!result.Hit)
+        {
+            return
+                $"{name} used {skill.DisplayName} on {targetName} but missed. " +
+                $"Hit chance: {result.HitChance:F1}% | " +
+                $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
+        }
+
+        string critText = result.WasCritical ? " CRITICAL!" : "";
+
+        return
+            $"{name} used {skill.DisplayName} on {targetName} | " +
+            $"Type: {result.DamageType} | " +
+            $"Armor Reduction: {result.ArmorReductionPercent:F1}% | " +
+            $"Resistance: {result.ResistancePercent:F1}% | " +
+            $"Final Damage: {result.FinalDamage}{critText} | " +
+            $"Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
     }
-#endif
 }

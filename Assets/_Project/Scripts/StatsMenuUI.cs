@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -77,6 +78,7 @@ public class StatsMenuUI : MonoBehaviour
         else
             sb.AppendLine(UIRichTextColors.Line("AP", $"{targetStats.MaxAP}/{targetStats.MaxAP}", UIRichTextColors.AP));
 
+        sb.AppendLine(BuildActiveEffectsLine(targetStats.gameObject));
         sb.AppendLine();
 
         sb.AppendLine(UIRichTextColors.Line("Strength", $"{targetStats.Strength}", UIRichTextColors.Strength));
@@ -174,6 +176,104 @@ public class StatsMenuUI : MonoBehaviour
     private void HandleAPChanged(int current, int max)
     {
         Refresh();
+    }
+
+    private string BuildActiveEffectsLine(GameObject targetObject)
+    {
+        CharacterStatusEffects statusEffects = targetObject != null
+            ? targetObject.GetComponent<CharacterStatusEffects>()
+            : null;
+
+        if (statusEffects == null || statusEffects.ActiveEffects == null || statusEffects.ActiveEffects.Count == 0)
+            return UIRichTextColors.DualLine("Effects", "-", UIRichTextColors.White, UIRichTextColors.White);
+
+        List<string> labels = BuildEffectLabels(statusEffects);
+        string joined = labels.Count > 0 ? string.Join(", ", labels) : "-";
+
+        return UIRichTextColors.DualLine("Effects", joined, UIRichTextColors.White, UIRichTextColors.White);
+    }
+
+    private List<string> BuildEffectLabels(CharacterStatusEffects statusEffects)
+    {
+        List<string> orderedKeys = new List<string>();
+        Dictionary<string, int> maxTurnsByLabel = new Dictionary<string, int>();
+
+        IReadOnlyList<ActiveStatusEffect> effects = statusEffects.ActiveEffects;
+        for (int i = 0; i < effects.Count; i++)
+        {
+            ActiveStatusEffect effect = effects[i];
+            if (effect == null)
+                continue;
+
+            string baseLabel = GetBaseEffectLabel(effect);
+            if (string.IsNullOrWhiteSpace(baseLabel))
+                continue;
+
+            int turns = Mathf.Max(1, effect.RemainingTurns);
+
+            if (!maxTurnsByLabel.ContainsKey(baseLabel))
+            {
+                maxTurnsByLabel[baseLabel] = turns;
+                orderedKeys.Add(baseLabel);
+            }
+            else
+            {
+                maxTurnsByLabel[baseLabel] = Mathf.Max(maxTurnsByLabel[baseLabel], turns);
+            }
+        }
+
+        List<string> labels = new List<string>();
+        for (int i = 0; i < orderedKeys.Count; i++)
+        {
+            string key = orderedKeys[i];
+            labels.Add($"{key}[{maxTurnsByLabel[key]}]");
+        }
+
+        return labels;
+    }
+
+    private string GetBaseEffectLabel(ActiveStatusEffect effect)
+    {
+        switch (effect.EffectType)
+        {
+            case SkillEffectType.DamageOverTime:
+                return $"DOT({GetDamageTypeShortName(effect.DotDamageType)})";
+
+            case SkillEffectType.SlowMovement:
+                return "Slowdown";
+
+            case SkillEffectType.SkipTurn:
+                return "Knocked";
+
+            case SkillEffectType.BuffPrimaryAttributes:
+            case SkillEffectType.BuffCritChance:
+            case SkillEffectType.BuffElementalDamage:
+                return "Buffed";
+
+            default:
+                return string.Empty;
+        }
+    }
+
+    private string GetDamageTypeShortName(DamageType damageType)
+    {
+        switch (damageType)
+        {
+            case DamageType.Fire:
+                return "Fire";
+            case DamageType.Ice:
+                return "Ice";
+            case DamageType.Earth:
+                return "Earth";
+            case DamageType.Wind:
+                return "Wind";
+            case DamageType.Lightning:
+                return "Lightning";
+            case DamageType.Physical:
+                return "Physical";
+            default:
+                return damageType.ToString();
+        }
     }
 
     private string GetDisplayName(GameObject targetObject)

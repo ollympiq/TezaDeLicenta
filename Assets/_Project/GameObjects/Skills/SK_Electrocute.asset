@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
+  m_Name: SK_Electrocute
+  m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
+  skillId: electrocute
+  displayName: Electrocute
+  skillType: 1
+  targetingMode: 1
+  areaMode: 1
+  keepSelectedAfterUse: 0
+  icon: {fileID: 21300000, guid: 918887f1aacb71b4cb34e86339c92e1b, type: 3}
+  cursorTexture: {fileID: 2800000, guid: 9289aecce50728c4688e206b86ddf39d, type: 3}
+  cursorHotspot: {x: 0, y: 0}
+  dealsDamage: 1
+  damageType: 4
+  minDamage: 24
+  maxDamage: 35
+  powerScaling: 0.35
+  bonusAccuracy: 0
+  canCrit: 1
+  apCost: 3
+  range: 6
+  areaRadius: 3
+  effects:
+  - effectType: 7
+    durationTurns: 2
+    flatMinValue: 0
+    flatMaxValue: 0
+    powerScaling: 0
+    useMagicPower: 0
+    bonusStrength: 0
+    bonusConstitution: 0
+    bonusDexterity: 0
+    bonusIntelligence: 0
+    critChanceBonusPercent: 0
+    elementalDamageBonusPercent: 0
+    affectAllElements: 0
+    elementalDamageType: 0
+    dotMinDamage: 0
+    dotMaxDamage: 0
+    dotPowerScaling: 0
+    dotUsesMagicPower: 0
+    dotDamageType: 0
+    movementCostMultiplier: 1

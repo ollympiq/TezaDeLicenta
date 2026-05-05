@@ -77,6 +77,8 @@ public class CharacterStats : MonoBehaviour
     [SerializeField] private float runtimeLightningResistanceBonus = 0f;
     [SerializeField] private float runtimeIceResistanceBonus = 0f;
 
+    private CharacterStatusEffects statusEffects;
+
     public event Action OnStatsChanged;
 
     public CharacterClass Class => characterClass;
@@ -89,10 +91,37 @@ public class CharacterStats : MonoBehaviour
     public int BaseDexterity => Mathf.Max(1, dexterity);
     public int BaseIntelligence => Mathf.Max(1, intelligence);
 
-    public int Strength => Mathf.Max(1, strength + runtimeStrengthBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Strength)));
-    public int Constitution => Mathf.Max(1, constitution + runtimeConstitutionBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Constitution)));
-    public int Dexterity => Mathf.Max(1, dexterity + runtimeDexterityBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Dexterity)));
-    public int Intelligence => Mathf.Max(1, intelligence + runtimeIntelligenceBonus + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Intelligence)));
+    public int Strength =>
+        Mathf.Max(
+            1,
+            strength +
+            runtimeStrengthBonus +
+            GetStatusStrengthBonus() +
+            Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Strength)));
+
+    public int Constitution =>
+        Mathf.Max(
+            1,
+            constitution +
+            runtimeConstitutionBonus +
+            GetStatusConstitutionBonus() +
+            Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Constitution)));
+
+    public int Dexterity =>
+        Mathf.Max(
+            1,
+            dexterity +
+            runtimeDexterityBonus +
+            GetStatusDexterityBonus() +
+            Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Dexterity)));
+
+    public int Intelligence =>
+        Mathf.Max(
+            1,
+            intelligence +
+            runtimeIntelligenceBonus +
+            GetStatusIntelligenceBonus() +
+            Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.Intelligence)));
 
     public int MaxHP =>
         (baseMaxHP + runtimeBaseMaxHPBonus) +
@@ -116,7 +145,8 @@ public class CharacterStats : MonoBehaviour
             3f +
             Dexterity * critChancePerDexterity +
             GetClassCritChanceBonus() +
-            GetEquipmentBonus(ItemBonusType.CritChance),
+            GetEquipmentBonus(ItemBonusType.CritChance) +
+            GetStatusCritChanceBonus(),
             0f, 100f);
 
     public int Initiative =>
@@ -194,17 +224,37 @@ public class CharacterStats : MonoBehaviour
             GetResistanceFromEquipment(DamageType.Ice));
 
     public float ElementalDamageBonusPercent =>
-    Mathf.Max(
-        0f,
-        Intelligence * elementalDamageBonusPerIntelligence +
-        GetClassElementalDamageBonus() +
-        GetEquipmentBonus(ItemBonusType.ElementalDamageBonusPercent));
+        Mathf.Max(
+            0f,
+            Intelligence * elementalDamageBonusPerIntelligence +
+            GetClassElementalDamageBonus() +
+            GetEquipmentBonus(ItemBonusType.ElementalDamageBonusPercent) +
+            GetStatusAllElementalDamageBonus());
 
-    public float FireDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.FireDamageBonusPercent);
-    public float EarthDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.EarthDamageBonusPercent);
-    public float WindDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.WindDamageBonusPercent);
-    public float LightningDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.LightningDamageBonusPercent);
-    public float IceDamageBonusPercent => ElementalDamageBonusPercent + GetEquipmentBonus(ItemBonusType.IceDamageBonusPercent);
+    public float FireDamageBonusPercent =>
+        ElementalDamageBonusPercent +
+        GetEquipmentBonus(ItemBonusType.FireDamageBonusPercent) +
+        GetStatusSpecificElementDamageBonus(DamageType.Fire);
+
+    public float EarthDamageBonusPercent =>
+        ElementalDamageBonusPercent +
+        GetEquipmentBonus(ItemBonusType.EarthDamageBonusPercent) +
+        GetStatusSpecificElementDamageBonus(DamageType.Earth);
+
+    public float WindDamageBonusPercent =>
+        ElementalDamageBonusPercent +
+        GetEquipmentBonus(ItemBonusType.WindDamageBonusPercent) +
+        GetStatusSpecificElementDamageBonus(DamageType.Wind);
+
+    public float LightningDamageBonusPercent =>
+        ElementalDamageBonusPercent +
+        GetEquipmentBonus(ItemBonusType.LightningDamageBonusPercent) +
+        GetStatusSpecificElementDamageBonus(DamageType.Lightning);
+
+    public float IceDamageBonusPercent =>
+        ElementalDamageBonusPercent +
+        GetEquipmentBonus(ItemBonusType.IceDamageBonusPercent) +
+        GetStatusSpecificElementDamageBonus(DamageType.Ice);
 
     public float ArmorPhysicalReductionPercent => Mathf.Clamp(Armor * 0.2f, 0f, 70f);
 
@@ -213,6 +263,9 @@ public class CharacterStats : MonoBehaviour
         if (equipment == null)
             equipment = GetComponent<CharacterEquipment>();
 
+        if (statusEffects == null)
+            statusEffects = GetComponent<CharacterStatusEffects>();
+
         ClampValues();
     }
 
@@ -220,6 +273,9 @@ public class CharacterStats : MonoBehaviour
     {
         if (equipment == null)
             equipment = GetComponent<CharacterEquipment>();
+
+        if (statusEffects == null)
+            statusEffects = GetComponent<CharacterStatusEffects>();
 
         if (equipment != null)
             equipment.OnEquipmentChanged += HandleEquipmentChanged;
@@ -472,6 +528,57 @@ public class CharacterStats : MonoBehaviour
                 return 0f;
         }
     }
+
+    private CharacterStatusEffects GetStatusEffects()
+    {
+        if (statusEffects == null)
+            statusEffects = GetComponent<CharacterStatusEffects>();
+
+        return statusEffects;
+    }
+
+    private int GetStatusStrengthBonus()
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.TotalStrengthBonus : 0;
+    }
+
+    private int GetStatusConstitutionBonus()
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.TotalConstitutionBonus : 0;
+    }
+
+    private int GetStatusDexterityBonus()
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.TotalDexterityBonus : 0;
+    }
+
+    private int GetStatusIntelligenceBonus()
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.TotalIntelligenceBonus : 0;
+    }
+
+    private float GetStatusCritChanceBonus()
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.TotalCritChanceBonusPercent : 0f;
+    }
+
+    private float GetStatusAllElementalDamageBonus()
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.TotalElementalDamageAllBonusPercent : 0f;
+    }
+
+    private float GetStatusSpecificElementDamageBonus(DamageType damageType)
+    {
+        CharacterStatusEffects effects = GetStatusEffects();
+        return effects != null ? effects.GetSpecificElementDamageBonusPercent(damageType) : 0f;
+    }
+
     private void ClampValues()
     {
         level = Mathf.Max(1, level);

@@ -179,6 +179,12 @@ public class InventoryUI : MonoBehaviour
         if (button != PointerEventData.InputButton.Left)
             return;
 
+        if (!CanPlayerInteractWithInventory())
+        {
+            GameLog.Warning("Nu poti folosi iteme sau echipa obiecte in tura inamicilor.");
+            return;
+        }
+
         switch (item.Definition.Category)
         {
             case ItemCategory.Weapon:
@@ -212,6 +218,12 @@ public class InventoryUI : MonoBehaviour
     {
         if (equipment == null || inventory == null)
             return;
+
+        if (!CanPlayerInteractWithInventory())
+        {
+            GameLog.Warning("Nu poti dezechipa obiecte in tura inamicilor.");
+            return;
+        }
 
         ItemInstance removed = equipment.Unequip(slot);
         if (removed == null)
@@ -307,5 +319,16 @@ public class InventoryUI : MonoBehaviour
             SkillTooltipUI.Instance.Hide();
 
         UISkillDragState.Clear();
+    }
+
+    private bool CanPlayerInteractWithInventory()
+    {
+        if (TurnManager.Instance == null)
+            return true;
+
+        if (!TurnManager.Instance.IsCombatActive)
+            return true;
+
+        return TurnManager.Instance.IsPlayerTurnActive;
     }
 }
