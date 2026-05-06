@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,10 +8,13 @@ public class LobbyContinueButton : MonoBehaviour
     [Header("References")]
     [SerializeField] private Button continueButton;
     [SerializeField] private TMP_Text buttonText;
+    [SerializeField] private LobbySceneController lobbySceneController;
 
     [Header("Labels")]
     [SerializeField] private string continueLabel = "Continue";
     [SerializeField] private string finishedLabel = "Finished";
+
+    private Coroutine refreshRoutine;
 
     private void Awake()
     {
@@ -20,12 +24,29 @@ public class LobbyContinueButton : MonoBehaviour
         if (buttonText == null)
             buttonText = GetComponentInChildren<TMP_Text>(true);
 
+        ResolveReferences();
+
         if (continueButton != null)
+        {
+            continueButton.onClick.RemoveListener(OnContinuePressed);
             continueButton.onClick.AddListener(OnContinuePressed);
+        }
     }
 
     private void OnEnable()
     {
+        ResolveReferences();
+        RefreshVisualState();
+
+        if (refreshRoutine != null)
+            StopCoroutine(refreshRoutine);
+
+        refreshRoutine = StartCoroutine(RefreshAfterSceneLoad());
+    }
+
+    private void Start()
+    {
+        ResolveReferences();
         RefreshVisualState();
     }
 
@@ -33,6 +54,17 @@ public class LobbyContinueButton : MonoBehaviour
     {
         if (continueButton != null)
             continueButton.onClick.RemoveListener(OnContinuePressed);
+    }
+
+    private IEnumerator RefreshAfterSceneLoad()
+    {
+        yield return null;
+        RefreshVisualState();
+
+        yield return null;
+        RefreshVisualState();
+
+        refreshRoutine = null;
     }
 
     public void RefreshVisualState()
@@ -48,6 +80,8 @@ public class LobbyContinueButton : MonoBehaviour
 
     public void OnContinuePressed()
     {
+        ResolveReferences();
+
         if (RunLevelFlow.Instance == null)
         {
             Debug.LogWarning("LobbyContinueButton: RunLevelFlow lipseste.");
@@ -60,6 +94,19 @@ public class LobbyContinueButton : MonoBehaviour
             return;
         }
 
+        if (lobbySceneController != null)
+        {
+            lobbySceneController.ContinueToNextCombat();
+            return;
+        }
+
+        Debug.LogWarning("LobbyContinueButton: LobbySceneController lipseste. Se trece in combat fara salvare.");
         RunLevelFlow.Instance.LoadNextCombatFromLobby();
+    }
+
+    private void ResolveReferences()
+    {
+        if (lobbySceneController == null)
+            lobbySceneController = FindFirstObjectByType<LobbySceneController>();
     }
 }

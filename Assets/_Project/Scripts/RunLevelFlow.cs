@@ -13,14 +13,50 @@ public class RunLevelFlow : MonoBehaviour
     [Header("Run State")]
     [SerializeField] private int maxCombatLevel = 10;
     [SerializeField] private int currentCombatLevel = 1;
+
+    [Tooltip("In lobby, this is the next combat level that should be loaded. 0 means no pending combat level.")]
     [SerializeField] private int pendingLobbyLevel = 0;
 
+    private bool isLoadingScene;
+
     public int CurrentCombatLevel => Mathf.Clamp(currentCombatLevel, 1, maxCombatLevel);
-    public int PendingLobbyLevel => Mathf.Clamp(pendingLobbyLevel > 0 ? pendingLobbyLevel : currentCombatLevel, 1, maxCombatLevel);
+
+    public int PendingLobbyLevel
+    {
+        get
+        {
+            if (pendingLobbyLevel <= 0)
+                return CurrentCombatLevel;
+
+            return Mathf.Clamp(pendingLobbyLevel, 1, maxCombatLevel);
+        }
+    }
+
     public int MaxCombatLevel => maxCombatLevel;
 
-    public bool IsLastCombatCleared => PendingLobbyLevel >= maxCombatLevel;
-    public bool CanContinueFromLobby => PendingLobbyLevel < maxCombatLevel;
+    public bool HasPendingLobbyCombat
+    {
+        get
+        {
+            return pendingLobbyLevel >= 1 && pendingLobbyLevel <= maxCombatLevel;
+        }
+    }
+
+    public bool CanContinueFromLobby
+    {
+        get
+        {
+            return !isLoadingScene && HasPendingLobbyCombat;
+        }
+    }
+
+    public bool IsLastCombatCleared
+    {
+        get
+        {
+            return currentCombatLevel >= maxCombatLevel && !HasPendingLobbyCombat;
+        }
+    }
 
     private void Awake()
     {
@@ -33,46 +69,105 @@ public class RunLevelFlow : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        maxCombatLevel = Mathf.Max(1, maxCombatLevel);
         currentCombatLevel = Mathf.Clamp(currentCombatLevel, 1, maxCombatLevel);
         pendingLobbyLevel = Mathf.Clamp(pendingLobbyLevel, 0, maxCombatLevel);
+
+        DebugState("Awake");
+    }
+
+    private void OnEnable()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    private void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        isLoadingScene = false;
+        DebugState("Scene loaded: " + scene.name);
     }
 
     public void StartNewRun(int startLevel = 1)
     {
         currentCombatLevel = Mathf.Clamp(startLevel, 1, maxCombatLevel);
         pendingLobbyLevel = 0;
+        isLoadingScene = false;
+
+        DebugState("StartNewRun");
     }
 
     public void EnterLobbyAfterCombat(int clearedCombatLevel)
     {
         int safeLevel = Mathf.Clamp(clearedCombatLevel, 1, maxCombatLevel);
+
         currentCombatLevel = safeLevel;
-        pendingLobbyLevel = safeLevel;
+
+        if (safeLevel >= maxCombatLevel)
+            pendingLobbyLevel = 0;
+        else
+            pendingLobbyLevel = safeLevel + 1;
+
+        DebugState("EnterLobbyAfterCombat");
     }
 
     public int AdvanceFromLobbyToNextCombat()
     {
-        int baseLevel = PendingLobbyLevel;
-        currentCombatLevel = Mathf.Clamp(baseLevel + 1, 1, maxCombatLevel);
+        if (!HasPendingLobbyCombat)
+        {
+            DebugState("AdvanceFromLobbyToNextCombat blocked");
+            return CurrentCombatLevel;
+        }
+
+        currentCombatLevel = Mathf.Clamp(pendingLobbyLevel, 1, maxCombatLevel);
         pendingLobbyLevel = 0;
+
+        DebugState("AdvanceFromLobbyToNextCombat");
         return currentCombatLevel;
     }
 
     public void LoadLobbyAfterCombat(int clearedCombatLevel)
     {
+        if (isLoadingScene)
+            return;
+
         EnterLobbyAfterCombat(clearedCombatLevel);
+
+        isLoadingScene = true;
         SceneManager.LoadScene(lobbySceneName);
     }
 
     public void LoadNextCombatFromLobby()
     {
-        if (!CanContinueFromLobby)
+        if (isLoadingScene)
+            return;
+
+        if (!HasPendingLobbyCombat)
         {
-            Debug.Log("RunLevelFlow: ultimul nivel a fost deja terminat.");
+            DebugState("LoadNextCombatFromLobby blocked");
             return;
         }
 
         AdvanceFromLobbyToNextCombat();
+
+        isLoadingScene = true;
         SceneManager.LoadScene(combatSceneName);
+    }
+
+    private void DebugState(string source)
+    {
+        Debug.Log(
+            $"RunLevelFlow [{source}] | " +
+            $"currentCombatLevel={currentCombatLevel}, " +
+            $"pendingLobbyLevel={pendingLobbyLevel}, " +
+            $"maxCombatLevel={maxCombatLevel}, " +
+            $"hasPendingLobbyCombat={HasPendingLobbyCombat}, " +
+            $"canContinue={CanContinueFromLobby}, " +
+            $"isLoadingScene={isLoadingScene}"
+        );
     }
 }

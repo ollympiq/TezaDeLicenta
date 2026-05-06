@@ -183,14 +183,26 @@ public class GameSession : MonoBehaviour
     }
 
     public void LoadIntoPlayer(
-        PlayerProgression progression,
-        PlayerWallet wallet,
-        CharacterInventory inventory,
-        CharacterEquipment equipment,
-        PlayerSkillLoadout skillLoadout)
+    PlayerProgression progression,
+    PlayerWallet wallet,
+    CharacterInventory inventory,
+    CharacterEquipment equipment,
+    PlayerSkillLoadout skillLoadout)
     {
         if (!hasRestorablePlayerState)
             return;
+
+        CharacterStats stats = FindStatsReference(
+            progression,
+            inventory,
+            equipment,
+            skillLoadout);
+
+        if (stats != null)
+        {
+            ApplySavedClassTo(stats);
+            ApplySavedPrimaryAttributesTo(stats);
+        }
 
         if (progression != null)
             progression.SetProgressionState(savedPlayerLevel, savedUnspentStatPoints);
