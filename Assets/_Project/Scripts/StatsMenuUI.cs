@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text;
 using TMPro;
 using UnityEngine;
@@ -184,96 +183,8 @@ public class StatsMenuUI : MonoBehaviour
             ? targetObject.GetComponent<CharacterStatusEffects>()
             : null;
 
-        if (statusEffects == null || statusEffects.ActiveEffects == null || statusEffects.ActiveEffects.Count == 0)
-            return UIRichTextColors.DualLine("Effects", "-", UIRichTextColors.White, UIRichTextColors.White);
-
-        List<string> labels = BuildEffectLabels(statusEffects);
-        string joined = labels.Count > 0 ? string.Join(", ", labels) : "-";
-
+        string joined = StatusEffectDisplayFormatter.BuildInlineList(statusEffects);
         return UIRichTextColors.DualLine("Effects", joined, UIRichTextColors.White, UIRichTextColors.White);
-    }
-
-    private List<string> BuildEffectLabels(CharacterStatusEffects statusEffects)
-    {
-        List<string> orderedKeys = new List<string>();
-        Dictionary<string, int> maxTurnsByLabel = new Dictionary<string, int>();
-
-        IReadOnlyList<ActiveStatusEffect> effects = statusEffects.ActiveEffects;
-        for (int i = 0; i < effects.Count; i++)
-        {
-            ActiveStatusEffect effect = effects[i];
-            if (effect == null)
-                continue;
-
-            string baseLabel = GetBaseEffectLabel(effect);
-            if (string.IsNullOrWhiteSpace(baseLabel))
-                continue;
-
-            int turns = Mathf.Max(1, effect.RemainingTurns);
-
-            if (!maxTurnsByLabel.ContainsKey(baseLabel))
-            {
-                maxTurnsByLabel[baseLabel] = turns;
-                orderedKeys.Add(baseLabel);
-            }
-            else
-            {
-                maxTurnsByLabel[baseLabel] = Mathf.Max(maxTurnsByLabel[baseLabel], turns);
-            }
-        }
-
-        List<string> labels = new List<string>();
-        for (int i = 0; i < orderedKeys.Count; i++)
-        {
-            string key = orderedKeys[i];
-            labels.Add($"{key}[{maxTurnsByLabel[key]}]");
-        }
-
-        return labels;
-    }
-
-    private string GetBaseEffectLabel(ActiveStatusEffect effect)
-    {
-        switch (effect.EffectType)
-        {
-            case SkillEffectType.DamageOverTime:
-                return $"DOT({GetDamageTypeShortName(effect.DotDamageType)})";
-
-            case SkillEffectType.SlowMovement:
-                return "Slowdown";
-
-            case SkillEffectType.SkipTurn:
-                return "Knocked";
-
-            case SkillEffectType.BuffPrimaryAttributes:
-            case SkillEffectType.BuffCritChance:
-            case SkillEffectType.BuffElementalDamage:
-                return "Buffed";
-
-            default:
-                return string.Empty;
-        }
-    }
-
-    private string GetDamageTypeShortName(DamageType damageType)
-    {
-        switch (damageType)
-        {
-            case DamageType.Fire:
-                return "Fire";
-            case DamageType.Ice:
-                return "Ice";
-            case DamageType.Earth:
-                return "Earth";
-            case DamageType.Wind:
-                return "Wind";
-            case DamageType.Lightning:
-                return "Lightning";
-            case DamageType.Physical:
-                return "Physical";
-            default:
-                return damageType.ToString();
-        }
     }
 
     private string GetDisplayName(GameObject targetObject)
@@ -291,6 +202,7 @@ public class StatsMenuUI : MonoBehaviour
         if (parts.Length >= 3)
         {
             StringBuilder sb = new StringBuilder();
+
             for (int i = 2; i < parts.Length; i++)
             {
                 if (sb.Length > 0)
@@ -326,8 +238,10 @@ public class StatsMenuUI : MonoBehaviour
         {
             case EnemyLootTier.MiniBoss:
                 return "Mini Boss";
+
             case EnemyLootTier.Boss:
                 return "Boss";
+
             default:
                 return "Normal";
         }
