@@ -93,6 +93,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a3caf0c3136d2554d93c6d7e0302ce2b, type: 2}
   - {fileID: 11400000, guid: 94dc75b658010264eb783e3107d7a385, type: 2}
   - {fileID: 11400000, guid: 553668361158491418d746946377defa, type: 2}
+  - {fileID: 11400000, guid: 9daee72a78a4eab49a1bec1ab6fc87d5, type: 2}
+  - {fileID: 11400000, guid: 672ef5846a5811247a2d2b3564f8d416, type: 2}
   tierSettings:
   - tier: 0
     minGold: 5

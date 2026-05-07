@@ -1,0 +1,92 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7872313449419232777
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4511766325688012348}
+  - component: {fileID: 5585355855952164265}
+  m_Layer: 0
+  m_Name: PlayerClassInitializer
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4511766325688012348
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7872313449419232777}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -1.05, y: 0, z: 0.54}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5585355855952164265
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7872313449419232777}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bcd51239cda699489b1f365fbaffa5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerClassInitializer
+  characterStats: {fileID: 0}
+  characterHealth: {fileID: 0}
+  characterEquipment: {fileID: 0}
+  characterInventory: {fileID: 0}
+  playerSkillLoadout: {fileID: 0}
+  playerWallet: {fileID: 0}
+  presets:
+  - classType: 1
+    strength: 14
+    constitution: 12
+    dexterity: 9
+    intelligence: 5
+    startingWeapon: {fileID: 11400000, guid: 493b95878c0ffad4295a38a88a19a1d4, type: 2}
+    startingSkill1: {fileID: 11400000, guid: 57a74b0c0691aef45a198750456f712c, type: 2}
+    startingSkill2: {fileID: 11400000, guid: a09bef5ecf6cc2f418aaa963a6c32b6c, type: 2}
+    healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
+    healthPotionAmount: 3
+    apPotion: {fileID: 11400000, guid: bc388e4e28b6aec439dc62c094b02219, type: 2}
+    apPotionAmount: 99
+    startingGold: 100
+  - classType: 2
+    strength: 8
+    constitution: 10
+    dexterity: 15
+    intelligence: 7
+    startingWeapon: {fileID: 11400000, guid: b968e826ce9b99745b0512353e9f2be7, type: 2}
+    startingSkill1: {fileID: 11400000, guid: ab355e13e11c4cf42ba20959fd692739, type: 2}
+    startingSkill2: {fileID: 0}
+    healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
+    healthPotionAmount: 3
+    apPotion: {fileID: 0}
+    apPotionAmount: 0
+    startingGold: 100
+  - classType: 3
+    strength: 5
+    constitution: 9
+    dexterity: 8
+    intelligence: 18
+    startingWeapon: {fileID: 11400000, guid: 376d83fe718ae2c43bbceab56882eb10, type: 2}
+    startingSkill1: {fileID: 11400000, guid: d2d63a17391bfd74e9e439236ca01f04, type: 2}
+    startingSkill2: {fileID: 0}
+    healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
+    healthPotionAmount: 3
+    apPotion: {fileID: 0}
+    apPotionAmount: 0
+    startingGold: 100

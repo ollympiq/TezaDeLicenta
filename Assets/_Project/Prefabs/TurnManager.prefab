@@ -48,7 +48,7 @@ MonoBehaviour:
   playerTurn: {fileID: 0}
   enemyTurns: []
   endTurnButton: {fileID: 0}
-  autoStartOnStart: 1
+  autoStartOnStart: 0
   nextTurnDelay: 0.2
 --- !u!114 &7965694538727195623
 MonoBehaviour:

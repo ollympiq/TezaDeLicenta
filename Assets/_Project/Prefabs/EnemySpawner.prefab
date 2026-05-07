@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3005919724894825988
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8776538757704184502}
+  - component: {fileID: 1342223626230974232}
+  - component: {fileID: 5714832957835871062}
+  m_Layer: 0
+  m_Name: EnemySpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8776538757704184502
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3005919724894825988}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -9.01, y: 0.56, z: 1.66011}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1342223626230974232
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3005919724894825988}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9, y: 1, z: 15}
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &5714832957835871062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3005919724894825988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09b6bb74509f82b438317580b561e9d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemySpawner
+  normalEnemies:
+  - {fileID: 6186170036969366969, guid: 2bb80483007022a438a688d96e3aa11b, type: 3}
+  miniBossEnemies:
+  - {fileID: 6186170036969366969, guid: 0ee60ee6f89b86640bd63bc82e24bc93, type: 3}
+  bossEnemies:
+  - {fileID: 6186170036969366969, guid: 321a280d82048b94b9ccf462c733dfc8, type: 3}
+  normalsPerRegularLevel: 3
+  miniBossesPerRegularLevel: 1
+  normalsPerBossLevel: 3
+  miniBossesPerBossLevel: 1
+  bossesPerBossLevel: 1
+  bossLevels: 050000000a000000
+  spawnVolume: {fileID: 1342223626230974232}
+  navMeshSampleDistance: 2
+  minDistanceBetweenEnemies: 2.75
+  minDistanceFromPlayer: 5
+  maxAttemptsPerEnemy: 40
+  spawnParent: {fileID: 0}
+  playerStats: {fileID: 0}
+  currentLevelContext: {fileID: 0}
+  spawnOnStart: 1
+  clearOldSpawnedChildrenFirst: 1
+  renameSpawnedEnemies: 1
+  refreshTurnManagerAfterSpawn: 1
+  debugLogs: 1

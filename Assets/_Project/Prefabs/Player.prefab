@@ -32,6 +32,7 @@ GameObject:
   - component: {fileID: 4379433929979151868}
   - component: {fileID: 886982264610091746}
   - component: {fileID: 2203569655691582566}
+  - component: {fileID: 4554974903951348662}
   m_Layer: 9
   m_Name: Player
   m_TagString: Untagged
@@ -588,6 +589,19 @@ MonoBehaviour:
   statPointsPerLevel: 5
   stats: {fileID: 7443605556733449951}
   health: {fileID: 1242841653015431108}
+--- !u!114 &4554974903951348662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6397618289114745851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01d80dfe431c6114888ddccde7d1b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterStatusEffects
+  activeEffects: []
 --- !u!1 &7363573512090391520
 GameObject:
   m_ObjectHideFlags: 0
