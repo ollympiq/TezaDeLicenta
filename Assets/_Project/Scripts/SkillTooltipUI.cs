@@ -83,14 +83,11 @@ public class SkillTooltipUI : MonoBehaviour
         if (playerCombatController == null)
             playerCombatController = FindFirstObjectByType<PlayerCombatController>();
 
-        if (playerCombatController != null)
-        {
-            if (previewCasterStats == null)
-                previewCasterStats = playerCombatController.GetComponent<CharacterStats>();
+        if (playerCombatController == null)
+            return;
 
-            if (previewCasterEquipment == null)
-                previewCasterEquipment = playerCombatController.GetComponent<CharacterEquipment>();
-        }
+        previewCasterStats = playerCombatController.GetComponent<CharacterStats>();
+        previewCasterEquipment = playerCombatController.GetComponent<CharacterEquipment>();
     }
 
     private void RefreshCurrentTooltip()
@@ -99,16 +96,24 @@ public class SkillTooltipUI : MonoBehaviour
             return;
 
         if (nameText != null)
-        {
-            string titleColor = currentSkill.SkillType == SkillType.Passive
-                ? UIRichTextColors.MagicPower
-                : UIRichTextColors.DamageTypeColor(currentSkill.DamageType);
-
-            nameText.text = UIRichTextColors.Paint(currentSkill.DisplayName, titleColor);
-        }
+            nameText.text = UIRichTextColors.Paint(currentSkill.DisplayName, GetSkillTitleColor(currentSkill));
 
         if (detailsText != null)
             detailsText.text = BuildDetails(currentSkill);
+    }
+
+    private string GetSkillTitleColor(SkillDefinition skill)
+    {
+        if (skill == null)
+            return UIRichTextColors.White;
+
+        if (skill.SkillType == SkillType.Passive)
+            return UIRichTextColors.MagicPower;
+
+        if (skill.DealsDamage)
+            return UIRichTextColors.DamageTypeColor(skill.DamageType);
+
+        return UIRichTextColors.White;
     }
 
     private string BuildDetails(SkillDefinition skill)
@@ -118,14 +123,14 @@ public class SkillTooltipUI : MonoBehaviour
 
         return skill.SkillType == SkillType.BasicAttack
             ? BuildBasicAttackDetails(skill)
-            : BuildSkillDetails(skill);
+            : SkillTooltipTextBuilder.BuildDetails(skill, previewCasterStats);
     }
 
     private string BuildBasicAttackDetails(SkillDefinition fallbackSkill)
     {
         WeaponDefinition weapon = previewCasterEquipment != null ? previewCasterEquipment.EquippedWeaponDefinition : null;
         if (previewCasterStats == null || weapon == null)
-            return BuildFallbackSkillDetails(fallbackSkill);
+            return SkillTooltipTextBuilder.BuildDetails(fallbackSkill, previewCasterStats);
 
         DamagePreviewUtility.TryBuildWeaponPreview(previewCasterStats, weapon, out DamagePreviewInfo preview);
         string dmgColor = UIRichTextColors.DamageTypeColor(weapon.DamageType);
@@ -136,42 +141,6 @@ public class SkillTooltipUI : MonoBehaviour
             UIRichTextColors.Line("Damage", $"{preview.MinPreview}-{preview.MaxPreview}", dmgColor) + "\n" +
             UIRichTextColors.Line("Range", $"{weapon.Range:0.0}", UIRichTextColors.White) + "\n" +
             UIRichTextColors.Line("Area Radius", "-", UIRichTextColors.White);
-    }
-
-    private string BuildSkillDetails(SkillDefinition skill)
-    {
-        string areaText = skill.AreaMode == SkillAreaMode.Circle
-            ? UIRichTextColors.Line("Area Radius", $"{skill.AreaRadius:0.0}", UIRichTextColors.White)
-            : UIRichTextColors.Line("Area Radius", "-", UIRichTextColors.White);
-
-        if (previewCasterStats == null)
-            return BuildFallbackSkillDetails(skill);
-
-        DamagePreviewUtility.TryBuildSkillPreview(previewCasterStats, skill, out DamagePreviewInfo preview);
-        string dmgColor = UIRichTextColors.DamageTypeColor(skill.DamageType);
-
-        return
-            UIRichTextColors.Line("AP Cost", skill.ApCost.ToString(), UIRichTextColors.AP) + "\n" +
-            UIRichTextColors.Line("Damage Type", skill.DamageType.ToString(), dmgColor) + "\n" +
-            UIRichTextColors.Line("Damage", $"{preview.MinPreview}-{preview.MaxPreview}", dmgColor) + "\n" +
-            UIRichTextColors.Line("Range", $"{skill.Range:0.0}", UIRichTextColors.White) + "\n" +
-            areaText;
-    }
-
-    private string BuildFallbackSkillDetails(SkillDefinition skill)
-    {
-        string areaText = skill.AreaMode == SkillAreaMode.Circle
-            ? UIRichTextColors.Line("Area Radius", $"{skill.AreaRadius:0.0}", UIRichTextColors.White)
-            : UIRichTextColors.Line("Area Radius", "-", UIRichTextColors.White);
-
-        string dmgColor = UIRichTextColors.DamageTypeColor(skill.DamageType);
-
-        return
-            UIRichTextColors.Line("AP Cost", skill.ApCost.ToString(), UIRichTextColors.AP) + "\n" +
-            UIRichTextColors.Line("Damage Type", skill.DamageType.ToString(), dmgColor) + "\n" +
-            UIRichTextColors.Line("Damage", $"{skill.MinDamage}-{skill.MaxDamage}", dmgColor) + "\n" +
-            UIRichTextColors.Line("Range", $"{skill.Range:0.0}", UIRichTextColors.White) + "\n" +
-            areaText;
     }
 
     private void UpdatePosition()

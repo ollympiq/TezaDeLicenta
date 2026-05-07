@@ -223,6 +223,8 @@ public class EnemyTurnController : MonoBehaviour
                     result.WasCritical
                 );
             }
+
+            ApplyAttackEffectsToTarget(attack);
         }
         else
         {
@@ -233,7 +235,21 @@ public class EnemyTurnController : MonoBehaviour
         GameLog.Combat(BuildCombatLog(attack, targetStats.name, result, targetHealth));
         return true;
     }
+    private void ApplyAttackEffectsToTarget(AttackDefinition attack)
+    {
+        if (attack == null || !attack.HasEffects || targetStats == null)
+            return;
 
+        CharacterStatusEffects targetEffects = targetStats.GetComponent<CharacterStatusEffects>();
+
+        if (targetEffects == null)
+        {
+            GameLog.Warning($"{targetStats.name} nu are CharacterStatusEffects. Efectele atacului {attack.AttackName} nu pot fi aplicate.");
+            return;
+        }
+
+        targetEffects.ApplyAttackEffects(attack, selfStats);
+    }
     private void PlayAttackAnimation(EnemyAttackAnimationType type)
     {
         if (animationController == null)
@@ -557,6 +573,34 @@ public class EnemyTurnController : MonoBehaviour
     {
         return metersPerAP / Mathf.Max(1f, GetMovementCostMultiplier());
     }
+
+    public void SetMediumAttackEffects(EnemyAttackEffectProfile profile)
+    {
+        if (mediumAttack == null)
+            return;
+
+        mediumAttack.SetEffects(profile != null ? profile.Effects : null);
+    }
+
+    public void SetHeavyAttackEffects(EnemyAttackEffectProfile profile)
+    {
+        if (heavyAttack == null)
+            return;
+
+        heavyAttack.SetEffects(profile != null ? profile.Effects : null);
+    }
+
+    public void ClearMediumAttackEffects()
+    {
+        mediumAttack?.ClearEffects();
+    }
+
+    public void ClearHeavyAttackEffects()
+    {
+        heavyAttack?.ClearEffects();
+    }
+
+
 
     private readonly struct AttackMovePlan
     {

@@ -31,11 +31,29 @@ public class ActiveStatusEffect
     public bool IsExpired => RemainingTurns <= 0;
 
     public ActiveStatusEffect(SkillDefinition sourceSkill, SkillEffectData effect, CharacterStats casterStats)
+    : this(
+        sourceSkill != null ? sourceSkill.SkillId : string.Empty,
+        sourceSkill != null ? sourceSkill.DisplayName : "Effect",
+        effect,
+        casterStats)
     {
-        SourceSkillId = sourceSkill != null ? sourceSkill.SkillId : string.Empty;
-        SourceSkillName = sourceSkill != null ? sourceSkill.DisplayName : "Effect";
-        EffectType = effect != null ? effect.EffectType : SkillEffectType.None;
+    }
 
+    public ActiveStatusEffect(AttackDefinition sourceAttack, SkillEffectData effect, CharacterStats casterStats)
+        : this(
+            sourceAttack != null ? sourceAttack.AttackName : string.Empty,
+            sourceAttack != null ? sourceAttack.AttackName : "Attack Effect",
+            effect,
+            casterStats)
+    {
+    }
+
+    public ActiveStatusEffect(string sourceId, string sourceName, SkillEffectData effect, CharacterStats casterStats)
+    {
+        SourceSkillId = sourceId;
+        SourceSkillName = sourceName;
+
+        EffectType = effect != null ? effect.EffectType : SkillEffectType.None;
         RemainingTurns = effect != null ? Math.Max(1, effect.DurationTurns) : 0;
 
         BonusStrength = effect != null ? effect.BonusStrength : 0;
@@ -55,15 +73,9 @@ public class ActiveStatusEffect
         DotDamageType = effect != null ? effect.DotDamageType : DamageType.Fire;
 
         if (effect != null && casterStats != null)
-        {
-            DotPowerSnapshot = effect.DotUsesMagicPower
-                ? casterStats.MagicPower
-                : casterStats.PhysicalPower;
-        }
+            DotPowerSnapshot = effect.DotUsesMagicPower ? casterStats.MagicPower : casterStats.PhysicalPower;
         else
-        {
             DotPowerSnapshot = 0;
-        }
 
         MovementCostMultiplier = effect != null ? effect.MovementCostMultiplier : 1f;
     }

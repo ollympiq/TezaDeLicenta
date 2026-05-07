@@ -52,7 +52,64 @@ public class CharacterStatusEffects : MonoBehaviour
 
         return anyApplied;
     }
+    public bool ApplyAttackEffects(AttackDefinition attack, CharacterStats casterStats)
+    {
+        if (attack == null || attack.Effects == null || attack.Effects.Count == 0)
+            return false;
 
+        bool anyApplied = false;
+
+        for (int i = 0; i < attack.Effects.Count; i++)
+        {
+            SkillEffectData effect = attack.Effects[i];
+
+            if (effect == null)
+                continue;
+
+            if (ApplySingleAttackEffect(attack, effect, casterStats))
+                anyApplied = true;
+        }
+
+        if (anyApplied)
+            NotifyEffectsChanged();
+
+        return anyApplied;
+    }
+
+    private bool ApplySingleAttackEffect(AttackDefinition attack, SkillEffectData effect, CharacterStats casterStats)
+    {
+        switch (effect.EffectType)
+        {
+            case SkillEffectType.HealInstant:
+                return ApplyInstantHeal(attack.AttackName, effect, casterStats);
+
+            case SkillEffectType.BuffPrimaryAttributes:
+            case SkillEffectType.BuffCritChance:
+            case SkillEffectType.BuffElementalDamage:
+            case SkillEffectType.DamageOverTime:
+            case SkillEffectType.SlowMovement:
+            case SkillEffectType.SkipTurn:
+                return ApplyTimedAttackEffect(attack, effect, casterStats);
+
+            default:
+                return false;
+        }
+    }
+
+    private bool ApplyTimedAttackEffect(AttackDefinition attack, SkillEffectData effect, CharacterStats casterStats)
+    {
+        if (effect.DurationTurns <= 0)
+        {
+            GameLog.Warning($"{attack.AttackName}: efectul are durata 0 si a fost ignorat.");
+            return false;
+        }
+
+        ActiveStatusEffect instance = new ActiveStatusEffect(attack, effect, casterStats);
+        activeEffects.Add(instance);
+
+        GameLog.Info($"{gameObject.name} primeste efectul {attack.AttackName} pentru {instance.RemainingTurns} ture.");
+        return true;
+    }
     public bool ProcessStartOfOwnerTurn()
     {
         currentTurnBlocked = false;
@@ -176,7 +233,7 @@ public class CharacterStatusEffects : MonoBehaviour
         switch (effect.EffectType)
         {
             case SkillEffectType.HealInstant:
-                return ApplyInstantHeal(skill, effect, casterStats);
+                return ApplyInstantHeal(skill.DisplayName, effect, casterStats);
 
             case SkillEffectType.BuffPrimaryAttributes:
             case SkillEffectType.BuffCritChance:
@@ -191,12 +248,13 @@ public class CharacterStatusEffects : MonoBehaviour
         }
     }
 
-    private bool ApplyInstantHeal(SkillDefinition skill, SkillEffectData effect, CharacterStats casterStats)
+    private bool ApplyInstantHeal(string sourceName, SkillEffectData effect, CharacterStats casterStats)
     {
         if (ownerHealth == null || ownerHealth.IsDead)
             return false;
 
         int rolled = effect.RollFlatValue();
+
         int sourcePower = 0;
 
         if (casterStats != null)
@@ -209,7 +267,8 @@ public class CharacterStatusEffects : MonoBehaviour
             return false;
 
         ownerHealth.Heal(finalHeal);
-        GameLog.Info($"{skill.DisplayName}: {gameObject.name} se vindeca cu {finalHeal} HP.");
+
+        GameLog.Info($"{sourceName}: {gameObject.name} se vindeca cu {finalHeal} HP.");
         return true;
     }
 

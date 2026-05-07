@@ -71,7 +71,10 @@ public class SkillEffectData
 
         return UnityEngine.Random.Range(flatMinValue, flatMaxValue + 1);
     }
-
+    public SkillEffectData Clone()
+    {
+        return (SkillEffectData)MemberwiseClone();
+    }
     public void ClampValues()
     {
         durationTurns = Mathf.Max(0, durationTurns);

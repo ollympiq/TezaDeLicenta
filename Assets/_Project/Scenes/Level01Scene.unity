@@ -997,8 +997,8 @@ MonoBehaviour:
     dexterity: 9
     intelligence: 5
     startingWeapon: {fileID: 11400000, guid: 493b95878c0ffad4295a38a88a19a1d4, type: 2}
-    startingSkill1: {fileID: 11400000, guid: 771f21102a4c04c4696d741282d0195c, type: 2}
-    startingSkill2: {fileID: 11400000, guid: d3c648a2ff33f32468490acdb5b55084, type: 2}
+    startingSkill1: {fileID: 11400000, guid: 3b9ef1413846e8f408a934af2ea86e16, type: 2}
+    startingSkill2: {fileID: 11400000, guid: a6b42c6b254d6744e9b102343d7c3a91, type: 2}
     healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
     healthPotionAmount: 3
     apPotion: {fileID: 11400000, guid: bc388e4e28b6aec439dc62c094b02219, type: 2}
