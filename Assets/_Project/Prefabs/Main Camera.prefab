@@ -28,13 +28,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3389292380992621106}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.061455056, y: 0.7289114, z: -0.06600722, w: -0.6786416}
+  m_LocalRotation: {x: 0.061456602, y: -0.7289123, z: 0.06600916, w: 0.67864037}
   m_LocalPosition: {x: 28.06771, y: 8.809763, z: 2.0582714}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 10.349, y: -94.091, z: 0}
 --- !u!20 &5880021387310274839
 Camera:
   m_ObjectHideFlags: 0
@@ -153,9 +153,17 @@ MonoBehaviour:
   target: {fileID: 0}
   yaw: 0
   rotateSpeed: 0.2
-  fixedPitch: 55
+  fixedPitch: 40
   distance: 10
   zoomSpeed: 50
   minDistance: 4
   maxDistance: 16
   focusSmooth: 12
+  returnToFollowSmooth: 10
+  enableFreeFly: 1
+  flyMoveSpeed: 12
+  flyFastMultiplier: 2.5
+  flyLookSpeed: 0.18
+  minFlyPitch: -80
+  maxFlyPitch: 80
+  useQAndEForVerticalMovement: 1
