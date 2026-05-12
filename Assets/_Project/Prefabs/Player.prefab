@@ -249,7 +249,7 @@ MonoBehaviour:
   constitution: 10
   dexterity: 10
   intelligence: 10
-  baseMaxHP: 50
+  baseMaxHP: 200
   baseMaxAP: 6
   baseArmor: 5
   basePhysicalResistance: 0
@@ -708,15 +708,24 @@ MonoBehaviour:
   playerAP: {fileID: 2830965190936745568}
   mover: {fileID: 2478294489545475276}
   center: {fileID: 112694893585524301}
-  cellSize: 0.3
-  maxRadiusCells: 50
-  cellOverlap: 1.08
-  sampleMaxDist: 0.22
-  sampleSnapTolerance: 0.01
-  maxHeightDifference: 0.2
-  yOffset: 0
+  cellSize: 0.5
+  maxRadiusCells: 25
+  cellOverlap: 1.05
+  sampleMaxDist: 5
+  sampleSnapTolerance: 0.1
+  maxHeightDifference: 5
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 64
+  projectCornersToGround: 1
+  groundRaycastUp: 1
+  groundRaycastDown: 1
+  cornerNavSampleMaxDist: 1
+  maxCornerHeightDifference: 1
+  requireCornersNearNavMesh: 1
+  yOffset: 0.15
   redrawInterval: 0.15
-  moveThreshold: 0.03
+  moveThreshold: 0.3
 --- !u!1001 &4634415002340200258
 PrefabInstance:
   m_ObjectHideFlags: 0

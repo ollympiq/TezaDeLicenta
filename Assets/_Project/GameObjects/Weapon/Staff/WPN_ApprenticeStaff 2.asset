@@ -26,7 +26,7 @@ MonoBehaviour:
   damageType: 3
   minDamage: 7
   maxDamage: 12
-  range: 6
+  range: 7
   apCost: 2
   bonusAccuracy: 0
   canCrit: 1

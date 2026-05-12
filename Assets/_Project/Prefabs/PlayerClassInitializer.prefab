@@ -52,12 +52,12 @@ MonoBehaviour:
   playerWallet: {fileID: 0}
   presets:
   - classType: 1
-    strength: 14
-    constitution: 12
-    dexterity: 9
-    intelligence: 5
+    strength: 24
+    constitution: 20
+    dexterity: 15
+    intelligence: 12
     startingWeapon: {fileID: 11400000, guid: 493b95878c0ffad4295a38a88a19a1d4, type: 2}
-    startingSkill1: {fileID: 11400000, guid: 57a74b0c0691aef45a198750456f712c, type: 2}
+    startingSkill1: {fileID: 11400000, guid: 771f21102a4c04c4696d741282d0195c, type: 2}
     startingSkill2: {fileID: 11400000, guid: a09bef5ecf6cc2f418aaa963a6c32b6c, type: 2}
     healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
     healthPotionAmount: 3
@@ -65,10 +65,10 @@ MonoBehaviour:
     apPotionAmount: 99
     startingGold: 100
   - classType: 2
-    strength: 8
-    constitution: 10
-    dexterity: 15
-    intelligence: 7
+    strength: 16
+    constitution: 20
+    dexterity: 28
+    intelligence: 14
     startingWeapon: {fileID: 11400000, guid: b968e826ce9b99745b0512353e9f2be7, type: 2}
     startingSkill1: {fileID: 11400000, guid: ab355e13e11c4cf42ba20959fd692739, type: 2}
     startingSkill2: {fileID: 0}
@@ -78,10 +78,10 @@ MonoBehaviour:
     apPotionAmount: 0
     startingGold: 100
   - classType: 3
-    strength: 5
-    constitution: 9
-    dexterity: 8
-    intelligence: 18
+    strength: 10
+    constitution: 17
+    dexterity: 15
+    intelligence: 30
     startingWeapon: {fileID: 11400000, guid: 376d83fe718ae2c43bbceab56882eb10, type: 2}
     startingSkill1: {fileID: 11400000, guid: d2d63a17391bfd74e9e439236ca01f04, type: 2}
     startingSkill2: {fileID: 0}
