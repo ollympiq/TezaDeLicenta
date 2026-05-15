@@ -14,6 +14,12 @@ public class SkillDefinition : ScriptableObject
     [SerializeField] private SkillAreaMode areaMode = SkillAreaMode.SingleTarget;
     [SerializeField] private bool keepSelectedAfterUse = true;
 
+    [Header("Animation")]
+    [SerializeField] private SkillAnimationType animationType = SkillAnimationType.MeleeAttack;
+
+    [Header("Weapon Requirement")]
+    [SerializeField] private SkillWeaponRequirement requiredWeapon = SkillWeaponRequirement.AnyWeapon;
+
     [Header("Visuals")]
     [SerializeField] private Sprite icon;
     [SerializeField] private Texture2D cursorTexture;
@@ -38,10 +44,14 @@ public class SkillDefinition : ScriptableObject
 
     public string SkillId => skillId;
     public string DisplayName => displayName;
+
     public SkillType SkillType => skillType;
     public SkillTargetingMode TargetingMode => targetingMode;
     public SkillAreaMode AreaMode => areaMode;
     public bool KeepSelectedAfterUse => keepSelectedAfterUse;
+
+    public SkillAnimationType AnimationType => animationType;
+    public SkillWeaponRequirement RequiredWeapon => requiredWeapon;
 
     public Sprite Icon => icon;
     public Texture2D CursorTexture => cursorTexture;
@@ -54,6 +64,7 @@ public class SkillDefinition : ScriptableObject
     public float PowerScaling => powerScaling;
     public float BonusAccuracy => bonusAccuracy;
     public bool CanCrit => canCrit;
+
     public int ApCost => apCost;
     public float Range => range;
     public float AreaRadius => areaRadius;

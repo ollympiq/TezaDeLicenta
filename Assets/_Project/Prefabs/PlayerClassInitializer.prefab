@@ -74,8 +74,8 @@ MonoBehaviour:
     startingSkill2: {fileID: 0}
     healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
     healthPotionAmount: 3
-    apPotion: {fileID: 0}
-    apPotionAmount: 0
+    apPotion: {fileID: 11400000, guid: bc388e4e28b6aec439dc62c094b02219, type: 2}
+    apPotionAmount: 99
     startingGold: 100
   - classType: 3
     strength: 10
@@ -87,6 +87,6 @@ MonoBehaviour:
     startingSkill2: {fileID: 0}
     healthPotion: {fileID: 11400000, guid: 22513bf33b05f554e8e3929e4a9610cd, type: 2}
     healthPotionAmount: 3
-    apPotion: {fileID: 0}
-    apPotionAmount: 0
+    apPotion: {fileID: 11400000, guid: bc388e4e28b6aec439dc62c094b02219, type: 2}
+    apPotionAmount: 99
     startingGold: 100

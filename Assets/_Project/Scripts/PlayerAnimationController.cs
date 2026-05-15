@@ -1,108 +1,44 @@
 using UnityEngine;
 using UnityEngine.AI;
 
-[RequireComponent(typeof(CharacterHealth))]
 public class PlayerAnimationController : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private Animator animator;
     [SerializeField] private Transform visualModel;
-    [SerializeField] private Collider mainCollider;
-    [SerializeField] private PlayerNavMeshMover moveController;
-    [SerializeField] private PlayerCombatController combatController;
-    [SerializeField] private CharacterSkillCaster skillCaster;
 
     [Header("Movement Animation")]
     [SerializeField] private float runThreshold = 0.1f;
     [SerializeField] private float rotationSpeed = 12f;
 
-    [Header("Action Locks")]
+    [Header("Attack Animation")]
     [SerializeField] private float attackLockDuration = 0.6f;
-    [SerializeField] private float hurtLockDuration = 0.45f;
-
-    [Header("Death")]
-    [SerializeField] private bool disableAgentOnDeath = true;
-    [SerializeField] private bool disableColliderOnDeath = false;
-    [SerializeField] private bool disableInputScriptsOnDeath = true;
-
-    private CharacterHealth health;
-    private int lastHp;
-    private float actionLockTimer;
-    private bool isDead;
 
     private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
-    private static readonly int HurtHash = Animator.StringToHash("Hurt");
-    private static readonly int DieHash = Animator.StringToHash("Die");
+    private static readonly int BowShotHash = Animator.StringToHash("BowShot");
+    private static readonly int SpellCastHash = Animator.StringToHash("SpellCast");
 
-    public bool IsDead => isDead;
+    private float attackLockTimer;
 
     private void Awake()
     {
         if (agent == null)
             agent = GetComponent<NavMeshAgent>();
 
-        if (moveController == null)
-            moveController = GetComponent<PlayerNavMeshMover>();
-
-        if (combatController == null)
-            combatController = GetComponent<PlayerCombatController>();
-
-        if (skillCaster == null)
-            skillCaster = GetComponent<CharacterSkillCaster>();
-
-        if (mainCollider == null)
-            mainCollider = GetComponent<Collider>();
-
-        health = GetComponent<CharacterHealth>();
-    }
-
-    private void OnEnable()
-    {
-        if (health != null)
-        {
-            health.OnHealthChanged += HandleHealthChanged;
-            health.OnDied += HandleDied;
-            lastHp = health.CurrentHP;
-        }
-    }
-
-    private void Start()
-    {
-        if (health != null)
-            lastHp = health.CurrentHP;
-    }
-
-    private void OnDisable()
-    {
-        if (health != null)
-        {
-            health.OnHealthChanged -= HandleHealthChanged;
-            health.OnDied -= HandleDied;
-        }
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
     }
 
     private void Update()
     {
-        if (animator == null)
+        if (agent == null || animator == null)
             return;
 
-        if (isDead)
+        if (attackLockTimer > 0f)
         {
-            animator.SetBool(IsRunningHash, false);
-            return;
-        }
-
-        if (actionLockTimer > 0f)
-        {
-            actionLockTimer -= Time.deltaTime;
-            animator.SetBool(IsRunningHash, false);
-            return;
-        }
-
-        if (agent == null || !agent.enabled)
-        {
+            attackLockTimer -= Time.deltaTime;
             animator.SetBool(IsRunningHash, false);
             return;
         }
@@ -121,85 +57,62 @@ public class PlayerAnimationController : MonoBehaviour
 
     public void PlayAttackAnimation(Transform target)
     {
-        if (animator == null || isDead)
-            return;
+        PlaySkillAnimation(SkillAnimationType.MeleeAttack, target);
+    }
 
+    public void PlaySkillAnimation(SkillAnimationType animationType, Transform target)
+    {
         if (target != null)
-        {
-            Vector3 dir = target.position - transform.position;
-            dir.y = 0f;
+            RotateTowardWorldPoint(target.position);
 
-            if (dir.sqrMagnitude > 0.0001f)
-                RotateVisualToward(dir.normalized, true);
-        }
+        PlaySkillAnimation(animationType);
+    }
 
-        actionLockTimer = attackLockDuration;
+    public void PlaySkillAnimationAtPoint(SkillAnimationType animationType, Vector3 worldPoint)
+    {
+        RotateTowardWorldPoint(worldPoint);
+        PlaySkillAnimation(animationType);
+    }
+
+    public void PlaySkillAnimation(SkillAnimationType animationType)
+    {
+        if (animator == null)
+            return;
+
+        if (animationType == SkillAnimationType.None)
+            return;
+
+        attackLockTimer = attackLockDuration;
+
         animator.SetBool(IsRunningHash, false);
+
         animator.ResetTrigger(AttackHash);
-        animator.SetTrigger(AttackHash);
+        animator.ResetTrigger(BowShotHash);
+        animator.ResetTrigger(SpellCastHash);
+
+        switch (animationType)
+        {
+            case SkillAnimationType.MeleeAttack:
+                animator.SetTrigger(AttackHash);
+                break;
+
+            case SkillAnimationType.BowShot:
+                animator.SetTrigger(BowShotHash);
+                break;
+
+            case SkillAnimationType.SpellCast:
+                animator.SetTrigger(SpellCastHash);
+                break;
+        }
     }
 
-    private void HandleHealthChanged(int currentHp, int maxHp)
+    private void RotateTowardWorldPoint(Vector3 worldPoint)
     {
-        if (animator == null || isDead)
-        {
-            lastHp = currentHp;
-            return;
-        }
+        Vector3 direction = worldPoint - transform.position;
+        direction.y = 0f;
 
-        bool tookDamage = currentHp < lastHp;
-        bool stillAlive = currentHp > 0;
-
-        if (tookDamage && stillAlive)
-        {
-            actionLockTimer = hurtLockDuration;
-            animator.SetBool(IsRunningHash, false);
-            animator.ResetTrigger(HurtHash);
-            animator.SetTrigger(HurtHash);
-        }
-
-        lastHp = currentHp;
-    }
-
-    private void HandleDied(CharacterHealth deadHealth)
-    {
-        if (isDead)
-            return;
-
-        isDead = true;
-        actionLockTimer = 0f;
-
-        if (animator != null)
-        {
-            animator.SetBool(IsRunningHash, false);
-            animator.ResetTrigger(HurtHash);
-            animator.ResetTrigger(AttackHash);
-            animator.SetTrigger(DieHash);
-        }
-
-        if (agent != null && agent.enabled)
-        {
-            agent.isStopped = true;
-            agent.ResetPath();
-
-            if (disableAgentOnDeath)
-                agent.enabled = false;
-        }
-
-        if (disableColliderOnDeath && mainCollider != null)
-            mainCollider.enabled = false;
-
-        if (disableInputScriptsOnDeath)
-        {
-            if (moveController != null)
-                moveController.enabled = false;
-
-            if (combatController != null)
-                combatController.enabled = false;
-
-            if (skillCaster != null)
-                skillCaster.enabled = false;
-        }
+        if (direction.sqrMagnitude > 0.0001f)
+            RotateVisualToward(direction.normalized, true);
     }
 
     private void RotateVisualToward(Vector3 direction, bool instant = false)
@@ -208,7 +121,7 @@ public class PlayerAnimationController : MonoBehaviour
             return;
 
         Transform targetTransform = visualModel != null ? visualModel : transform;
-        Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
+        Quaternion targetRotation = Quaternion.LookRotation(direction);
 
         if (instant)
         {

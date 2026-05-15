@@ -1,0 +1,95 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1216814386171956364
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8381141973494009908}
+  - component: {fileID: 4120260195890759764}
+  m_Layer: 0
+  m_Name: PlayerClassSpawner
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8381141973494009908
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1216814386171956364}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 8.91448, y: 1.55024, z: -19.27316}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 4827959565531019577}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4120260195890759764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1216814386171956364}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13497fd193212b24d9f23466b8c3aaa9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerClassPrefabSpawner
+  spawnPoint: {fileID: 4827959565531019577}
+  fallbackClass: 1
+  playerPrefabs:
+  - classType: 1
+    prefab: {fileID: 7365705225811633593, guid: 799996d5d1fbc8a45bc057a408ccc0a2, type: 3}
+    sceneInstance: {fileID: 0}
+  - classType: 2
+    prefab: {fileID: 5542528420778972293, guid: 7e040703664a90c49aa1b892958f4a79, type: 3}
+    sceneInstance: {fileID: 0}
+  - classType: 3
+    prefab: {fileID: 6602147123807111628, guid: 5e58d15d279f48346b480bbd4ab69521, type: 3}
+    sceneInstance: {fileID: 0}
+  useSceneInstancesIfAssigned: 1
+  deactivateUnselectedSceneInstances: 1
+  destroyPreviousRuntimePlayer: 1
+  bindSceneReferences: 1
+  activePlayerName: Player
+--- !u!1 &7269979301170196656
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4827959565531019577}
+  m_Layer: 0
+  m_Name: Spawnpoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4827959565531019577
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7269979301170196656}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8381141973494009908}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

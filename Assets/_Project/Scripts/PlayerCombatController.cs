@@ -171,7 +171,7 @@ public class PlayerCombatController : MonoBehaviour
         switch (selectedSkill.SkillType)
         {
             case SkillType.BasicAttack:
-                usedSuccessfully = basicAttack != null && basicAttack.TryAttackTarget(targetStats);
+                usedSuccessfully = basicAttack != null && basicAttack.TryAttackTarget(targetStats, selectedSkill);
                 break;
 
             case SkillType.Active:

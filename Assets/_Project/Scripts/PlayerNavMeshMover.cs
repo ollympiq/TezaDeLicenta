@@ -19,6 +19,10 @@ public class PlayerNavMeshMover : MonoBehaviour
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private float navMeshSampleDistance = 1.5f;
 
+    [Header("Click Blocking")]
+    [SerializeField] private bool blockMovementOnEnemyOrLootClick = true;
+    [SerializeField] private LayerMask extraMovementBlockerMask;
+
     [Header("AP Cost")]
     [SerializeField] private float unitsPerAP = 2f;
     public float UnitsPerAP => unitsPerAP;
@@ -117,11 +121,13 @@ public class PlayerNavMeshMover : MonoBehaviour
 
     private void TryMoveToMouse()
     {
-        if (Mouse.current == null)
+        if (Mouse.current == null || mainCamera == null)
             return;
 
+        Vector2 mousePosition = Mouse.current.position.ReadValue();
+
         if (!TryCalculateMovePreviewAtScreenPoint(
-                Mouse.current.position.ReadValue(),
+                mousePosition,
                 out int apCost,
                 out float pathLength,
                 out Vector3 destination))
@@ -129,19 +135,40 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (!playerAP.HasEnoughAP(apCost))
         {
-            GameLog.Warning("Nu ai destul AP pentru deplasare.");
+            GameLog.Warning(
+                $"Nu ai destul AP pentru deplasare. " +
+                $"Cost: {apCost}, AP curent: {playerAP.CurrentAP}/{playerAP.MaxAP}, " +
+                $"Lungime traseu: {pathLength:F2}, UnitsPerAP: {GetEffectiveUnitsPerAP():F2}, " +
+                $"Player: {gameObject.name}"
+            );
+            return;
+        }
+
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        {
+            GameLog.Warning("PlayerNavMeshMover: agentul playerului nu este pe NavMesh.");
+            return;
+        }
+
+        agent.isStopped = false;
+
+        bool destinationSet = agent.SetDestination(destination);
+        if (!destinationSet)
+        {
+            GameLog.Warning("PlayerNavMeshMover: destinatia nu a putut fi setata. AP-ul nu a fost consumat.");
             return;
         }
 
         bool spent = playerAP.SpendAP(apCost);
         if (!spent)
+        {
+            agent.ResetPath();
+            GameLog.Warning("PlayerNavMeshMover: AP-ul nu a putut fi consumat. Miscarea a fost anulata.");
             return;
+        }
 
         OnMoveStarted?.Invoke();
         moveRangeVisualizer?.BeginHideUntilMovementEnds();
-
-        agent.isStopped = false;
-        agent.SetDestination(destination);
 
         if (movementWatchRoutine != null)
             StopCoroutine(movementWatchRoutine);
@@ -166,7 +193,10 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         Ray ray = mainCamera.ScreenPointToRay(screenPosition);
 
-        if (!Physics.Raycast(ray, out RaycastHit hit, 500f, groundMask))
+        if (blockMovementOnEnemyOrLootClick && IsMovementClickBlockedBeforeGround(ray))
+            return false;
+
+        if (!Physics.Raycast(ray, out RaycastHit hit, 500f, groundMask, QueryTriggerInteraction.Ignore))
             return false;
 
         if (!NavMesh.SamplePosition(hit.point, out NavMeshHit navHit, navMeshSampleDistance, NavMesh.AllAreas))
@@ -189,6 +219,73 @@ public class PlayerNavMeshMover : MonoBehaviour
         apCost = Mathf.CeilToInt(pathLength / GetEffectiveUnitsPerAP());
         destination = navHit.position;
         return true;
+    }
+
+    private bool IsMovementClickBlockedBeforeGround(Ray ray)
+    {
+        RaycastHit[] hits = Physics.RaycastAll(ray, 500f, ~0, QueryTriggerInteraction.Ignore);
+
+        if (hits == null || hits.Length == 0)
+            return false;
+
+        Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Collider hitCollider = hits[i].collider;
+
+            if (hitCollider == null)
+                continue;
+
+            Transform hitTransform = hitCollider.transform;
+
+            if (hitTransform == transform || hitTransform.IsChildOf(transform))
+                continue;
+
+            GameObject hitObject = hitCollider.gameObject;
+
+            if (IsLayerInMask(hitObject.layer, groundMask))
+                return false;
+
+            if (IsLayerInMask(hitObject.layer, extraMovementBlockerMask))
+                return true;
+
+            if (IsEnemyOrLootObject(hitTransform))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsEnemyOrLootObject(Transform hitTransform)
+    {
+        if (hitTransform == null)
+            return false;
+
+        CharacterHealth hitHealth = hitTransform.GetComponentInParent<CharacterHealth>();
+        if (hitHealth != null && hitHealth != health)
+            return true;
+
+        CharacterStats hitStats = hitTransform.GetComponentInParent<CharacterStats>();
+        CharacterStats ownStats = GetComponent<CharacterStats>();
+
+        if (hitStats != null && hitStats != ownStats)
+            return true;
+
+        EnemyLootContainer lootContainer = hitTransform.GetComponentInParent<EnemyLootContainer>();
+        if (lootContainer != null)
+            return true;
+
+        EnemyTurnController enemyTurnController = hitTransform.GetComponentInParent<EnemyTurnController>();
+        if (enemyTurnController != null)
+            return true;
+
+        return false;
+    }
+
+    private bool IsLayerInMask(int layer, LayerMask mask)
+    {
+        return (mask.value & (1 << layer)) != 0;
     }
 
     private IEnumerator WatchMovementUntilFinished()
@@ -246,6 +343,7 @@ public class PlayerNavMeshMover : MonoBehaviour
             return 0f;
 
         float total = 0f;
+
         for (int i = 1; i < path.corners.Length; i++)
             total += Vector3.Distance(path.corners[i - 1], path.corners[i]);
 

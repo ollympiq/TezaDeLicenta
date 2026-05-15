@@ -43,27 +43,13 @@ public class PlayerClassInitializer : MonoBehaviour
 
     private void Awake()
     {
-        if (characterStats == null)
-            characterStats = FindFirstObjectByType<CharacterStats>();
-
-        if (characterHealth == null)
-            characterHealth = FindFirstObjectByType<CharacterHealth>();
-
-        if (characterEquipment == null)
-            characterEquipment = FindFirstObjectByType<CharacterEquipment>();
-
-        if (characterInventory == null)
-            characterInventory = FindFirstObjectByType<CharacterInventory>();
-
-        if (playerSkillLoadout == null)
-            playerSkillLoadout = FindFirstObjectByType<PlayerSkillLoadout>();
-
-        if (playerWallet == null)
-            playerWallet = FindFirstObjectByType<PlayerWallet>();
+        ResolveReferencesFromActivePlayer();
     }
 
     private void Start()
     {
+        ResolveReferencesFromActivePlayer();
+
         if (GameSession.Instance == null)
             return;
 
@@ -80,6 +66,21 @@ public class PlayerClassInitializer : MonoBehaviour
         ApplyPreset(preset);
     }
 
+    public void ResolveReferencesFromActivePlayer()
+    {
+        GameObject playerRoot = PlayerRuntimeRegistry.ResolvePlayerRoot();
+
+        if (playerRoot == null)
+            return;
+
+        characterStats = playerRoot.GetComponent<CharacterStats>();
+        characterHealth = playerRoot.GetComponent<CharacterHealth>();
+        characterEquipment = playerRoot.GetComponent<CharacterEquipment>();
+        characterInventory = playerRoot.GetComponent<CharacterInventory>();
+        playerSkillLoadout = playerRoot.GetComponent<PlayerSkillLoadout>();
+        playerWallet = playerRoot.GetComponent<PlayerWallet>();
+    }
+
     private ClassPreset GetPreset(CharacterClass classType)
     {
         for (int i = 0; i < presets.Count; i++)
@@ -93,6 +94,8 @@ public class PlayerClassInitializer : MonoBehaviour
 
     private void ApplyPreset(ClassPreset preset)
     {
+        ResolveReferencesFromActivePlayer();
+
         if (characterStats != null)
         {
             characterStats.ApplyLevel1Defaults();

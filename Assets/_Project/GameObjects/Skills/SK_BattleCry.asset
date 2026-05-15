@@ -18,6 +18,7 @@ MonoBehaviour:
   targetingMode: 3
   areaMode: 0
   keepSelectedAfterUse: 0
+  animationType: 3
   icon: {fileID: 21300000, guid: dbf0cb6749821b44389d232c60d9f711, type: 3}
   cursorTexture: {fileID: 2800000, guid: 18a51141aaaf12c4bae41c12b2bc5940, type: 3}
   cursorHotspot: {x: 0, y: 0}
@@ -46,3 +47,9 @@ MonoBehaviour:
     elementalDamageBonusPercent: 0
     affectAllElements: 0
     elementalDamageType: 0
+    dotMinDamage: 0
+    dotMaxDamage: 0
+    dotPowerScaling: 0
+    dotUsesMagicPower: 1
+    dotDamageType: 1
+    movementCostMultiplier: 2

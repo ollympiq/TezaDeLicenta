@@ -8,9 +8,15 @@ public class EnemyLootUI : MonoBehaviour
     [Header("References")]
     [SerializeField] private CharacterInventory playerInventory;
     [SerializeField] private PlayerWallet playerWallet;
+    [SerializeField] private Transform playerTransform;
     [SerializeField] private GameObject panelRoot;
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private EnemyLootSlotUI[] slots;
+
+    [Header("Interaction")]
+    [SerializeField] private bool requirePlayerNearContainer = true;
+    [SerializeField] private float maxOpenDistance = 3f;
+    [SerializeField] private bool requireContainerLootable = true;
 
     private EnemyLootContainer currentContainer;
     private int lastCollectedGold;
@@ -42,19 +48,18 @@ public class EnemyLootUI : MonoBehaviour
 
         Instance = this;
 
-        if (playerInventory == null)
-            playerInventory = FindFirstObjectByType<CharacterInventory>();
-
-        if (playerWallet == null)
-            playerWallet = FindFirstObjectByType<PlayerWallet>();
+        ResolvePlayerReferences();
 
         if (panelRoot == null)
             panelRoot = gameObject;
 
-        for (int i = 0; i < slots.Length; i++)
+        if (slots != null)
         {
-            if (slots[i] != null)
-                slots[i].Setup(this, i);
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] != null)
+                    slots[i].Setup(this, i);
+            }
         }
 
         currentContainer = null;
@@ -62,15 +67,29 @@ public class EnemyLootUI : MonoBehaviour
         initialized = true;
     }
 
-    public void Show(EnemyLootContainer container)
+    public void SetPlayerReferences(
+        CharacterInventory inventory,
+        PlayerWallet wallet,
+        Transform playerRoot)
+    {
+        playerInventory = inventory;
+        playerWallet = wallet;
+        playerTransform = playerRoot;
+    }
+
+    public bool Show(EnemyLootContainer container)
     {
         EnsureInitialized();
+        ResolvePlayerReferences();
 
         if (container == null || panelRoot == null)
         {
             Hide();
-            return;
+            return false;
         }
+
+        if (!CanOpenContainer(container))
+            return false;
 
         currentContainer = container;
         CollectGoldFromCurrentContainer();
@@ -78,7 +97,7 @@ public class EnemyLootUI : MonoBehaviour
         if (currentContainer.ItemCount <= 0)
         {
             Hide();
-            return;
+            return false;
         }
 
         if (titleText != null)
@@ -88,6 +107,7 @@ public class EnemyLootUI : MonoBehaviour
             panelRoot.SetActive(true);
 
         RefreshNow();
+        return true;
     }
 
     public void Hide()
@@ -120,6 +140,7 @@ public class EnemyLootUI : MonoBehaviour
                 continue;
 
             ItemInstance item = currentContainer.GetItemAt(i);
+
             if (item != null)
                 slots[i].Refresh(item);
             else
@@ -131,6 +152,12 @@ public class EnemyLootUI : MonoBehaviour
     {
         if (currentContainer == null || playerInventory == null)
             return;
+
+        if (!CanOpenContainer(currentContainer))
+        {
+            Hide();
+            return;
+        }
 
         ItemInstance item = currentContainer.GetItemAt(slotIndex);
         if (item == null || !item.IsValid)
@@ -166,6 +193,79 @@ public class EnemyLootUI : MonoBehaviour
 
         if (currentContainer.ItemCount <= 0)
             Hide();
+    }
+
+    private bool CanOpenContainer(EnemyLootContainer container)
+    {
+        if (container == null)
+            return false;
+
+        if (requireContainerLootable && !container.IsLootable)
+            return false;
+
+        if (!requirePlayerNearContainer)
+            return true;
+
+        if (playerTransform == null)
+        {
+            ResolvePlayerReferences();
+
+            if (playerTransform == null)
+            {
+                GameLog.Warning("EnemyLootUI: nu exista referinta la player pentru verificarea distantei.");
+                return false;
+            }
+        }
+
+        float distance = GetDistanceFromPlayerToContainer(container);
+
+        if (distance > maxOpenDistance)
+        {
+            GameLog.Warning($"Esti prea departe pentru a deschide loot-ul. Distanta: {distance:F1} / {maxOpenDistance:F1}");
+            return false;
+        }
+
+        return true;
+    }
+
+    private float GetDistanceFromPlayerToContainer(EnemyLootContainer container)
+    {
+        Vector3 playerPosition = playerTransform.position;
+        Collider containerCollider = container.GetComponentInChildren<Collider>();
+
+        if (containerCollider != null)
+        {
+            Vector3 closestPoint = containerCollider.ClosestPoint(playerPosition);
+            return Vector3.Distance(playerPosition, closestPoint);
+        }
+
+        return Vector3.Distance(playerPosition, container.transform.position);
+    }
+
+    private void ResolvePlayerReferences()
+    {
+        GameObject playerRoot = PlayerRuntimeRegistry.ResolvePlayerRoot();
+
+        if (playerRoot != null)
+        {
+            if (playerTransform == null)
+                playerTransform = playerRoot.transform;
+
+            if (playerInventory == null)
+                playerInventory = playerRoot.GetComponent<CharacterInventory>();
+
+            if (playerWallet == null)
+                playerWallet = playerRoot.GetComponent<PlayerWallet>();
+        }
+
+        if (playerInventory == null)
+            playerInventory = FindFirstObjectByType<CharacterInventory>();
+
+        if (playerWallet == null)
+            playerWallet = FindFirstObjectByType<PlayerWallet>();
+
+        if (playerTransform == null && playerInventory != null)
+            playerTransform = playerInventory.transform;
     }
 
     private void CollectGoldFromCurrentContainer()

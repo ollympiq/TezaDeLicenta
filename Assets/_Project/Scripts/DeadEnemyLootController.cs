@@ -16,25 +16,18 @@ public class DeadEnemyLootController : MonoBehaviour
 
     private void Awake()
     {
-        if (mainCamera == null)
-            mainCamera = Camera.main;
+        ResolveReferences();
+    }
 
-        if (playerCombatController == null)
-            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
-
-        if (playerMover == null)
-            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
-
-        if (lootUI == null)
-        {
-            lootUI = EnemyLootUI.Instance != null
-                ? EnemyLootUI.Instance
-                : FindFirstObjectByType<EnemyLootUI>(FindObjectsInactive.Include);
-        }
+    private void Start()
+    {
+        ResolveReferences();
     }
 
     private void Update()
     {
+        ResolveReferences();
+
         if (lootUI == null || Mouse.current == null || mainCamera == null)
             return;
 
@@ -61,18 +54,57 @@ public class DeadEnemyLootController : MonoBehaviour
         if (clickedLoot != null)
         {
             playerMover?.BlockMovementForCurrentFrame();
-            lootUI.Show(clickedLoot);
-            GameLog.Info($"Ai deschis loot-ul de la {clickedLoot.name}.");
-        }
-        else
-        {
-            if (lootUI.IsOpen)
-            {
-                playerMover?.BlockMovementForCurrentFrame();
-                GameLog.Info("Ai inchis fereastra de loot.");
-            }
 
-            lootUI.Hide();
+            bool wasOpenBefore = lootUI.IsOpen;
+            EnemyLootContainer previousContainer = lootUI.CurrentContainer;
+
+            lootUI.Show(clickedLoot);
+
+            bool openedNow =
+                lootUI.IsOpen &&
+                lootUI.CurrentContainer == clickedLoot;
+
+            bool wasAlreadyOpenForSameContainer =
+                wasOpenBefore &&
+                previousContainer == clickedLoot;
+
+            if (openedNow && !wasAlreadyOpenForSameContainer)
+                GameLog.Info($"Ai deschis loot-ul de la {clickedLoot.name}.");
+
+            return;
+        }
+
+        if (lootUI.IsOpen)
+        {
+            playerMover?.BlockMovementForCurrentFrame();
+            GameLog.Info("Ai inchis fereastra de loot.");
+        }
+
+        lootUI.Hide();
+    }
+
+    private void ResolveReferences()
+    {
+        if (mainCamera == null)
+            mainCamera = Camera.main;
+
+        if (playerCombatController == null)
+            playerCombatController = PlayerRuntimeRegistry.Get<PlayerCombatController>();
+
+        if (playerCombatController == null)
+            playerCombatController = FindFirstObjectByType<PlayerCombatController>();
+
+        if (playerMover == null)
+            playerMover = PlayerRuntimeRegistry.Get<PlayerNavMeshMover>();
+
+        if (playerMover == null)
+            playerMover = FindFirstObjectByType<PlayerNavMeshMover>();
+
+        if (lootUI == null)
+        {
+            lootUI = EnemyLootUI.Instance != null
+                ? EnemyLootUI.Instance
+                : FindFirstObjectByType<EnemyLootUI>(FindObjectsInactive.Include);
         }
     }
 
@@ -80,7 +112,7 @@ public class DeadEnemyLootController : MonoBehaviour
     {
         Ray ray = mainCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
 
-        if (!Physics.Raycast(ray, out RaycastHit hit, rayDistance, enemyMask))
+        if (!Physics.Raycast(ray, out RaycastHit hit, rayDistance, enemyMask, QueryTriggerInteraction.Ignore))
             return null;
 
         CharacterStats targetStats = hit.collider.GetComponentInParent<CharacterStats>();

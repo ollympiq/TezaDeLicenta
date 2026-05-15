@@ -15,6 +15,7 @@ public class CharacterSkillCaster : MonoBehaviour
     private NavMeshAgent agent;
     private CharacterHealth selfHealth;
     private TurnActionLimiter turnActionLimiter;
+    private CharacterEquipment equipment;
 
     private void Awake()
     {
@@ -24,6 +25,7 @@ public class CharacterSkillCaster : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         selfHealth = GetComponent<CharacterHealth>();
         turnActionLimiter = GetComponent<TurnActionLimiter>();
+        equipment = GetComponent<CharacterEquipment>();
     }
 
     public bool TryUseSkillOnSelf(SkillDefinition skill)
@@ -32,6 +34,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         if (skill == null || skill.SkillType != SkillType.Active)
+            return false;
+
+        if (!CanUseRequiredWeapon(skill))
             return false;
 
         if (!skill.HasAnyPayload)
@@ -50,7 +55,11 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
+
         StopMovement();
+
+        if (animationController != null)
+            animationController.PlaySkillAnimation(skill.AnimationType);
 
         return ApplySkillToTargets(skill, new List<CharacterStats> { casterStats });
     }
@@ -61,6 +70,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         if (skill == null || skill.SkillType != SkillType.Active)
+            return false;
+
+        if (!CanUseRequiredWeapon(skill))
             return false;
 
         if (!skill.HasAnyPayload)
@@ -103,7 +115,7 @@ public class CharacterSkillCaster : MonoBehaviour
         StopMovement();
 
         if (animationController != null)
-            animationController.PlayAttackAnimation(primaryTarget.transform);
+            animationController.PlaySkillAnimation(skill.AnimationType, primaryTarget.transform);
 
         return ApplySkillToTargets(skill, targets);
     }
@@ -114,6 +126,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         if (skill == null || skill.SkillType != SkillType.Active)
+            return false;
+
+        if (!CanUseRequiredWeapon(skill))
             return false;
 
         if (!skill.HasAnyPayload)
@@ -147,7 +162,24 @@ public class CharacterSkillCaster : MonoBehaviour
         turnActionLimiter?.MarkSkillUsed(skill);
 
         StopMovement();
+
+        if (animationController != null)
+            animationController.PlaySkillAnimationAtPoint(skill.AnimationType, point);
+
         return ApplySkillToTargets(skill, targets);
+    }
+
+    private bool CanUseRequiredWeapon(SkillDefinition skill)
+    {
+        WeaponDefinition equippedWeapon = equipment != null
+            ? equipment.EquippedWeaponDefinition
+            : null;
+
+        if (SkillWeaponRequirementValidator.CanUseSkill(skill, equippedWeapon))
+            return true;
+
+        GameLog.Warning(SkillWeaponRequirementValidator.BuildRequirementMessage(skill, equippedWeapon));
+        return false;
     }
 
     private List<CharacterStats> CollectTargetsFromTarget(SkillDefinition skill, CharacterStats primaryTarget)
@@ -202,6 +234,9 @@ public class CharacterSkillCaster : MonoBehaviour
 
     private bool IsValidTarget(CharacterStats targetStats)
     {
+        if (targetStats == null)
+            return false;
+
         CharacterHealth health = targetStats.GetComponent<CharacterHealth>();
         return health != null && !health.IsDead;
     }
@@ -289,6 +324,7 @@ public class CharacterSkillCaster : MonoBehaviour
             if (!targetHealth.IsDead && skill.Effects != null && skill.Effects.Count > 0)
             {
                 CharacterStatusEffects statusEffects = EnsureStatusEffects(targetStats);
+
                 if (statusEffects != null)
                     appliedEffects = statusEffects.ApplySkillEffects(skill, casterStats);
             }
@@ -303,13 +339,18 @@ public class CharacterSkillCaster : MonoBehaviour
     private CharacterStatusEffects EnsureStatusEffects(CharacterStats targetStats)
     {
         CharacterStatusEffects statusEffects = targetStats.GetComponent<CharacterStatusEffects>();
+
         if (statusEffects == null)
             statusEffects = targetStats.gameObject.AddComponent<CharacterStatusEffects>();
 
         return statusEffects;
     }
 
-    private string BuildCombatLog(SkillDefinition skill, string targetName, DamageResult result, CharacterHealth targetHealth)
+    private string BuildCombatLog(
+        SkillDefinition skill,
+        string targetName,
+        DamageResult result,
+        CharacterHealth targetHealth)
     {
         if (!result.Hit)
         {

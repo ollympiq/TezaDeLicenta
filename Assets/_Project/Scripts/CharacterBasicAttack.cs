@@ -34,28 +34,52 @@ public class CharacterBasicAttack : MonoBehaviour
     public int GetAttackAPCost()
     {
         WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
-        return weapon != null ? weapon.ApCost : 999;
+        return GetAttackAPCost(weapon, null);
+    }
+
+    public int GetAttackAPCost(WeaponDefinition weapon, SkillDefinition basicAttackSkill)
+    {
+        if (basicAttackSkill != null)
+            return Mathf.Max(0, basicAttackSkill.ApCost);
+
+        return weapon != null ? Mathf.Max(0, weapon.ApCost) : 999;
     }
 
     public float GetAttackRange()
     {
         WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
-        return weapon != null ? weapon.Range : 0f;
+        return GetAttackRange(weapon, null);
+    }
+
+    public float GetAttackRange(WeaponDefinition weapon, SkillDefinition basicAttackSkill)
+    {
+        if (basicAttackSkill != null && basicAttackSkill.Range > 0f)
+            return basicAttackSkill.Range;
+
+        return weapon != null ? Mathf.Max(0f, weapon.Range) : 0f;
     }
 
     public bool IsTargetInAttackRange(Transform target)
     {
+        WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
+        return IsTargetInAttackRange(target, weapon, null);
+    }
+
+    public bool IsTargetInAttackRange(Transform target, WeaponDefinition weapon, SkillDefinition basicAttackSkill)
+    {
         if (target == null)
             return false;
 
-        WeaponDefinition weapon = equipment != null ? equipment.EquippedWeaponDefinition : null;
-        if (weapon == null)
-            return false;
-
-        return IsTargetInRange(target, weapon.Range);
+        float range = GetAttackRange(weapon, basicAttackSkill);
+        return IsTargetInRange(target, range);
     }
 
     public bool TryAttackTarget(CharacterStats targetStats)
+    {
+        return TryAttackTarget(targetStats, null);
+    }
+
+    public bool TryAttackTarget(CharacterStats targetStats, SkillDefinition basicAttackSkill)
     {
         if (selfHealth != null && selfHealth.IsDead)
             return false;
@@ -70,6 +94,12 @@ public class CharacterBasicAttack : MonoBehaviour
             return false;
         }
 
+        if (basicAttackSkill != null && !SkillWeaponRequirementValidator.CanUseSkill(basicAttackSkill, weapon))
+        {
+            GameLog.Warning(SkillWeaponRequirementValidator.BuildRequirementMessage(basicAttackSkill, weapon));
+            return false;
+        }
+
         if (turnActionLimiter != null && !turnActionLimiter.CanUseBasicAttack())
         {
             GameLog.Warning("Basic Attack a fost deja folosit in acest tur.");
@@ -80,7 +110,10 @@ public class CharacterBasicAttack : MonoBehaviour
         if (targetHealth == null || targetHealth.IsDead)
             return false;
 
-        if (!IsTargetInRange(targetStats.transform, weapon.Range))
+        float attackRange = GetAttackRange(weapon, basicAttackSkill);
+        int apCost = GetAttackAPCost(weapon, basicAttackSkill);
+
+        if (!IsTargetInRange(targetStats.transform, attackRange))
         {
             GameLog.Warning("Tinta este prea departe pentru Basic Attack.");
             return false;
@@ -88,13 +121,13 @@ public class CharacterBasicAttack : MonoBehaviour
 
         if (playerAP != null)
         {
-            if (!playerAP.HasEnoughAP(weapon.ApCost))
+            if (!playerAP.HasEnoughAP(apCost))
             {
                 GameLog.Warning("Nu ai destul AP pentru Basic Attack.");
                 return false;
             }
 
-            if (!playerAP.SpendAP(weapon.ApCost))
+            if (!playerAP.SpendAP(apCost))
                 return false;
         }
 
@@ -106,10 +139,7 @@ public class CharacterBasicAttack : MonoBehaviour
             agent.ResetPath();
         }
 
-        if (playerAnimationController != null)
-            playerAnimationController.PlayAttackAnimation(targetStats.transform);
-        else if (enemyAnimationController != null)
-            enemyAnimationController.PlayAttackAnimation(targetStats.transform);
+        PlayBasicAttackAnimation(basicAttackSkill, targetStats.transform);
 
         DamageResult result = DamageCalculator.ResolveWeaponAttack(attackerStats, targetStats, weapon);
 
@@ -137,7 +167,28 @@ public class CharacterBasicAttack : MonoBehaviour
         return true;
     }
 
-    private void LogAttackResult(WeaponDefinition weapon, CharacterStats targetStats, CharacterHealth targetHealth, DamageResult result)
+    private void PlayBasicAttackAnimation(SkillDefinition basicAttackSkill, Transform target)
+    {
+        if (playerAnimationController != null)
+        {
+            SkillAnimationType animationType = SkillAnimationType.MeleeAttack;
+
+            if (basicAttackSkill != null)
+                animationType = basicAttackSkill.AnimationType;
+
+            playerAnimationController.PlaySkillAnimation(animationType, target);
+            return;
+        }
+
+        if (enemyAnimationController != null)
+            enemyAnimationController.PlayAttackAnimation(target);
+    }
+
+    private void LogAttackResult(
+        WeaponDefinition weapon,
+        CharacterStats targetStats,
+        CharacterHealth targetHealth,
+        DamageResult result)
     {
         string attackerName = CompareTag("Player") ? "Player" : gameObject.name;
         string targetName = targetStats != null ? targetStats.gameObject.name : "Target";
@@ -163,6 +214,7 @@ public class CharacterBasicAttack : MonoBehaviour
 
         Vector3 a = transform.position;
         Vector3 b = target.position;
+
         a.y = 0f;
         b.y = 0f;
 
@@ -177,22 +229,22 @@ public class CharacterBasicAttack : MonoBehaviour
         if (t == null)
             return 0.5f;
 
-        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
+        if (t.TryGetComponent<NavMeshAgent>(out NavMeshAgent navAgent))
             return Mathf.Max(0.1f, navAgent.radius);
 
-        if (t.TryGetComponent<CapsuleCollider>(out var capsule))
+        if (t.TryGetComponent<CapsuleCollider>(out CapsuleCollider capsule))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
             return capsule.radius * scale;
         }
 
-        if (t.TryGetComponent<SphereCollider>(out var sphere))
+        if (t.TryGetComponent<SphereCollider>(out SphereCollider sphere))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
             return sphere.radius * scale;
         }
 
-        if (t.TryGetComponent<Collider>(out var col))
+        if (t.TryGetComponent<Collider>(out Collider col))
             return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
 
         return 0.5f;

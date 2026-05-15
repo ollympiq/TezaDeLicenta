@@ -23,6 +23,7 @@ public static class SkillTooltipTextBuilder
         StringBuilder builder = new StringBuilder();
 
         builder.AppendLine(UIRichTextColors.Line("AP Cost", skill.ApCost.ToString(), UIRichTextColors.AP));
+        builder.AppendLine($"Required Weapon: {SkillWeaponRequirementValidator.GetRequirementDisplayName(skill.RequiredWeapon)}");
 
         if (skill.DealsDamage)
             AppendDamageLines(builder, skill, previewCasterStats);
