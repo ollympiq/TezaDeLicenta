@@ -20,6 +20,8 @@ public class RunLevelFlow : MonoBehaviour
     private bool isLoadingScene;
 
     public int CurrentCombatLevel => Mathf.Clamp(currentCombatLevel, 1, maxCombatLevel);
+    public int RawPendingLobbyLevel => pendingLobbyLevel;
+    public int MaxCombatLevel => maxCombatLevel;
 
     public int PendingLobbyLevel
     {
@@ -31,8 +33,6 @@ public class RunLevelFlow : MonoBehaviour
             return Mathf.Clamp(pendingLobbyLevel, 1, maxCombatLevel);
         }
     }
-
-    public int MaxCombatLevel => maxCombatLevel;
 
     public bool HasPendingLobbyCombat
     {
@@ -99,6 +99,17 @@ public class RunLevelFlow : MonoBehaviour
         isLoadingScene = false;
 
         DebugState("StartNewRun");
+    }
+
+    public void ApplyLoadedRunState(int loadedCurrentCombatLevel, int loadedPendingLobbyLevel)
+    {
+        maxCombatLevel = Mathf.Max(1, maxCombatLevel);
+
+        currentCombatLevel = Mathf.Clamp(loadedCurrentCombatLevel, 1, maxCombatLevel);
+        pendingLobbyLevel = Mathf.Clamp(loadedPendingLobbyLevel, 0, maxCombatLevel);
+        isLoadingScene = false;
+
+        DebugState("ApplyLoadedRunState");
     }
 
     public void EnterLobbyAfterCombat(int clearedCombatLevel)

@@ -106,6 +106,8 @@ public class EnemyStatsTooltipUI : MonoBehaviour
         if (!string.IsNullOrEmpty(typeLabel))
             sb.AppendLine(UIRichTextColors.DualLine("Type", typeLabel, UIRichTextColors.White, UIRichTextColors.White));
 
+        sb.AppendLine(UIRichTextColors.DualLine("Level", stats.Level.ToString(), UIRichTextColors.White, UIRichTextColors.Initiative));
+
         sb.AppendLine(UIRichTextColors.DualLine("Class", stats.Class.ToString(), UIRichTextColors.White, UIRichTextColors.ClassColor(stats.Class)));
 
         if (health != null)

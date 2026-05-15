@@ -69,10 +69,20 @@ public class MainMenuController : MonoBehaviour
 
     public void LoadSavePlaceholder()
     {
+        LoadSaveGame();
+    }
+
+    public void LoadSaveGame()
+    {
         EnsurePersistentSessionExists();
 
-        Debug.Log("Load Save este placeholder momentan.");
-        SceneManager.LoadScene(lobbySceneName);
+        if (!SaveSystem.TryLoadSaveIntoRuntime(out string sceneToLoad))
+        {
+            Debug.LogWarning("Nu exista salvare valida.");
+            return;
+        }
+
+        SceneManager.LoadScene(sceneToLoad);
     }
 
     public void OpenSettings()

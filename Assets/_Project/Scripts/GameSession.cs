@@ -268,6 +268,77 @@ public class GameSession : MonoBehaviour
         return true;
     }
 
+    public GameSaveData ExportSaveData(string sceneName)
+    {
+        GameSaveData data = new GameSaveData();
+
+        data.sceneName = string.IsNullOrWhiteSpace(sceneName) ? "LobbyScene" : sceneName;
+        data.savedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        data.selectedPlayerClass = selectedPlayerClass;
+        data.hasRestorablePlayerState = hasRestorablePlayerState;
+
+        data.gameSessionCurrentCombatLevel = currentCombatLevel;
+        data.pendingLobbyLevelUp = pendingLobbyLevelUp;
+
+        data.savedPlayerLevel = savedPlayerLevel;
+        data.savedUnspentStatPoints = savedUnspentStatPoints;
+        data.savedGold = savedGold;
+
+        data.savedStrength = savedStrength;
+        data.savedConstitution = savedConstitution;
+        data.savedDexterity = savedDexterity;
+        data.savedIntelligence = savedIntelligence;
+
+        data.savedInventory = new List<SavedItemInstance>(savedInventory);
+        data.savedEquipment = new List<SavedEquippedItem>(savedEquipment);
+        data.savedSkills = savedSkills != null ? savedSkills : new SavedSkillLoadout();
+
+        return data;
+    }
+
+    public void ImportSaveData(GameSaveData data)
+    {
+        if (data == null)
+            return;
+
+        RebuildDefinitionCaches();
+
+        selectedPlayerClass = data.selectedPlayerClass;
+        pendingClassSelection = false;
+
+        currentCombatLevel = Mathf.Max(1, data.gameSessionCurrentCombatLevel);
+        pendingLobbyLevelUp = data.pendingLobbyLevelUp;
+
+        savedPlayerLevel = Mathf.Max(1, data.savedPlayerLevel);
+        savedUnspentStatPoints = Mathf.Max(0, data.savedUnspentStatPoints);
+        savedGold = Mathf.Max(0, data.savedGold);
+
+        savedStrength = Mathf.Max(1, data.savedStrength);
+        savedConstitution = Mathf.Max(1, data.savedConstitution);
+        savedDexterity = Mathf.Max(1, data.savedDexterity);
+        savedIntelligence = Mathf.Max(1, data.savedIntelligence);
+
+        savedInventory = data.savedInventory != null
+            ? new List<SavedItemInstance>(data.savedInventory)
+            : new List<SavedItemInstance>();
+
+        savedEquipment = data.savedEquipment != null
+            ? new List<SavedEquippedItem>(data.savedEquipment)
+            : new List<SavedEquippedItem>();
+
+        savedSkills = data.savedSkills != null
+            ? data.savedSkills
+            : new SavedSkillLoadout();
+
+        hasRestorablePlayerState = data.hasRestorablePlayerState;
+    }
+
+    public void ForceRestorableState()
+    {
+        hasRestorablePlayerState = true;
+    }
+
     private CharacterStats FindStatsReference(
         PlayerProgression progression,
         CharacterInventory inventory,

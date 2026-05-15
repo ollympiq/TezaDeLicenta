@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -19,40 +20,50 @@ public class PlayerStatAllocationUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dexterityText;
     [SerializeField] private TextMeshProUGUI intelligenceText;
 
+    private PlayerProgression subscribedProgression;
+    private CharacterStats subscribedStats;
+
     private void Awake()
     {
-        if (progression == null)
-            progression = FindFirstObjectByType<PlayerProgression>();
-
-        if (stats == null)
-            stats = FindFirstObjectByType<CharacterStats>();
-
         if (panelRoot == null)
             panelRoot = gameObject;
+
+        ResolveReferences();
+    }
+
+    private IEnumerator Start()
+    {
+        // Asteptam un frame, pentru ca playerul poate fi spawnat dinamic
+        // si PlayerSceneReferenceBinder poate seta referintele dupa Awake/OnEnable.
+        yield return null;
+
+        ResolveReferences();
+        SubscribeToEvents();
+        RefreshNow();
     }
 
     private void OnEnable()
     {
-        if (progression != null)
-            progression.OnProgressionChanged += RefreshNow;
-
-        if (stats != null)
-            stats.OnStatsChanged += RefreshNow;
-
+        ResolveReferences();
+        SubscribeToEvents();
         RefreshNow();
     }
 
     private void OnDisable()
     {
-        if (progression != null)
-            progression.OnProgressionChanged -= RefreshNow;
-
-        if (stats != null)
-            stats.OnStatsChanged -= RefreshNow;
+        UnsubscribeFromEvents();
     }
 
     public void OpenPanel()
     {
+        ResolveReferences();
+
+        if (ShouldAutoClose())
+        {
+            ClosePanel();
+            return;
+        }
+
         if (panelRoot != null)
             panelRoot.SetActive(true);
 
@@ -87,6 +98,8 @@ public class PlayerStatAllocationUI : MonoBehaviour
 
     public void RefreshNow()
     {
+        ResolveReferences();
+
         if (progression != null)
         {
             if (levelText != null)
@@ -110,23 +123,89 @@ public class PlayerStatAllocationUI : MonoBehaviour
             if (intelligenceText != null)
                 intelligenceText.text = stats.Intelligence.ToString();
         }
+
+        if (ShouldAutoClose())
+            ClosePanel();
     }
 
     private void TrySpend(PlayerStatType statType)
     {
+        ResolveReferences();
+
         if (progression == null)
             return;
 
         bool spent = progression.SpendPoint(statType, 1);
+
         if (!spent)
         {
-            Debug.Log("Nu mai ai puncte disponibile.");
+            GameLog.Warning("Nu mai ai puncte disponibile.");
+            RefreshNow();
             return;
         }
 
         RefreshNow();
 
-        if (autoCloseWhenNoPointsRemain && progression.UnspentStatPoints <= 0)
+        if (ShouldAutoClose())
             ClosePanel();
+    }
+
+    private bool ShouldAutoClose()
+    {
+        return autoCloseWhenNoPointsRemain &&
+               progression != null &&
+               progression.UnspentStatPoints <= 0;
+    }
+
+    private void ResolveReferences()
+    {
+        if (progression == null)
+            progression = PlayerRuntimeRegistry.Get<PlayerProgression>();
+
+        if (progression == null)
+            progression = FindFirstObjectByType<PlayerProgression>();
+
+        if (stats == null)
+            stats = PlayerRuntimeRegistry.Get<CharacterStats>();
+
+        if (stats == null)
+            stats = FindFirstObjectByType<CharacterStats>();
+    }
+
+    private void SubscribeToEvents()
+    {
+        if (subscribedProgression != progression)
+        {
+            if (subscribedProgression != null)
+                subscribedProgression.OnProgressionChanged -= RefreshNow;
+
+            subscribedProgression = progression;
+
+            if (subscribedProgression != null)
+                subscribedProgression.OnProgressionChanged += RefreshNow;
+        }
+
+        if (subscribedStats != stats)
+        {
+            if (subscribedStats != null)
+                subscribedStats.OnStatsChanged -= RefreshNow;
+
+            subscribedStats = stats;
+
+            if (subscribedStats != null)
+                subscribedStats.OnStatsChanged += RefreshNow;
+        }
+    }
+
+    private void UnsubscribeFromEvents()
+    {
+        if (subscribedProgression != null)
+            subscribedProgression.OnProgressionChanged -= RefreshNow;
+
+        if (subscribedStats != null)
+            subscribedStats.OnStatsChanged -= RefreshNow;
+
+        subscribedProgression = null;
+        subscribedStats = null;
     }
 }
