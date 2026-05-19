@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class InGameMenuUI : MonoBehaviour
 {
+    private const string MasterVolumeKey = "MasterVolume";
+    private const float DefaultVolume = 1f;
+
     [Header("Scene Names")]
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
@@ -17,14 +20,14 @@ public class InGameMenuUI : MonoBehaviour
 
     private void Awake()
     {
-        if (volumeSlider != null)
-        {
-            volumeSlider.value = AudioListener.volume;
-            volumeSlider.onValueChanged.RemoveListener(SetMasterVolume);
-            volumeSlider.onValueChanged.AddListener(SetMasterVolume);
-        }
-
+        ApplySavedVolume();
+        SetupVolumeSlider();
         CloseMenu();
+    }
+
+    private void OnEnable()
+    {
+        RefreshVolumeSlider();
     }
 
     private void OnDestroy()
@@ -48,6 +51,8 @@ public class InGameMenuUI : MonoBehaviour
     {
         if (menuPanelRoot != null)
             menuPanelRoot.SetActive(true);
+
+        RefreshVolumeSlider();
 
         if (pauseGameWhenOpen)
             Time.timeScale = 0f;
@@ -82,6 +87,39 @@ public class InGameMenuUI : MonoBehaviour
 
     public void SetMasterVolume(float value)
     {
-        AudioListener.volume = Mathf.Clamp01(value);
+        value = Mathf.Clamp01(value);
+
+        AudioListener.volume = value;
+
+        PlayerPrefs.SetFloat(MasterVolumeKey, value);
+        PlayerPrefs.Save();
+    }
+
+    private void SetupVolumeSlider()
+    {
+        if (volumeSlider == null)
+            return;
+
+        volumeSlider.onValueChanged.RemoveListener(SetMasterVolume);
+        volumeSlider.SetValueWithoutNotify(GetSavedVolume());
+        volumeSlider.onValueChanged.AddListener(SetMasterVolume);
+    }
+
+    private void RefreshVolumeSlider()
+    {
+        if (volumeSlider == null)
+            return;
+
+        volumeSlider.SetValueWithoutNotify(GetSavedVolume());
+    }
+
+    private void ApplySavedVolume()
+    {
+        AudioListener.volume = GetSavedVolume();
+    }
+
+    private float GetSavedVolume()
+    {
+        return PlayerPrefs.GetFloat(MasterVolumeKey, DefaultVolume);
     }
 }
