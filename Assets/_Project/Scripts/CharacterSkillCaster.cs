@@ -16,6 +16,7 @@ public class CharacterSkillCaster : MonoBehaviour
     private CharacterHealth selfHealth;
     private TurnActionLimiter turnActionLimiter;
     private CharacterEquipment equipment;
+    private CharacterCombatAudio combatAudio;
 
     private void Awake()
     {
@@ -26,6 +27,7 @@ public class CharacterSkillCaster : MonoBehaviour
         selfHealth = GetComponent<CharacterHealth>();
         turnActionLimiter = GetComponent<TurnActionLimiter>();
         equipment = GetComponent<CharacterEquipment>();
+        combatAudio = GetComponent<CharacterCombatAudio>();
     }
 
     public bool TryUseSkillOnSelf(SkillDefinition skill)
@@ -55,8 +57,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
-
         StopMovement();
+
+        PlaySkillSound(skill);
 
         if (animationController != null)
             animationController.PlaySkillAnimation(skill.AnimationType);
@@ -114,6 +117,8 @@ public class CharacterSkillCaster : MonoBehaviour
 
         StopMovement();
 
+        PlaySkillSound(skill);
+
         if (animationController != null)
             animationController.PlaySkillAnimation(skill.AnimationType, primaryTarget.transform);
 
@@ -162,6 +167,8 @@ public class CharacterSkillCaster : MonoBehaviour
         turnActionLimiter?.MarkSkillUsed(skill);
 
         StopMovement();
+
+        PlaySkillSound(skill);
 
         if (animationController != null)
             animationController.PlaySkillAnimationAtPoint(skill.AnimationType, point);
@@ -344,6 +351,14 @@ public class CharacterSkillCaster : MonoBehaviour
             statusEffects = targetStats.gameObject.AddComponent<CharacterStatusEffects>();
 
         return statusEffects;
+    }
+
+    private void PlaySkillSound(SkillDefinition skill)
+    {
+        if (combatAudio == null || skill == null)
+            return;
+
+        combatAudio.PlaySkillAttackSound(skill.AnimationType);
     }
 
     private string BuildCombatLog(

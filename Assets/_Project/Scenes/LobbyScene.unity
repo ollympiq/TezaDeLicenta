@@ -1306,9 +1306,17 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: buySound
+      value: 
+      objectReference: {fileID: 8300000, guid: cd9c185d3ed61b1438ee8f357dd47db7, type: 3}
+    - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
       propertyPath: goldText
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: sellSound
+      value: 
+      objectReference: {fileID: 8300000, guid: afcb317e84880914c8b52b2f86e30d10, type: 3}
     - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
       propertyPath: playerWallet
       value: 
@@ -1320,6 +1328,10 @@ PrefabInstance:
     - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
       propertyPath: playerInventory
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
+      propertyPath: traderStockTier
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7431806045724278594, guid: 85cf4b7786f31894cafc3a1f3d1aa6de, type: 3}
       propertyPath: playerInventoryUI

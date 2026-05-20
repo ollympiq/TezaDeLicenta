@@ -27,6 +27,12 @@ public class TraderShopUI : MonoBehaviour
     [SerializeField, Min(0)] private int minItemLevelOffset = 0;
     [SerializeField, Min(0)] private int maxItemLevelOffset = 1;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource tradeAudioSource;
+    [SerializeField] private AudioClip buySound;
+    [SerializeField] private AudioClip sellSound;
+    [SerializeField, Range(0f, 1f)] private float tradeSoundVolume = 1f;
+
     [Header("Behavior")]
     [SerializeField] private bool closeOnEscape = true;
 
@@ -51,6 +57,16 @@ public class TraderShopUI : MonoBehaviour
 
         if (shopPanelRect == null && panelRoot != null)
             shopPanelRect = panelRoot.GetComponent<RectTransform>();
+
+        if (tradeAudioSource == null)
+            tradeAudioSource = GetComponent<AudioSource>();
+
+        if (tradeAudioSource == null)
+            tradeAudioSource = gameObject.AddComponent<AudioSource>();
+
+        tradeAudioSource.playOnAwake = false;
+        tradeAudioSource.loop = false;
+        tradeAudioSource.spatialBlend = 0f;
 
         if (!cachedNormalPosition && shopPanelRect != null)
         {
@@ -163,6 +179,9 @@ public class TraderShopUI : MonoBehaviour
         }
 
         stockEntries.RemoveAt(slotIndex);
+
+        PlayTradeSound(buySound);
+
         GameLog.Success($"Ai cumparat {purchasedItem.DisplayName} pentru {entry.BuyPrice} Gold.");
         RefreshAll();
         playerInventoryUI?.RefreshAll();
@@ -189,6 +208,9 @@ public class TraderShopUI : MonoBehaviour
             return false;
 
         playerWallet.AddGold(sellPrice);
+
+        PlayTradeSound(sellSound);
+
         GameLog.Success($"Ai vandut {removed.DisplayName} pentru {sellPrice} Gold.");
 
         RefreshAll();
@@ -346,5 +368,13 @@ public class TraderShopUI : MonoBehaviour
             return;
 
         shopPanelRect.anchoredPosition = traderMode ? traderAnchoredPosition : normalAnchoredPosition;
+    }
+
+    private void PlayTradeSound(AudioClip clip)
+    {
+        if (tradeAudioSource == null || clip == null)
+            return;
+
+        tradeAudioSource.PlayOneShot(clip, tradeSoundVolume);
     }
 }

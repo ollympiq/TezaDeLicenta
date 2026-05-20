@@ -4,9 +4,20 @@ using UnityEngine.SceneManagement;
 
 public static class SaveSystem
 {
-    private const string SaveFileName = "savegame.json";
+    private const string BuildSaveFileName = "savegame.json";
+    private const string EditorSaveFileName = "editor_savegame.json";
 
-    public static string SavePath => Path.Combine(Application.persistentDataPath, SaveFileName);
+    public static string SavePath
+    {
+        get
+        {
+#if UNITY_EDITOR
+            return Path.Combine(Application.persistentDataPath, EditorSaveFileName);
+#else
+            return Path.Combine(Application.persistentDataPath, BuildSaveFileName);
+#endif
+        }
+    }
 
     public static bool HasSave()
     {
@@ -40,6 +51,11 @@ public static class SaveSystem
         }
 
         string json = JsonUtility.ToJson(data, true);
+
+        string directory = Path.GetDirectoryName(SavePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
+
         File.WriteAllText(SavePath, json);
 
         Debug.Log("Joc salvat in: " + SavePath);
@@ -94,8 +110,23 @@ public static class SaveSystem
     public static void DeleteSave()
     {
         if (File.Exists(SavePath))
+        {
             File.Delete(SavePath);
+            Debug.Log("SaveSystem: save sters din: " + SavePath);
+        }
     }
+
+#if UNITY_EDITOR
+    public static string GetEditorSavePath()
+    {
+        return Path.Combine(Application.persistentDataPath, EditorSaveFileName);
+    }
+
+    public static string GetBuildSavePathPreview()
+    {
+        return Path.Combine(Application.persistentDataPath, BuildSaveFileName);
+    }
+#endif
 
     private static void CaptureCurrentPlayerIntoSession(GameSession session)
     {

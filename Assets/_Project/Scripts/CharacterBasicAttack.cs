@@ -13,6 +13,7 @@ public class CharacterBasicAttack : MonoBehaviour
 
     private PlayerAnimationController playerAnimationController;
     private EnemyAnimationController enemyAnimationController;
+    private CharacterCombatAudio combatAudio;
 
     private NavMeshAgent agent;
     private CharacterHealth selfHealth;
@@ -26,6 +27,7 @@ public class CharacterBasicAttack : MonoBehaviour
 
         playerAnimationController = GetComponent<PlayerAnimationController>();
         enemyAnimationController = GetComponent<EnemyAnimationController>();
+        combatAudio = GetComponent<CharacterCombatAudio>();
 
         agent = GetComponent<NavMeshAgent>();
         selfHealth = GetComponent<CharacterHealth>();
@@ -139,7 +141,7 @@ public class CharacterBasicAttack : MonoBehaviour
             agent.ResetPath();
         }
 
-        PlayBasicAttackAnimation(basicAttackSkill, targetStats.transform);
+        PlayBasicAttackAnimationAndSound(weapon, basicAttackSkill, targetStats.transform);
 
         DamageResult result = DamageCalculator.ResolveWeaponAttack(attackerStats, targetStats, weapon);
 
@@ -167,33 +169,52 @@ public class CharacterBasicAttack : MonoBehaviour
         return true;
     }
 
-    private void PlayBasicAttackAnimation(SkillDefinition basicAttackSkill, Transform target)
+    private void PlayBasicAttackAnimationAndSound(WeaponDefinition weapon, SkillDefinition basicAttackSkill, Transform target)
     {
+        SkillAnimationType animationType = basicAttackSkill != null
+            ? basicAttackSkill.AnimationType
+            : ResolveAnimationTypeFromWeapon(weapon);
+
+        combatAudio?.PlaySkillAttackSound(animationType);
+
         if (playerAnimationController != null)
         {
-            SkillAnimationType animationType = SkillAnimationType.MeleeAttack;
-
-            if (basicAttackSkill != null)
-                animationType = basicAttackSkill.AnimationType;
-
             playerAnimationController.PlaySkillAnimation(animationType, target);
-            return;
         }
-
-        if (enemyAnimationController != null)
-            enemyAnimationController.PlayAttackAnimation(target);
+        else if (enemyAnimationController != null)
+        {
+            enemyAnimationController.PlayBasicAttackAnimation(target);
+        }
     }
 
-    private void LogAttackResult(
-        WeaponDefinition weapon,
-        CharacterStats targetStats,
-        CharacterHealth targetHealth,
-        DamageResult result)
+    private SkillAnimationType ResolveAnimationTypeFromWeapon(WeaponDefinition weapon)
+    {
+        if (weapon == null)
+            return SkillAnimationType.MeleeAttack;
+
+        switch (weapon.WeaponFamily)
+        {
+            case WeaponFamily.Bow:
+            case WeaponFamily.Crossbow:
+                return SkillAnimationType.BowShot;
+
+            case WeaponFamily.Staff:
+            case WeaponFamily.Wand:
+            case WeaponFamily.Spellblade:
+                return SkillAnimationType.SpellCast;
+
+            default:
+                return SkillAnimationType.MeleeAttack;
+        }
+    }
+
+    private void LogAttackResult(WeaponDefinition weapon, CharacterStats targetStats, CharacterHealth targetHealth, DamageResult result)
     {
         string attackerName = CompareTag("Player") ? "Player" : gameObject.name;
         string targetName = targetStats != null ? targetStats.gameObject.name : "Target";
 
-        string line = result.BuildLogLine(attackerName, weapon.DisplayName, targetName);
+        string weaponName = weapon != null ? weapon.DisplayName : "weapon";
+        string line = result.BuildLogLine(attackerName, weaponName, targetName);
 
         if (targetHealth != null)
             line += $" | Target HP: {targetHealth.CurrentHP}/{targetHealth.MaxHP}";
@@ -214,7 +235,6 @@ public class CharacterBasicAttack : MonoBehaviour
 
         Vector3 a = transform.position;
         Vector3 b = target.position;
-
         a.y = 0f;
         b.y = 0f;
 
@@ -229,22 +249,22 @@ public class CharacterBasicAttack : MonoBehaviour
         if (t == null)
             return 0.5f;
 
-        if (t.TryGetComponent<NavMeshAgent>(out NavMeshAgent navAgent))
+        if (t.TryGetComponent<NavMeshAgent>(out var navAgent))
             return Mathf.Max(0.1f, navAgent.radius);
 
-        if (t.TryGetComponent<CapsuleCollider>(out CapsuleCollider capsule))
+        if (t.TryGetComponent<CapsuleCollider>(out var capsule))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
             return capsule.radius * scale;
         }
 
-        if (t.TryGetComponent<SphereCollider>(out SphereCollider sphere))
+        if (t.TryGetComponent<SphereCollider>(out var sphere))
         {
             float scale = Mathf.Max(t.lossyScale.x, t.lossyScale.z);
             return sphere.radius * scale;
         }
 
-        if (t.TryGetComponent<Collider>(out Collider col))
+        if (t.TryGetComponent<Collider>(out var col))
             return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
 
         return 0.5f;

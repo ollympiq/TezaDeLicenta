@@ -157,6 +157,8 @@ GameObject:
   - component: {fileID: 6528026385967841020}
   - component: {fileID: 3235109239714687788}
   - component: {fileID: 679893326609375791}
+  - component: {fileID: 3397359007354541396}
+  - component: {fileID: 3880623212955635853}
   m_Layer: 9
   m_Name: Ranger
   m_TagString: Untagged
@@ -646,7 +648,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e4247dab170c26428475a63199f9f78, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  portrait: {fileID: 21300000, guid: 612061a00207f9c439e2431d46c7acae, type: 3}
+  portrait: {fileID: 21300000, guid: 3a798f4b9a48e1c4b96e6d7551ec0fb3, type: 3}
 --- !u!114 &5560572367415039106
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -722,6 +724,66 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStatusEffects
   activeEffects: []
+--- !u!114 &3397359007354541396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5542528420778972293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bac2cfb31440304f9698a1a17ba590d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::FootstepAudio
+  agent: {fileID: 8238383107747999192}
+  health: {fileID: 4993683412854753081}
+  audioSource: {fileID: 0}
+  footstepClips:
+  - {fileID: 8300000, guid: 2201223d0c3d98a4aa710cda9ab34c6b, type: 3}
+  baseStepInterval: 0.38
+  minMoveSpeed: 0.12
+  volume: 0.65
+  randomizePitch: 1
+  minPitch: 0.9
+  maxPitch: 1.1
+  spatialBlend: 1
+  minDistance: 1.5
+  maxDistance: 18
+--- !u!114 &3880623212955635853
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5542528420778972293}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 179e6157214955d44bda0256ec9dd319, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterCombatAudio
+  audioSource: {fileID: 0}
+  meleeAttackClips:
+  - {fileID: 8300000, guid: 4f58c618cac3f274480dde692097aa4c, type: 3}
+  bowShotClips:
+  - {fileID: 8300000, guid: 6dfc39a514b27a940b7f4cdb9e041c84, type: 3}
+  spellCastClips:
+  - {fileID: 8300000, guid: 5e8b1c1e009dd13479b4b8da5f4f58a7, type: 3}
+  mediumAttackClips: []
+  heavyAttackClips: []
+  hitClips:
+  - {fileID: 8300000, guid: b38fac8db96f95b448ba7aef3c05e86e, type: 3}
+  deathClips:
+  - {fileID: 8300000, guid: 52e9c1aaba5d81543accce908a60ca91, type: 3}
+  attackVolume: 0.8
+  hitVolume: 0.8
+  deathVolume: 0.9
+  randomizePitch: 1
+  minPitch: 0.92
+  maxPitch: 1.08
+  spatialBlend: 0
+  minDistance: 2
+  maxDistance: 25
 --- !u!1001 &4341294988827081628
 PrefabInstance:
   m_ObjectHideFlags: 0

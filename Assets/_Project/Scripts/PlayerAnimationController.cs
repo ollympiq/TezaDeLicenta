@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(CharacterHealth))]
 public class PlayerAnimationController : MonoBehaviour
 {
     [Header("References")]
@@ -12,15 +13,24 @@ public class PlayerAnimationController : MonoBehaviour
     [SerializeField] private float runThreshold = 0.1f;
     [SerializeField] private float rotationSpeed = 12f;
 
-    [Header("Attack Animation")]
+    [Header("Action Locks")]
     [SerializeField] private float attackLockDuration = 0.6f;
+    [SerializeField] private float hurtLockDuration = 0.45f;
+
+    [Header("Death")]
+    [SerializeField] private bool stopAgentOnDeath = true;
+
+    private CharacterHealth health;
+    private int lastHp;
+    private float actionLockTimer;
+    private bool isDead;
 
     private static readonly int IsRunningHash = Animator.StringToHash("IsRunning");
     private static readonly int AttackHash = Animator.StringToHash("Attack");
     private static readonly int BowShotHash = Animator.StringToHash("BowShot");
     private static readonly int SpellCastHash = Animator.StringToHash("SpellCast");
-
-    private float attackLockTimer;
+    private static readonly int HurtHash = Animator.StringToHash("Hurt");
+    private static readonly int DieHash = Animator.StringToHash("Die");
 
     private void Awake()
     {
@@ -29,16 +39,43 @@ public class PlayerAnimationController : MonoBehaviour
 
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
+
+        health = GetComponent<CharacterHealth>();
+    }
+
+    private void OnEnable()
+    {
+        if (health != null)
+        {
+            health.OnHealthChanged += HandleHealthChanged;
+            health.OnDied += HandleDied;
+            lastHp = health.CurrentHP;
+        }
+    }
+
+    private void Start()
+    {
+        if (health != null)
+            lastHp = health.CurrentHP;
+    }
+
+    private void OnDisable()
+    {
+        if (health != null)
+        {
+            health.OnHealthChanged -= HandleHealthChanged;
+            health.OnDied -= HandleDied;
+        }
     }
 
     private void Update()
     {
-        if (agent == null || animator == null)
+        if (agent == null || animator == null || isDead)
             return;
 
-        if (attackLockTimer > 0f)
+        if (actionLockTimer > 0f)
         {
-            attackLockTimer -= Time.deltaTime;
+            actionLockTimer -= Time.deltaTime;
             animator.SetBool(IsRunningHash, false);
             return;
         }
@@ -62,6 +99,9 @@ public class PlayerAnimationController : MonoBehaviour
 
     public void PlaySkillAnimation(SkillAnimationType animationType, Transform target)
     {
+        if (isDead)
+            return;
+
         if (target != null)
             RotateTowardWorldPoint(target.position);
 
@@ -70,25 +110,26 @@ public class PlayerAnimationController : MonoBehaviour
 
     public void PlaySkillAnimationAtPoint(SkillAnimationType animationType, Vector3 worldPoint)
     {
+        if (isDead)
+            return;
+
         RotateTowardWorldPoint(worldPoint);
         PlaySkillAnimation(animationType);
     }
 
     public void PlaySkillAnimation(SkillAnimationType animationType)
     {
-        if (animator == null)
+        if (animator == null || isDead)
             return;
 
         if (animationType == SkillAnimationType.None)
             return;
 
-        attackLockTimer = attackLockDuration;
+        actionLockTimer = attackLockDuration;
 
         animator.SetBool(IsRunningHash, false);
 
-        animator.ResetTrigger(AttackHash);
-        animator.ResetTrigger(BowShotHash);
-        animator.ResetTrigger(SpellCastHash);
+        ResetActionTriggers();
 
         switch (animationType)
         {
@@ -104,6 +145,61 @@ public class PlayerAnimationController : MonoBehaviour
                 animator.SetTrigger(SpellCastHash);
                 break;
         }
+    }
+
+    private void HandleHealthChanged(int currentHp, int maxHp)
+    {
+        if (animator == null || isDead)
+        {
+            lastHp = currentHp;
+            return;
+        }
+
+        bool tookDamage = currentHp < lastHp;
+        bool stillAlive = currentHp > 0;
+
+        if (tookDamage && stillAlive)
+        {
+            actionLockTimer = hurtLockDuration;
+
+            animator.SetBool(IsRunningHash, false);
+            ResetActionTriggers();
+
+            animator.ResetTrigger(HurtHash);
+            animator.SetTrigger(HurtHash);
+        }
+
+        lastHp = currentHp;
+    }
+
+    private void HandleDied(CharacterHealth deadHealth)
+    {
+        if (animator == null || isDead)
+            return;
+
+        isDead = true;
+        actionLockTimer = 0f;
+
+        animator.SetBool(IsRunningHash, false);
+        ResetActionTriggers();
+        animator.ResetTrigger(HurtHash);
+        animator.SetTrigger(DieHash);
+
+        if (stopAgentOnDeath && agent != null && agent.enabled)
+        {
+            agent.isStopped = true;
+            agent.ResetPath();
+        }
+    }
+
+    private void ResetActionTriggers()
+    {
+        if (animator == null)
+            return;
+
+        animator.ResetTrigger(AttackHash);
+        animator.ResetTrigger(BowShotHash);
+        animator.ResetTrigger(SpellCastHash);
     }
 
     private void RotateTowardWorldPoint(Vector3 worldPoint)

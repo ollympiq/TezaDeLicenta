@@ -5,7 +5,9 @@ using UnityEngine;
 public class CharacterHealth : MonoBehaviour
 {
     [SerializeField] private int currentHP;
+
     private CharacterStats stats;
+    private CharacterCombatAudio combatAudio;
     private bool initialized;
 
     public int CurrentHP => currentHP;
@@ -18,6 +20,8 @@ public class CharacterHealth : MonoBehaviour
     private void Awake()
     {
         stats = GetComponent<CharacterStats>();
+        combatAudio = GetComponent<CharacterCombatAudio>();
+
         InitializeIfNeeded();
     }
 
@@ -59,11 +63,19 @@ public class CharacterHealth : MonoBehaviour
             return;
 
         bool wasAlive = !IsDead;
+
         currentHP = Mathf.Clamp(currentHP - amount, 0, MaxHP);
         NotifyChanged();
 
         if (wasAlive && currentHP <= 0)
+        {
+            combatAudio?.PlayDeathSound();
             OnDied?.Invoke(this);
+        }
+        else if (currentHP > 0)
+        {
+            combatAudio?.PlayHitSound();
+        }
     }
 
     public void SetCurrentHP(int value)
@@ -71,11 +83,15 @@ public class CharacterHealth : MonoBehaviour
         InitializeIfNeeded();
 
         bool wasAlive = !IsDead;
+
         currentHP = Mathf.Clamp(value, 0, MaxHP);
         NotifyChanged();
 
         if (wasAlive && currentHP <= 0)
+        {
+            combatAudio?.PlayDeathSound();
             OnDied?.Invoke(this);
+        }
     }
 
     private void HandleStatsChanged()

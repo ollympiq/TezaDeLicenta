@@ -8,6 +8,7 @@ using UnityEngine.AI;
 [RequireComponent(typeof(CharacterHealth))]
 [RequireComponent(typeof(CharacterStats))]
 [RequireComponent(typeof(TurnActionLimiter))]
+
 public class EnemyTurnController : MonoBehaviour
 {
     [Header("References")]
@@ -16,6 +17,7 @@ public class EnemyTurnController : MonoBehaviour
     [SerializeField] private EnemyAnimationController animationController;
     [SerializeField] private TurnActionLimiter actionLimiter;
     [SerializeField] private TurnAgentLock turnLock;
+    [SerializeField] private CharacterCombatAudio combatAudio;
 
     [Header("Special Attacks")]
     [SerializeField] private AttackDefinition mediumAttack;
@@ -62,6 +64,9 @@ public class EnemyTurnController : MonoBehaviour
 
         if (turnLock == null)
             turnLock = GetComponent<TurnAgentLock>();
+
+        if (combatAudio == null)
+            combatAudio = GetComponent<CharacterCombatAudio>();
 
         ap = GetComponent<PlayerAP>();
         basicAttack = GetComponent<CharacterBasicAttack>();
@@ -206,6 +211,7 @@ public class EnemyTurnController : MonoBehaviour
         actionLimiter?.MarkCustomActionUsed(actionKey);
 
         StopMovement();
+        PlayAttackSound(animationType);
         PlayAttackAnimation(animationType);
 
         DamageResult result = DamageCalculator.ResolveAttack(selfStats, targetStats, attack);
@@ -267,6 +273,33 @@ public class EnemyTurnController : MonoBehaviour
 
             default:
                 animationController.PlayBasicAttackAnimation(targetStats != null ? targetStats.transform : null);
+                break;
+        }
+    }
+
+    private void PlayAttackSound(EnemyAttackAnimationType type)
+    {
+        if (combatAudio == null)
+            return;
+
+        WeaponDefinition weapon = null;
+
+        CharacterEquipment equipment = GetComponent<CharacterEquipment>();
+        if (equipment != null)
+            weapon = equipment.EquippedWeaponDefinition;
+
+        switch (type)
+        {
+            case EnemyAttackAnimationType.Medium:
+                combatAudio.PlayEnemyAttackSound(CharacterCombatAudio.EnemyAttackSoundType.Medium, weapon);
+                break;
+
+            case EnemyAttackAnimationType.Heavy:
+                combatAudio.PlayEnemyAttackSound(CharacterCombatAudio.EnemyAttackSoundType.Heavy, weapon);
+                break;
+
+            default:
+                combatAudio.PlayEnemyAttackSound(CharacterCombatAudio.EnemyAttackSoundType.Basic, weapon);
                 break;
         }
     }
