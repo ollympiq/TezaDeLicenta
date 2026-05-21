@@ -25,9 +25,9 @@ MonoBehaviour:
   cursorHotspot: {x: 0, y: 0}
   dealsDamage: 1
   damageType: 4
-  minDamage: 24
-  maxDamage: 35
-  powerScaling: 0.35
+  minDamage: 20
+  maxDamage: 32
+  powerScaling: 0.25
   bonusAccuracy: 0
   canCrit: 1
   apCost: 3

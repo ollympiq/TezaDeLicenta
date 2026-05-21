@@ -183,6 +183,7 @@ public class TraderShopUI : MonoBehaviour
         PlayTradeSound(buySound);
 
         GameLog.Success($"Ai cumparat {purchasedItem.DisplayName} pentru {entry.BuyPrice} Gold.");
+
         RefreshAll();
         playerInventoryUI?.RefreshAll();
     }
@@ -203,15 +204,20 @@ public class TraderShopUI : MonoBehaviour
             return false;
         }
 
-        ItemInstance removed = playerInventory.TakeAt(slotIndex);
-        if (removed == null || !removed.IsValid)
+        string soldItemName = item.DisplayName;
+
+        // IMPORTANT:
+        // Nu folosim TakeAt(slotIndex), deoarece aceea metoda scoate toata stiva.
+        // RemoveAt(slotIndex, 1) vinde doar o singura bucata din stack.
+        bool removedOneItem = playerInventory.RemoveAt(slotIndex, 1);
+        if (!removedOneItem)
             return false;
 
         playerWallet.AddGold(sellPrice);
 
         PlayTradeSound(sellSound);
 
-        GameLog.Success($"Ai vandut {removed.DisplayName} pentru {sellPrice} Gold.");
+        GameLog.Success($"Ai vandut {soldItemName} pentru {sellPrice} Gold.");
 
         RefreshAll();
         playerInventoryUI?.RefreshAll();

@@ -160,10 +160,11 @@ public class GameSession : MonoBehaviour
                 pendingClassSelection = false;
             }
 
-            savedStrength = stats.Strength;
-            savedConstitution = stats.Constitution;
-            savedDexterity = stats.Dexterity;
-            savedIntelligence = stats.Intelligence;
+            
+            savedStrength = stats.BaseStrength;
+            savedConstitution = stats.BaseConstitution;
+            savedDexterity = stats.BaseDexterity;
+            savedIntelligence = stats.BaseIntelligence;
         }
 
         if (progression != null)

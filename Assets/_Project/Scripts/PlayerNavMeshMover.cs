@@ -34,11 +34,15 @@ public class PlayerNavMeshMover : MonoBehaviour
     private PlayerAP playerAP;
     private CharacterHealth health;
     private CharacterStatusEffects statusEffects;
+
     private bool turnInputEnabled;
     private bool blockMovementThisFrame;
+    private bool unlimitedMovementMode;
+
     private Coroutine movementWatchRoutine;
 
     public bool IsCurrentlyMoving => IsActuallyMoving();
+    public bool IsUnlimitedMovementMode => unlimitedMovementMode;
 
     private void Awake()
     {
@@ -57,6 +61,7 @@ public class PlayerNavMeshMover : MonoBehaviour
             moveRangeVisualizer = FindFirstObjectByType<MoveRangeGridVisualizer>();
 
         turnInputEnabled = false;
+        unlimitedMovementMode = false;
     }
 
     private void Update()
@@ -133,7 +138,7 @@ public class PlayerNavMeshMover : MonoBehaviour
                 out Vector3 destination))
             return;
 
-        if (!playerAP.HasEnoughAP(apCost))
+        if (!unlimitedMovementMode && !playerAP.HasEnoughAP(apCost))
         {
             GameLog.Warning(
                 $"Nu ai destul AP pentru deplasare. " +
@@ -159,23 +164,31 @@ public class PlayerNavMeshMover : MonoBehaviour
             return;
         }
 
-        bool spent = playerAP.SpendAP(apCost);
-        if (!spent)
+        if (!unlimitedMovementMode)
         {
-            agent.ResetPath();
-            GameLog.Warning("PlayerNavMeshMover: AP-ul nu a putut fi consumat. Miscarea a fost anulata.");
-            return;
+            bool spent = playerAP.SpendAP(apCost);
+            if (!spent)
+            {
+                agent.ResetPath();
+                GameLog.Warning("PlayerNavMeshMover: AP-ul nu a putut fi consumat. Miscarea a fost anulata.");
+                return;
+            }
         }
 
         OnMoveStarted?.Invoke();
-        moveRangeVisualizer?.BeginHideUntilMovementEnds();
+
+        if (!unlimitedMovementMode && moveRangeVisualizer != null && moveRangeVisualizer.gameObject.activeInHierarchy)
+            moveRangeVisualizer.BeginHideUntilMovementEnds();
 
         if (movementWatchRoutine != null)
             StopCoroutine(movementWatchRoutine);
 
         movementWatchRoutine = StartCoroutine(WatchMovementUntilFinished());
 
-        GameLog.Info($"Deplasare efectuata | Cost: {apCost} AP | Lungime traseu: {pathLength:F2}");
+        if (unlimitedMovementMode)
+            GameLog.Info($"Deplasare efectuata | Mod liber | Lungime traseu: {pathLength:F2}");
+        else
+            GameLog.Info($"Deplasare efectuata | Cost: {apCost} AP | Lungime traseu: {pathLength:F2}");
     }
 
     public bool TryCalculateMovePreviewAtScreenPoint(
@@ -216,7 +229,10 @@ public class PlayerNavMeshMover : MonoBehaviour
         if (pathLength < 0.05f)
             return false;
 
-        apCost = Mathf.CeilToInt(pathLength / GetEffectiveUnitsPerAP());
+        apCost = unlimitedMovementMode
+            ? 0
+            : Mathf.CeilToInt(pathLength / GetEffectiveUnitsPerAP());
+
         destination = navHit.position;
         return true;
     }
@@ -356,6 +372,20 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         if (!enabled)
             StopMovementImmediately(true);
+    }
+
+    public void SetUnlimitedMovementMode(bool enabled)
+    {
+        unlimitedMovementMode = enabled;
+
+        if (moveRangeVisualizer != null)
+            moveRangeVisualizer.gameObject.SetActive(!enabled);
+    }
+
+    public void SetMoveRangeVisualizerEnabled(bool enabled)
+    {
+        if (moveRangeVisualizer != null)
+            moveRangeVisualizer.gameObject.SetActive(enabled);
     }
 
     public void BlockMovementForCurrentFrame()

@@ -50,6 +50,12 @@ public class PlayerTurnController : MonoBehaviour
 
         IsTurnActive = true;
 
+        if (mover != null)
+        {
+            mover.SetUnlimitedMovementMode(false);
+            mover.SetMoveRangeVisualizerEnabled(true);
+        }
+
         bool survivedStartEffects = statusEffects == null || statusEffects.ProcessStartOfOwnerTurn();
         if (!survivedStartEffects || !IsAlive)
         {
@@ -79,6 +85,13 @@ public class PlayerTurnController : MonoBehaviour
             statusEffects?.ProcessEndOfOwnerTurn();
 
         IsTurnActive = false;
+
+        if (mover != null)
+        {
+            mover.SetUnlimitedMovementMode(false);
+            mover.SetMoveRangeVisualizerEnabled(true);
+        }
+
         SetControlEnabled(false);
         StopMovement();
     }
@@ -86,10 +99,31 @@ public class PlayerTurnController : MonoBehaviour
     public void SetExplorationControl(bool enabled)
     {
         IsTurnActive = false;
-        SetControlEnabled(enabled);
 
-        if (!enabled)
+        if (enabled)
+        {
+            if (ap != null)
+                ap.RestoreAllAP();
+
+            if (mover != null)
+            {
+                mover.SetUnlimitedMovementMode(true);
+                mover.SetMoveRangeVisualizerEnabled(false);
+            }
+
+            SetControlEnabled(true);
+        }
+        else
+        {
+            if (mover != null)
+            {
+                mover.SetUnlimitedMovementMode(false);
+                mover.SetMoveRangeVisualizerEnabled(true);
+            }
+
+            SetControlEnabled(false);
             StopMovement();
+        }
     }
 
     private void SetControlEnabled(bool enabled)

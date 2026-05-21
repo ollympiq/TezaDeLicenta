@@ -19,6 +19,7 @@ public class TurnManager : MonoBehaviour
     [SerializeField] private float nextTurnDelay = 0.2f;
 
     private readonly List<TurnActor> roundOrder = new();
+    private readonly List<CharacterHealth> observedHealths = new();
 
     private int currentTurnIndex = -1;
     private int roundNumber = 0;
@@ -71,6 +72,8 @@ public class TurnManager : MonoBehaviour
 
     private void OnDestroy()
     {
+        UnsubscribeFromDeathEvents();
+
         if (Instance == this)
             Instance = null;
 
@@ -97,6 +100,7 @@ public class TurnManager : MonoBehaviour
         if (playerTurn != null)
             playerTurn.EndTurn();
 
+        RefreshEnemyList();
         UpdateEndTurnButton(false);
         NotifyTurnStateChanged();
     }
@@ -104,8 +108,14 @@ public class TurnManager : MonoBehaviour
     public void SetEnemyTurns(IEnumerable<EnemyTurnController> newEnemyTurns)
     {
         enemyTurns = newEnemyTurns != null
-            ? newEnemyTurns.Where(e => e != null).Distinct().ToList()
+            ? newEnemyTurns
+                .Where(e => e != null && !IsEnemyDead(e))
+                .Distinct()
+                .ToList()
             : new List<EnemyTurnController>();
+
+        SubscribeToDeathEvents();
+        NotifyTurnStateChanged();
     }
 
     public void StartCombat()
@@ -122,6 +132,7 @@ public class TurnManager : MonoBehaviour
         }
 
         RefreshEnemyList();
+        SubscribeToDeathEvents();
 
         combatStartedOnce = true;
         combatActive = true;
@@ -145,10 +156,17 @@ public class TurnManager : MonoBehaviour
 
     public void RefreshEnemyList()
     {
-        enemyTurns.RemoveAll(e => e == null);
+        enemyTurns.RemoveAll(e => e == null || IsEnemyDead(e));
 
         if (enemyTurns.Count == 0)
-            enemyTurns = FindObjectsByType<EnemyTurnController>(FindObjectsSortMode.None).ToList();
+        {
+            enemyTurns = FindObjectsByType<EnemyTurnController>(FindObjectsSortMode.None)
+                .Where(e => e != null && !IsEnemyDead(e))
+                .Distinct()
+                .ToList();
+        }
+
+        SubscribeToDeathEvents();
     }
 
     public void EndPlayerTurn()
@@ -188,6 +206,7 @@ public class TurnManager : MonoBehaviour
         for (int i = startIndex; i < roundOrder.Count; i++)
         {
             TurnActor actor = roundOrder[i];
+
             if (IsActorAlive(actor) && addedActors.Add(actor.Health))
                 result.Add(BuildPortraitData(actor));
         }
@@ -195,6 +214,7 @@ public class TurnManager : MonoBehaviour
         for (int i = 0; i < startIndex; i++)
         {
             TurnActor actor = roundOrder[i];
+
             if (IsActorAlive(actor) && addedActors.Add(actor.Health))
                 result.Add(BuildPortraitData(actor));
         }
@@ -216,6 +236,7 @@ public class TurnManager : MonoBehaviour
     private IEnumerator AdvanceAfterDelay()
     {
         yield return new WaitForSeconds(nextTurnDelay);
+
         advanceRoutine = null;
         AdvanceToNextActor();
     }
@@ -317,7 +338,7 @@ public class TurnManager : MonoBehaviour
         roundOrder.Clear();
 
         List<TurnActor> aliveEnemies = enemyTurns
-            .Where(e => e != null)
+            .Where(e => e != null && !IsEnemyDead(e))
             .Select(CreateEnemyActor)
             .Where(a => a != null && a.IsAlive)
             .OrderByDescending(a => a.Initiative)
@@ -353,7 +374,7 @@ public class TurnManager : MonoBehaviour
         List<TurnActor> result = new List<TurnActor>();
 
         List<TurnActor> aliveEnemies = enemyTurns
-            .Where(e => e != null)
+            .Where(e => e != null && !IsEnemyDead(e))
             .Select(CreateEnemyActor)
             .Where(a => a != null && a.IsAlive)
             .OrderByDescending(a => a.Initiative)
@@ -432,6 +453,7 @@ public class TurnManager : MonoBehaviour
         }
 
         List<TurnActor> nextRound = BuildPreviewRoundOrder();
+
         for (int i = 0; i < nextRound.Count; i++)
         {
             if (IsActorAlive(nextRound[i]))
@@ -463,6 +485,7 @@ public class TurnManager : MonoBehaviour
     private bool CheckCombatEnded()
     {
         bool playerDead = playerTurn == null || playerTurn.Health == null || playerTurn.Health.IsDead;
+
         bool anyEnemyAlive = enemyTurns.Any(e =>
         {
             if (e == null)
@@ -474,6 +497,8 @@ public class TurnManager : MonoBehaviour
 
         if (playerDead)
         {
+            StopAdvanceRoutine();
+
             combatActive = false;
             playerTurnActive = false;
             UpdateEndTurnButton(false);
@@ -487,6 +512,8 @@ public class TurnManager : MonoBehaviour
 
         if (!anyEnemyAlive)
         {
+            StopAdvanceRoutine();
+
             combatActive = false;
             playerTurnActive = false;
             UpdateEndTurnButton(false);
@@ -499,6 +526,102 @@ public class TurnManager : MonoBehaviour
         }
 
         return false;
+    }
+
+    private void HandleActorDied(CharacterHealth deadHealth)
+    {
+        if (deadHealth == null)
+            return;
+
+        bool isPlayerDeath =
+            playerTurn != null &&
+            playerTurn.Health != null &&
+            playerTurn.Health == deadHealth;
+
+        if (!isPlayerDeath)
+        {
+            enemyTurns.RemoveAll(e =>
+            {
+                if (e == null)
+                    return true;
+
+                CharacterHealth enemyHealth = e.GetComponent<CharacterHealth>();
+                return enemyHealth == null || enemyHealth == deadHealth || enemyHealth.IsDead;
+            });
+        }
+
+        if (!combatActive)
+        {
+            NotifyTurnStateChanged();
+            return;
+        }
+
+        bool ended = CheckCombatEnded();
+
+        if (!ended)
+            NotifyTurnStateChanged();
+    }
+
+    private void SubscribeToDeathEvents()
+    {
+        UnsubscribeFromDeathEvents();
+
+        if (playerTurn == null)
+            playerTurn = FindFirstObjectByType<PlayerTurnController>();
+
+        if (playerTurn != null && playerTurn.Health != null)
+            SubscribeHealth(playerTurn.Health);
+
+        for (int i = 0; i < enemyTurns.Count; i++)
+        {
+            EnemyTurnController enemy = enemyTurns[i];
+
+            if (enemy == null)
+                continue;
+
+            CharacterHealth health = enemy.GetComponent<CharacterHealth>();
+
+            if (health != null)
+                SubscribeHealth(health);
+        }
+    }
+
+    private void SubscribeHealth(CharacterHealth health)
+    {
+        if (health == null || observedHealths.Contains(health))
+            return;
+
+        health.OnDied += HandleActorDied;
+        observedHealths.Add(health);
+    }
+
+    private void UnsubscribeFromDeathEvents()
+    {
+        for (int i = 0; i < observedHealths.Count; i++)
+        {
+            if (observedHealths[i] != null)
+                observedHealths[i].OnDied -= HandleActorDied;
+        }
+
+        observedHealths.Clear();
+    }
+
+    private bool IsEnemyDead(EnemyTurnController enemy)
+    {
+        if (enemy == null)
+            return true;
+
+        CharacterHealth health = enemy.GetComponent<CharacterHealth>();
+        return health == null || health.IsDead;
+    }
+
+    private void StopAdvanceRoutine()
+    {
+        if (advanceRoutine == null)
+            return;
+
+        StopCoroutine(advanceRoutine);
+        advanceRoutine = null;
     }
 
     private void UpdateEndTurnButton(bool playerCanEndTurn)

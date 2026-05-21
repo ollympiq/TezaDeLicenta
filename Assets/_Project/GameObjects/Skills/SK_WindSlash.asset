@@ -27,10 +27,10 @@ MonoBehaviour:
   damageType: 3
   minDamage: 20
   maxDamage: 30
-  powerScaling: 0.6
+  powerScaling: 0.26
   bonusAccuracy: 0
   canCrit: 1
   apCost: 2
-  range: 10
+  range: 8
   areaRadius: 0
   effects: []
