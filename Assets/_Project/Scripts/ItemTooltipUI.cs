@@ -21,6 +21,8 @@ public class ItemTooltipUI : MonoBehaviour
 
     private ItemInstance currentItem;
     private string currentExtraDetails;
+    private bool currentCompactSkillBookView;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -62,12 +64,39 @@ public class ItemTooltipUI : MonoBehaviour
 
         currentItem = item;
         currentExtraDetails = extraDetails;
+        currentCompactSkillBookView = false;
 
         if (nameText != null)
             nameText.text = UIRichTextColors.Paint(item.DisplayName, UIRichTextColors.RarityColor(item.Rarity));
 
         if (detailsText != null)
-            detailsText.text = BuildDetails(item, currentExtraDetails);
+            detailsText.text = BuildDetails(item, currentExtraDetails, currentCompactSkillBookView);
+
+        panelRoot.gameObject.SetActive(true);
+        panelRoot.SetAsLastSibling();
+
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(panelRoot);
+        UpdatePosition();
+    }
+
+    public void ShowTraderSkillBook(ItemInstance item, int buyPrice)
+    {
+        if (item == null || item.Definition == null || item.SkillBookDefinition == null || panelRoot == null)
+        {
+            Hide();
+            return;
+        }
+
+        currentItem = item;
+        currentExtraDetails = $"Cost: {buyPrice} Gold";
+        currentCompactSkillBookView = true;
+
+        if (nameText != null)
+            nameText.text = UIRichTextColors.Paint(item.DisplayName, UIRichTextColors.RarityColor(item.Rarity));
+
+        if (detailsText != null)
+            detailsText.text = BuildDetails(item, currentExtraDetails, currentCompactSkillBookView);
 
         panelRoot.gameObject.SetActive(true);
         panelRoot.SetAsLastSibling();
@@ -81,15 +110,19 @@ public class ItemTooltipUI : MonoBehaviour
     {
         currentItem = null;
         currentExtraDetails = null;
+        currentCompactSkillBookView = false;
 
         if (panelRoot != null)
             panelRoot.gameObject.SetActive(false);
     }
 
-    private string BuildDetails(ItemInstance item, string extraDetails)
+    private string BuildDetails(ItemInstance item, string extraDetails, bool compactSkillBookView = false)
     {
         if (item == null || item.Definition == null)
             return string.Empty;
+
+        if (compactSkillBookView && item.SkillBookDefinition != null)
+            return BuildCompactSkillBookDetails(item, extraDetails);
 
         StringBuilder sb = new StringBuilder();
 
@@ -114,11 +147,32 @@ public class ItemTooltipUI : MonoBehaviour
             sb.AppendLine();
             sb.AppendLine(UIRichTextColors.Line("Stack", item.StackCount.ToString(), UIRichTextColors.White));
         }
+
         if (!string.IsNullOrWhiteSpace(extraDetails))
         {
             sb.AppendLine();
             sb.AppendLine(UIRichTextColors.Paint(extraDetails, UIRichTextColors.Gold));
         }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private string BuildCompactSkillBookDetails(ItemInstance item, string extraDetails)
+    {
+        StringBuilder sb = new StringBuilder();
+
+        SkillBookDefinition skillBook = item.SkillBookDefinition;
+        SkillDefinition skill = skillBook != null ? skillBook.TaughtSkill : null;
+
+        string skillName = skill != null ? skill.DisplayName : "No Skill Assigned";
+        sb.AppendLine(UIRichTextColors.Line("Teaches", skillName, UIRichTextColors.Intelligence));
+
+        if (!string.IsNullOrWhiteSpace(extraDetails))
+        {
+            sb.AppendLine();
+            sb.AppendLine(UIRichTextColors.Paint(extraDetails, UIRichTextColors.Gold));
+        }
+
         return sb.ToString().TrimEnd();
     }
 

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class CharacterInventory : MonoBehaviour
 {
+    private const int PotionAPCost = 1;
+
     [SerializeField] private int capacity = 24;
     [SerializeField] private List<StartingInventoryEntry> startingItems = new List<StartingInventoryEntry>();
     [SerializeField] private List<ItemInstance> items = new List<ItemInstance>();
@@ -222,21 +224,52 @@ public class CharacterInventory : MonoBehaviour
         CharacterHealth health = user.GetComponent<CharacterHealth>();
         PlayerAP playerAP = user.GetComponent<PlayerAP>();
 
-        bool used = false;
+        bool hasHealingEffect = health != null && potion.HealAmount > 0;
+        bool hasApRestoreEffect = playerAP != null && potion.RestoreAP > 0;
 
-        if (health != null && potion.HealAmount > 0)
+        if (!hasHealingEffect && !hasApRestoreEffect)
+            return false;
+
+        bool isAPPotion = hasApRestoreEffect;
+
+        bool requiresAPCost = ShouldPotionConsumeAP() && !isAPPotion;
+
+        if (requiresAPCost)
         {
+            if (playerAP == null)
+            {
+                GameLog.Warning("Nu exista componenta PlayerAP pentru folosirea potiunei.");
+                return false;
+            }
+
+            if (!playerAP.HasEnoughAP(PotionAPCost))
+            {
+                GameLog.Warning($"Nu ai destul AP pentru a folosi potiunea. Cost: {PotionAPCost} AP.");
+                return false;
+            }
+
+            if (!playerAP.SpendAP(PotionAPCost))
+                return false;
+        }
+
+        if (hasHealingEffect)
             health.Heal(potion.HealAmount);
-            used = true;
-        }
 
-        if (playerAP != null && potion.RestoreAP > 0)
-        {
+        if (hasApRestoreEffect)
             playerAP.RestoreAP(potion.RestoreAP);
-            used = true;
-        }
 
-        return used;
+        return true;
+    }
+
+    private bool ShouldPotionConsumeAP()
+    {
+        if (TurnManager.Instance == null)
+            return false;
+
+        if (!TurnManager.Instance.IsCombatActive)
+            return false;
+
+        return TurnManager.Instance.IsPlayerTurnActive;
     }
 
     private bool TryUseSkillBook(ItemInstance item, GameObject user)

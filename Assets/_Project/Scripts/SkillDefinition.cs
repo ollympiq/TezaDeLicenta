@@ -36,6 +36,7 @@ public class SkillDefinition : ScriptableObject
 
     [Header("Usage")]
     [SerializeField] private int apCost = 2;
+    [SerializeField, Min(0)] private int cooldownTurns = 0;
     [SerializeField] private float range = 6f;
     [SerializeField] private float areaRadius = 2.5f;
 
@@ -66,6 +67,7 @@ public class SkillDefinition : ScriptableObject
     public bool CanCrit => canCrit;
 
     public int ApCost => apCost;
+    public int CooldownTurns => cooldownTurns;
     public float Range => range;
     public float AreaRadius => areaRadius;
 
@@ -79,6 +81,9 @@ public class SkillDefinition : ScriptableObject
 
         if (apCost < 0)
             apCost = 0;
+
+        if (cooldownTurns < 0)
+            cooldownTurns = 0;
 
         if (range < 0f)
             range = 0f;

@@ -16,7 +16,7 @@ public class CharacterSkillCaster : MonoBehaviour
     private CharacterHealth selfHealth;
     private TurnActionLimiter turnActionLimiter;
     private CharacterEquipment equipment;
-    private CharacterCombatAudio combatAudio;
+    private PlayerSkillCooldowns skillCooldowns;
 
     private void Awake()
     {
@@ -27,7 +27,10 @@ public class CharacterSkillCaster : MonoBehaviour
         selfHealth = GetComponent<CharacterHealth>();
         turnActionLimiter = GetComponent<TurnActionLimiter>();
         equipment = GetComponent<CharacterEquipment>();
-        combatAudio = GetComponent<CharacterCombatAudio>();
+        skillCooldowns = GetComponent<PlayerSkillCooldowns>();
+
+        if (playerAP != null && skillCooldowns == null)
+            skillCooldowns = gameObject.AddComponent<PlayerSkillCooldowns>();
     }
 
     public bool TryUseSkillOnSelf(SkillDefinition skill)
@@ -39,6 +42,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         if (!CanUseRequiredWeapon(skill))
+            return false;
+
+        if (!CanUseSkillBecauseCooldown(skill))
             return false;
 
         if (!skill.HasAnyPayload)
@@ -57,9 +63,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
-        StopMovement();
+        skillCooldowns?.StartCooldown(skill);
 
-        PlaySkillSound(skill);
+        StopMovement();
 
         if (animationController != null)
             animationController.PlaySkillAnimation(skill.AnimationType);
@@ -76,6 +82,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         if (!CanUseRequiredWeapon(skill))
+            return false;
+
+        if (!CanUseSkillBecauseCooldown(skill))
             return false;
 
         if (!skill.HasAnyPayload)
@@ -114,10 +123,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
+        skillCooldowns?.StartCooldown(skill);
 
         StopMovement();
-
-        PlaySkillSound(skill);
 
         if (animationController != null)
             animationController.PlaySkillAnimation(skill.AnimationType, primaryTarget.transform);
@@ -134,6 +142,9 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         if (!CanUseRequiredWeapon(skill))
+            return false;
+
+        if (!CanUseSkillBecauseCooldown(skill))
             return false;
 
         if (!skill.HasAnyPayload)
@@ -165,15 +176,28 @@ public class CharacterSkillCaster : MonoBehaviour
             return false;
 
         turnActionLimiter?.MarkSkillUsed(skill);
+        skillCooldowns?.StartCooldown(skill);
 
         StopMovement();
-
-        PlaySkillSound(skill);
 
         if (animationController != null)
             animationController.PlaySkillAnimationAtPoint(skill.AnimationType, point);
 
         return ApplySkillToTargets(skill, targets);
+    }
+
+    private bool CanUseSkillBecauseCooldown(SkillDefinition skill)
+    {
+        if (skillCooldowns == null || skill == null)
+            return true;
+
+        int remaining = skillCooldowns.GetRemainingCooldown(skill);
+
+        if (remaining <= 0)
+            return true;
+
+        GameLog.Warning($"Skill-ul {skill.DisplayName} este in cooldown: {remaining} ture.");
+        return false;
     }
 
     private bool CanUseRequiredWeapon(SkillDefinition skill)
@@ -351,14 +375,6 @@ public class CharacterSkillCaster : MonoBehaviour
             statusEffects = targetStats.gameObject.AddComponent<CharacterStatusEffects>();
 
         return statusEffects;
-    }
-
-    private void PlaySkillSound(SkillDefinition skill)
-    {
-        if (combatAudio == null || skill == null)
-            return;
-
-        combatAudio.PlaySkillAttackSound(skill.AnimationType);
     }
 
     private string BuildCombatLog(

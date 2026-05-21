@@ -17,6 +17,7 @@ public class PlayerTurnController : MonoBehaviour
     [SerializeField] private PlayerCombatController combatController;
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private TurnActionLimiter actionLimiter;
+    [SerializeField] private PlayerSkillCooldowns skillCooldowns;
 
     private CharacterStatusEffects statusEffects;
 
@@ -35,6 +36,12 @@ public class PlayerTurnController : MonoBehaviour
         if (combatController == null) combatController = GetComponent<PlayerCombatController>();
         if (agent == null) agent = GetComponent<NavMeshAgent>();
         if (actionLimiter == null) actionLimiter = GetComponent<TurnActionLimiter>();
+
+        if (skillCooldowns == null)
+            skillCooldowns = GetComponent<PlayerSkillCooldowns>();
+
+        if (skillCooldowns == null)
+            skillCooldowns = gameObject.AddComponent<PlayerSkillCooldowns>();
 
         statusEffects = GetComponent<CharacterStatusEffects>();
         if (statusEffects == null)
@@ -64,6 +71,8 @@ public class PlayerTurnController : MonoBehaviour
             StopMovement();
             return false;
         }
+
+        skillCooldowns?.TickStartOfPlayerTurn();
 
         if (statusEffects != null && statusEffects.IsCurrentTurnBlocked)
         {
@@ -102,6 +111,8 @@ public class PlayerTurnController : MonoBehaviour
 
         if (enabled)
         {
+            skillCooldowns?.ClearAll();
+
             if (ap != null)
                 ap.RestoreAllAP();
 

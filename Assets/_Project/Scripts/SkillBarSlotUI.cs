@@ -5,9 +5,14 @@ using UnityEngine.UI;
 
 public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
+    [Header("References")]
     [SerializeField] private Image iconImage;
     [SerializeField] private Image selectedFrame;
     [SerializeField] private TextMeshProUGUI slotIndexText;
+
+    [Header("Cooldown UI")]
+    [SerializeField] private Image cooldownOverlay;
+    [SerializeField] private TextMeshProUGUI cooldownText;
 
     private SkillBarUI owner;
     private PlayerSkillLoadout loadout;
@@ -22,9 +27,11 @@ public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler,
 
         if (slotIndexText != null)
             slotIndexText.text = (slotIndex + 1).ToString();
+
+        SetCooldownVisible(false, 0);
     }
 
-    public void Refresh(SkillDefinition skill, bool isSelected)
+    public void Refresh(SkillDefinition skill, bool isSelected, int cooldownRemaining)
     {
         currentSkill = skill;
 
@@ -36,17 +43,27 @@ public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler,
 
         if (selectedFrame != null)
             selectedFrame.enabled = isSelected;
+
+        SetCooldownVisible(skill != null && cooldownRemaining > 0, cooldownRemaining);
     }
 
     public void OnDrop(PointerEventData eventData)
     {
-        if (owner == null || loadout == null)
+        if (owner == null)
+        {
+            UISkillDragState.Clear();
             return;
+        }
 
-        if (UISkillDragState.CurrentSkill == null)
+        SkillDefinition draggedSkill = UISkillDragState.CurrentSkill;
+
+        if (draggedSkill == null)
+        {
+            UISkillDragState.Clear();
             return;
+        }
 
-        bool assigned = loadout.AssignSkillToSlot(UISkillDragState.CurrentSkill, slotIndex);
+        bool assigned = owner.TryAssignSkillFromSkillBook(draggedSkill, slotIndex);
 
         UISkillDragState.Clear();
 
@@ -72,5 +89,17 @@ public class SkillBarSlotUI : MonoBehaviour, IDropHandler, IPointerClickHandler,
     {
         if (SkillTooltipUI.Instance != null)
             SkillTooltipUI.Instance.Hide();
+    }
+
+    private void SetCooldownVisible(bool visible, int cooldownRemaining)
+    {
+        if (cooldownOverlay != null)
+            cooldownOverlay.gameObject.SetActive(visible);
+
+        if (cooldownText != null)
+        {
+            cooldownText.gameObject.SetActive(visible);
+            cooldownText.text = visible ? cooldownRemaining.ToString() : string.Empty;
+        }
     }
 }

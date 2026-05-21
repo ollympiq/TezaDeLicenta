@@ -27,10 +27,12 @@ public class TurnManager : MonoBehaviour
     private bool combatActive;
     private bool playerTurnActive;
     private bool combatStartedOnce;
+    private bool combatWon;
     private Coroutine advanceRoutine;
 
     public bool IsCombatActive => combatActive;
     public bool IsPlayerTurnActive => combatActive && playerTurnActive;
+    public bool CanExitToLobby => combatWon;
     public int CurrentRound => roundNumber;
 
     public event Action OnTurnStateChanged;
@@ -92,6 +94,7 @@ public class TurnManager : MonoBehaviour
         combatActive = false;
         playerTurnActive = false;
         combatStartedOnce = false;
+        combatWon = false;
 
         currentTurnIndex = -1;
         roundNumber = 0;
@@ -137,6 +140,8 @@ public class TurnManager : MonoBehaviour
         combatStartedOnce = true;
         combatActive = true;
         playerTurnActive = false;
+        combatWon = false;
+
         roundNumber = 0;
         currentTurnIndex = -1;
 
@@ -501,6 +506,7 @@ public class TurnManager : MonoBehaviour
 
             combatActive = false;
             playerTurnActive = false;
+            combatWon = false;
             UpdateEndTurnButton(false);
 
             if (playerTurn != null)
@@ -516,6 +522,7 @@ public class TurnManager : MonoBehaviour
 
             combatActive = false;
             playerTurnActive = false;
+            combatWon = true;
             UpdateEndTurnButton(false);
 
             if (playerTurn != null)

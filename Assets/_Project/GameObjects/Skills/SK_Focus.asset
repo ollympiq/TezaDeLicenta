@@ -19,6 +19,7 @@ MonoBehaviour:
   areaMode: 0
   keepSelectedAfterUse: 0
   animationType: 3
+  requiredWeapon: 0
   icon: {fileID: 21300000, guid: 4f8261ad6deaf564a8efcde0d564741d, type: 3}
   cursorTexture: {fileID: 2800000, guid: 09ab91e4ff23ba44a9c6adbccfd7cae8, type: 3}
   cursorHotspot: {x: 0, y: 0}
@@ -30,6 +31,7 @@ MonoBehaviour:
   bonusAccuracy: 0
   canCrit: 1
   apCost: 2
+  cooldownTurns: 2
   range: 0
   areaRadius: 2.5
   effects:

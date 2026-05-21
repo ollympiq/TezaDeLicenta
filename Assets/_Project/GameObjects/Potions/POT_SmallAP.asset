@@ -17,7 +17,7 @@ MonoBehaviour:
   description: 
   icon: {fileID: 21300000, guid: 916c52341d1abbd43b1f922b56e85f40, type: 3}
   baseRarity: 4
-  buyPrice: 50
+  buyPrice: 25
   sellPrice: 5
   stackable: 1
   maxStack: 5

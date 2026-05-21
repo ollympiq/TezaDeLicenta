@@ -31,6 +31,7 @@ MonoBehaviour:
   bonusAccuracy: 5
   canCrit: 1
   apCost: 2
+  cooldownTurns: 2
   range: 12
   areaRadius: 2.5
   effects: []

@@ -47,7 +47,10 @@ public class TraderShopSlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnt
         if (currentEntry == null || !currentEntry.IsValid || ItemTooltipUI.Instance == null)
             return;
 
-        ItemTooltipUI.Instance.Show(currentEntry.Item, $"Cost: {currentEntry.BuyPrice} Gold");
+        if (currentEntry.Item.SkillBookDefinition != null)
+            ItemTooltipUI.Instance.ShowTraderSkillBook(currentEntry.Item, currentEntry.BuyPrice);
+        else
+            ItemTooltipUI.Instance.Show(currentEntry.Item, $"Cost: {currentEntry.BuyPrice} Gold");
     }
 
     public void OnPointerExit(PointerEventData eventData)
