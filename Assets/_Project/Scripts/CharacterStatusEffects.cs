@@ -52,6 +52,7 @@ public class CharacterStatusEffects : MonoBehaviour
 
         return anyApplied;
     }
+
     public bool ApplyAttackEffects(AttackDefinition attack, CharacterStats casterStats)
     {
         if (attack == null || attack.Effects == null || attack.Effects.Count == 0)
@@ -107,9 +108,12 @@ public class CharacterStatusEffects : MonoBehaviour
         ActiveStatusEffect instance = new ActiveStatusEffect(attack, effect, casterStats);
         activeEffects.Add(instance);
 
+        ShowAppliedEffectText(effect, attack.AttackName);
+
         GameLog.Info($"{gameObject.name} primeste efectul {attack.AttackName} pentru {instance.RemainingTurns} ture.");
         return true;
     }
+
     public bool ProcessStartOfOwnerTurn()
     {
         currentTurnBlocked = false;
@@ -283,8 +287,94 @@ public class CharacterStatusEffects : MonoBehaviour
         ActiveStatusEffect instance = new ActiveStatusEffect(skill, effect, casterStats);
         activeEffects.Add(instance);
 
+        ShowAppliedEffectText(effect, skill.DisplayName);
+
         GameLog.Info($"{gameObject.name} primeste efectul {skill.DisplayName} pentru {instance.RemainingTurns} ture.");
         return true;
+    }
+
+    private void ShowAppliedEffectText(SkillEffectData effect, string sourceName)
+    {
+        if (DamageNumberManager.Instance == null || effect == null)
+            return;
+
+        string text = BuildAppliedEffectText(effect, sourceName);
+
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        if (IsPositiveEffect(effect))
+            DamageNumberManager.Instance.ShowBuffText(text, transform);
+        else
+            DamageNumberManager.Instance.ShowDebuffText(text, transform);
+    }
+
+    private string BuildAppliedEffectText(SkillEffectData effect, string sourceName)
+    {
+        switch (effect.EffectType)
+        {
+            case SkillEffectType.BuffPrimaryAttributes:
+                return BuildPrimaryBuffText(effect, sourceName);
+
+            case SkillEffectType.BuffCritChance:
+                return effect.CritChanceBonusPercent >= 0f
+                    ? $"+Crit {effect.CritChanceBonusPercent:0.#}%"
+                    : $"Crit {effect.CritChanceBonusPercent:0.#}%";
+
+            case SkillEffectType.BuffElementalDamage:
+                if (effect.AffectAllElements)
+                    return $"+Element {effect.ElementalDamageBonusPercent:0.#}%";
+
+                return $"+{effect.ElementalDamageType} {effect.ElementalDamageBonusPercent:0.#}%";
+
+            case SkillEffectType.DamageOverTime:
+                return $"DOT({effect.DotDamageType})";
+
+            case SkillEffectType.SlowMovement:
+                return "Slow";
+
+            case SkillEffectType.SkipTurn:
+                return "Knocked";
+
+            default:
+                return sourceName;
+        }
+    }
+
+    private string BuildPrimaryBuffText(SkillEffectData effect, string sourceName)
+    {
+        if (effect.BonusStrength != 0)
+            return $"STR {FormatSigned(effect.BonusStrength)}";
+
+        if (effect.BonusConstitution != 0)
+            return $"CON {FormatSigned(effect.BonusConstitution)}";
+
+        if (effect.BonusDexterity != 0)
+            return $"DEX {FormatSigned(effect.BonusDexterity)}";
+
+        if (effect.BonusIntelligence != 0)
+            return $"INT {FormatSigned(effect.BonusIntelligence)}";
+
+        return string.IsNullOrWhiteSpace(sourceName) ? "Buff" : sourceName;
+    }
+
+    private string FormatSigned(int value)
+    {
+        return value >= 0 ? $"+{value}" : value.ToString();
+    }
+
+    private bool IsPositiveEffect(SkillEffectData effect)
+    {
+        switch (effect.EffectType)
+        {
+            case SkillEffectType.BuffPrimaryAttributes:
+            case SkillEffectType.BuffCritChance:
+            case SkillEffectType.BuffElementalDamage:
+                return true;
+
+            default:
+                return false;
+        }
     }
 
     private bool HasActiveSkipTurnEffect()

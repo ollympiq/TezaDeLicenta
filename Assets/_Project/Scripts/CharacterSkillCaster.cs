@@ -324,6 +324,8 @@ public class CharacterSkillCaster : MonoBehaviour
             bool dealtDamage = false;
             bool appliedEffects = false;
 
+            bool canApplyEffects = !skill.DealsDamage;
+
             if (skill.DealsDamage)
             {
                 DamageResult result = DamageCalculator.ResolveSkill(casterStats, targetStats, skill);
@@ -332,6 +334,7 @@ public class CharacterSkillCaster : MonoBehaviour
                 {
                     targetHealth.TakeDamage(result.FinalDamage);
                     dealtDamage = true;
+                    canApplyEffects = true;
 
                     if (DamageNumberManager.Instance != null)
                     {
@@ -345,6 +348,8 @@ public class CharacterSkillCaster : MonoBehaviour
                 }
                 else
                 {
+                    canApplyEffects = false;
+
                     if (DamageNumberManager.Instance != null)
                         DamageNumberManager.Instance.ShowMiss(targetStats.transform);
                 }
@@ -352,7 +357,7 @@ public class CharacterSkillCaster : MonoBehaviour
                 GameLog.Combat(BuildCombatLog(skill, targetStats.name, result, targetHealth));
             }
 
-            if (!targetHealth.IsDead && skill.Effects != null && skill.Effects.Count > 0)
+            if (canApplyEffects && !targetHealth.IsDead && skill.Effects != null && skill.Effects.Count > 0)
             {
                 CharacterStatusEffects statusEffects = EnsureStatusEffects(targetStats);
 

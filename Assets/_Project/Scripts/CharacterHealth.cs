@@ -51,8 +51,15 @@ public class CharacterHealth : MonoBehaviour
         if (amount <= 0 || IsDead)
             return;
 
+        int beforeHeal = currentHP;
+
         currentHP = Mathf.Clamp(currentHP + amount, 0, MaxHP);
         NotifyChanged();
+
+        int actualHeal = currentHP - beforeHeal;
+
+        if (actualHeal > 0 && DamageNumberManager.Instance != null)
+            DamageNumberManager.Instance.ShowHeal(actualHeal, transform);
     }
 
     public void TakeDamage(int amount)

@@ -20,10 +20,15 @@ public class DamageNumberManager : MonoBehaviour
 
     [Header("Other Colors")]
     [SerializeField] private Color missColor = new Color(1f, 0.35f, 0.35f, 1f);
+    [SerializeField] private Color healColor = new Color(0.35f, 1f, 0.45f, 1f);
+    [SerializeField] private Color buffColor = new Color(0.45f, 0.85f, 1f, 1f);
+    [SerializeField] private Color debuffColor = new Color(1f, 0.55f, 0.2f, 1f);
+    [SerializeField] private Color statusColor = new Color(1f, 0.9f, 0.35f, 1f);
 
     [Header("Scale")]
     [SerializeField] private float normalScale = 1f;
     [SerializeField] private float criticalScale = 1.2f;
+    [SerializeField] private float statusScale = 0.95f;
 
     private void Awake()
     {
@@ -47,26 +52,62 @@ public class DamageNumberManager : MonoBehaviour
 
     public void ShowDamage(int amount, Transform target, DamageType damageType, bool isCritical = false)
     {
-        if (damageNumberPrefab == null || spawnRoot == null || rootCanvas == null || worldCamera == null)
-            return;
-
-        DamageNumberUI instance = Instantiate(damageNumberPrefab, spawnRoot);
-        instance.transform.SetAsLastSibling();
-
         Color color = GetColorForDamageType(damageType);
         float scale = isCritical ? criticalScale : normalScale;
 
-        instance.Initialize(rootCanvas, worldCamera, target, amount.ToString(), color, scale);
+        SpawnText(amount.ToString(), target, color, scale);
     }
 
     public void ShowMiss(Transform target)
     {
-        if (damageNumberPrefab == null || spawnRoot == null || rootCanvas == null || worldCamera == null)
+        SpawnText("Miss", target, missColor, normalScale);
+    }
+
+    public void ShowHeal(int amount, Transform target)
+    {
+        if (amount <= 0)
+            return;
+
+        SpawnText($"+{amount} HP", target, healColor, normalScale);
+    }
+
+    public void ShowBuffText(string text, Transform target)
+    {
+        ShowStatusText(text, target, buffColor);
+    }
+
+    public void ShowDebuffText(string text, Transform target)
+    {
+        ShowStatusText(text, target, debuffColor);
+    }
+
+    public void ShowStatusText(string text, Transform target)
+    {
+        ShowStatusText(text, target, statusColor);
+    }
+
+    public void ShowStatusText(string text, Transform target, Color color)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        SpawnText(text, target, color, statusScale);
+    }
+
+    private void SpawnText(string displayText, Transform target, Color color, float scale)
+    {
+        if (damageNumberPrefab == null || spawnRoot == null || rootCanvas == null)
+            return;
+
+        if (worldCamera == null)
+            worldCamera = Camera.main;
+
+        if (worldCamera == null)
             return;
 
         DamageNumberUI instance = Instantiate(damageNumberPrefab, spawnRoot);
         instance.transform.SetAsLastSibling();
-        instance.Initialize(rootCanvas, worldCamera, target, "Miss", missColor, normalScale);
+        instance.Initialize(rootCanvas, worldCamera, target, displayText, color, scale);
     }
 
     private Color GetColorForDamageType(DamageType damageType)
