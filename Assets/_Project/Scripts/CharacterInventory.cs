@@ -258,7 +258,20 @@ public class CharacterInventory : MonoBehaviour
         if (hasApRestoreEffect)
             playerAP.RestoreAP(potion.RestoreAP);
 
+        if (IsPlayerUser(user) && CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordPotionUsed();
+
         return true;
+    }
+
+    private bool IsPlayerUser(GameObject user)
+    {
+        if (user == null)
+            return false;
+
+        return user.GetComponent<PlayerTurnController>() != null ||
+               user.GetComponent<PlayerCombatController>() != null ||
+               user.CompareTag("Player");
     }
 
     private bool ShouldPotionConsumeAP()

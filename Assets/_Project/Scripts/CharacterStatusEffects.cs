@@ -6,6 +6,12 @@ public class CharacterStatusEffects : MonoBehaviour
 {
     [SerializeField] private List<ActiveStatusEffect> activeEffects = new List<ActiveStatusEffect>();
 
+    [Header("Player Knock Protection")]
+    [SerializeField] private bool enablePlayerKnockImmunity = true;
+    [SerializeField, Min(0)] private int playerKnockImmunityTurnsAfterKnock = 2;
+
+    private int playerKnockImmunityTurnsRemaining;
+
     private CharacterStats ownerStats;
     private CharacterHealth ownerHealth;
     private bool currentTurnBlocked;
@@ -105,9 +111,17 @@ public class CharacterStatusEffects : MonoBehaviour
             return false;
         }
 
+        if (ShouldIgnoreKnockBecauseOfImmunity(effect))
+        {
+            ShowKnockImmuneText();
+            GameLog.Info($"{gameObject.name} este imun la Knock pentru inca {playerKnockImmunityTurnsRemaining} ture.");
+            return false;
+        }
+
         ActiveStatusEffect instance = new ActiveStatusEffect(attack, effect, casterStats);
         activeEffects.Add(instance);
 
+        ActivateKnockImmunityIfNeeded(effect);
         ShowAppliedEffectText(effect, attack.AttackName);
 
         GameLog.Info($"{gameObject.name} primeste efectul {attack.AttackName} pentru {instance.RemainingTurns} ture.");
@@ -168,6 +182,7 @@ public class CharacterStatusEffects : MonoBehaviour
     public void ProcessEndOfOwnerTurn()
     {
         currentTurnBlocked = false;
+        TickPlayerKnockImmunity();
 
         if (activeEffects.Count == 0)
             return;
@@ -224,6 +239,7 @@ public class CharacterStatusEffects : MonoBehaviour
     public void ClearAllEffects()
     {
         currentTurnBlocked = false;
+        playerKnockImmunityTurnsRemaining = 0;
 
         if (activeEffects.Count == 0)
             return;
@@ -284,13 +300,32 @@ public class CharacterStatusEffects : MonoBehaviour
             return false;
         }
 
+        if (ShouldIgnoreKnockBecauseOfImmunity(effect))
+        {
+            ShowKnockImmuneText();
+            GameLog.Info($"{gameObject.name} este imun la Knock pentru inca {playerKnockImmunityTurnsRemaining} ture.");
+            return false;
+        }
+
         ActiveStatusEffect instance = new ActiveStatusEffect(skill, effect, casterStats);
         activeEffects.Add(instance);
 
+        ActivateKnockImmunityIfNeeded(effect);
         ShowAppliedEffectText(effect, skill.DisplayName);
 
         GameLog.Info($"{gameObject.name} primeste efectul {skill.DisplayName} pentru {instance.RemainingTurns} ture.");
         return true;
+    }
+
+
+    private bool IsPlayerCaster(CharacterStats casterStats)
+    {
+        if (casterStats == null)
+            return false;
+
+        return casterStats.GetComponent<PlayerTurnController>() != null ||
+               casterStats.GetComponent<PlayerCombatController>() != null ||
+               casterStats.CompareTag("Player");
     }
 
     private void ShowAppliedEffectText(SkillEffectData effect, string sourceName)
@@ -318,44 +353,49 @@ public class CharacterStatusEffects : MonoBehaviour
 
             case SkillEffectType.BuffCritChance:
                 return effect.CritChanceBonusPercent >= 0f
-                    ? $"+Crit {effect.CritChanceBonusPercent:0.#}%"
+                    ? $"Crit +{effect.CritChanceBonusPercent:0.#}%"
                     : $"Crit {effect.CritChanceBonusPercent:0.#}%";
 
             case SkillEffectType.BuffElementalDamage:
                 if (effect.AffectAllElements)
-                    return $"+Element {effect.ElementalDamageBonusPercent:0.#}%";
+                    return $"Element +{effect.ElementalDamageBonusPercent:0.#}%";
 
-                return $"+{effect.ElementalDamageType} {effect.ElementalDamageBonusPercent:0.#}%";
+                return $"{effect.ElementalDamageType} +{effect.ElementalDamageBonusPercent:0.#}%";
 
             case SkillEffectType.DamageOverTime:
                 return $"DOT({effect.DotDamageType})";
 
             case SkillEffectType.SlowMovement:
-                return "Slow";
+                return "Slowed";
 
             case SkillEffectType.SkipTurn:
                 return "Knocked";
 
             default:
-                return sourceName;
+                return string.IsNullOrWhiteSpace(sourceName) ? "Effect" : sourceName;
         }
     }
 
     private string BuildPrimaryBuffText(SkillEffectData effect, string sourceName)
     {
+        List<string> parts = new List<string>();
+
         if (effect.BonusStrength != 0)
-            return $"STR {FormatSigned(effect.BonusStrength)}";
+            parts.Add($"STR {FormatSigned(effect.BonusStrength)}");
 
         if (effect.BonusConstitution != 0)
-            return $"CON {FormatSigned(effect.BonusConstitution)}";
+            parts.Add($"CON {FormatSigned(effect.BonusConstitution)}");
 
         if (effect.BonusDexterity != 0)
-            return $"DEX {FormatSigned(effect.BonusDexterity)}";
+            parts.Add($"DEX {FormatSigned(effect.BonusDexterity)}");
 
         if (effect.BonusIntelligence != 0)
-            return $"INT {FormatSigned(effect.BonusIntelligence)}";
+            parts.Add($"INT {FormatSigned(effect.BonusIntelligence)}");
 
-        return string.IsNullOrWhiteSpace(sourceName) ? "Buff" : sourceName;
+        if (parts.Count == 0)
+            return string.IsNullOrWhiteSpace(sourceName) ? "Buff" : sourceName;
+
+        return string.Join("  ", parts);
     }
 
     private string FormatSigned(int value)
@@ -507,6 +547,73 @@ public class CharacterStatusEffects : MonoBehaviour
         }
 
         return total;
+    }
+
+    private bool ShouldIgnoreKnockBecauseOfImmunity(SkillEffectData effect)
+    {
+        if (effect == null)
+            return false;
+
+        if (effect.EffectType != SkillEffectType.SkipTurn)
+            return false;
+
+        if (!enablePlayerKnockImmunity)
+            return false;
+
+        if (!IsPlayerOwner())
+            return false;
+
+        return playerKnockImmunityTurnsRemaining > 0;
+    }
+
+    private void ActivateKnockImmunityIfNeeded(SkillEffectData effect)
+    {
+        if (effect == null)
+            return;
+
+        if (effect.EffectType != SkillEffectType.SkipTurn)
+            return;
+
+        if (!enablePlayerKnockImmunity)
+            return;
+
+        if (!IsPlayerOwner())
+            return;
+
+        playerKnockImmunityTurnsRemaining = Mathf.Max(
+            playerKnockImmunityTurnsRemaining,
+            playerKnockImmunityTurnsAfterKnock
+        );
+    }
+
+    private void TickPlayerKnockImmunity()
+    {
+        if (!enablePlayerKnockImmunity)
+            return;
+
+        if (!IsPlayerOwner())
+            return;
+
+        if (playerKnockImmunityTurnsRemaining <= 0)
+            return;
+
+        playerKnockImmunityTurnsRemaining--;
+
+        if (playerKnockImmunityTurnsRemaining <= 0)
+            GameLog.Info($"{gameObject.name}: imunitatea la Knock a expirat.");
+    }
+
+    private void ShowKnockImmuneText()
+    {
+        if (DamageNumberManager.Instance != null)
+            DamageNumberManager.Instance.ShowStatusText("Knock Immune", transform);
+    }
+
+    private bool IsPlayerOwner()
+    {
+        return GetComponent<PlayerTurnController>() != null ||
+               GetComponent<PlayerCombatController>() != null ||
+               CompareTag("Player");
     }
 
     private void NotifyEffectsChanged()

@@ -413,6 +413,63 @@ Camera:
   m_CorrespondingSourceObject: {fileID: 5880021387310274839, guid: 3c73dc96195954841a750b8fe51a9313, type: 3}
   m_PrefabInstance: {fileID: 3749424138127072956}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &436499370
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 436499372}
+  - component: {fileID: 436499371}
+  m_Layer: 0
+  m_Name: CombatTelemetryTracker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &436499371
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436499370}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99a21608a6821274d9f42b3eeea684c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CombatTelemetryTracker
+  generateAdaptationOnFinalize: 1
+  adaptationGenerator: {fileID: 11400000, guid: 34212761373f978469d1dd5df13b7dc6, type: 2}
+  saveAdaptationToGameSession: 1
+  logGeneratedAdaptation: 1
+  saveTelemetryToJsonLines: 1
+  telemetryFileName: combat_telemetry.jsonl
+  autoStartTracking: 1
+  targetClearTimeSeconds: 180
+  distanceSampleInterval: 0.5
+  minTrackingTimeBeforeFinalize: 2
+  requireAliveEnemySeenBeforeFinalize: 1
+  requireCombatSeenBeforeFinalize: 1
+  logFinalTelemetry: 1
+--- !u!4 &436499372
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436499370}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.56482, y: -157.79921, z: -178.85686}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &540137929
 GameObject:
   m_ObjectHideFlags: 0
@@ -6926,6 +6983,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2774100934512788242, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 2774100934512788242, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 2790124438468111320, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
       propertyPath: cooldownText
       value: 
@@ -7406,6 +7471,14 @@ PrefabInstance:
       propertyPath: cooldownOverlay
       value: 
       objectReference: {fileID: 1383684315}
+    - target: {fileID: 6562590861934026996, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 500
+      objectReference: {fileID: 0}
+    - target: {fileID: 6562590861934026996, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -110
+      objectReference: {fileID: 0}
     - target: {fileID: 6575837310595024405, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -7529,6 +7602,14 @@ PrefabInstance:
     - target: {fileID: 7323547214581857051, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7323547214581857051, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7365127066560771857, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 7434239403757300721, guid: ff9f8ba6dbb20884ebfd8109ba06980a, type: 3}
       propertyPath: m_AnchorMax.y
@@ -7855,7 +7936,7 @@ PrefabInstance:
     - target: {fileID: 5585355855952164265, guid: 6a603f531bfdb9d4aaa6a422e9d07c71, type: 3}
       propertyPath: presets.Array.data[2].startingSkill2
       value: 
-      objectReference: {fileID: 11400000, guid: e0f256315441a3f4d8a2e7c8b384b328, type: 2}
+      objectReference: {fileID: 11400000, guid: a09bef5ecf6cc2f418aaa963a6c32b6c, type: 2}
     - target: {fileID: 7872313449419232777, guid: 6a603f531bfdb9d4aaa6a422e9d07c71, type: 3}
       propertyPath: m_Name
       value: PlayerClassInitializer
@@ -8027,12 +8108,24 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 0}
     - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
+      propertyPath: adaptationConfig
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
       propertyPath: currentLevelContext
       value: 
       objectReference: {fileID: 5493636445774472378}
     - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
       propertyPath: bossEnemies.Array.size
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
+      propertyPath: adaptationEffectLibrary
+      value: 
+      objectReference: {fileID: 11400000, guid: 8aae8fcfbfb7dbd4ab4aa5bc9dc90662, type: 2}
+    - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
+      propertyPath: applyAdaptationPrototype
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
       propertyPath: normalEnemies.Array.size
@@ -8562,3 +8655,4 @@ SceneRoots:
   - {fileID: 3204910326503935659}
   - {fileID: 757343811}
   - {fileID: 2593322226980797944}
+  - {fileID: 436499372}

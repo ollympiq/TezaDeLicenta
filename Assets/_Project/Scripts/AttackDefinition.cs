@@ -1,17 +1,20 @@
+using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
-[System.Serializable]
+[Serializable]
 public class AttackDefinition
 {
     [SerializeField] private string attackName = "Basic Attack";
     [SerializeField] private DamageType damageType = DamageType.Physical;
+
     [SerializeField] private int minDamage = 12;
     [SerializeField] private int maxDamage = 18;
+
     [SerializeField, Range(0f, 3f)] private float powerScaling = 0.35f;
     [SerializeField, Range(0f, 100f)] private float bonusAccuracy = 0f;
     [SerializeField] private bool canCrit = true;
+
     [SerializeField] private int apCost = 2;
     [SerializeField] private float range = 2.2f;
 
@@ -21,17 +24,36 @@ public class AttackDefinition
 
     public string AttackName => attackName;
     public DamageType DamageType => damageType;
+
     public int MinDamage => minDamage;
     public int MaxDamage => maxDamage;
+
     public float PowerScaling => powerScaling;
     public float BonusAccuracy => bonusAccuracy;
     public bool CanCrit => canCrit;
+
     public int ApCost => apCost;
     public float Range => range;
 
     public bool ApplyEffectsOnlyOnHit => applyEffectsOnlyOnHit;
     public IReadOnlyList<SkillEffectData> Effects => effects;
     public bool HasEffects => effects != null && effects.Count > 0;
+
+    public void SetDamageType(DamageType newDamageType)
+    {
+        damageType = newDamageType;
+    }
+
+    public void SetPowerScaling(float newPowerScaling)
+    {
+        powerScaling = Mathf.Clamp(newPowerScaling, 0f, 3f);
+    }
+
+    public void SetDamageRange(int newMinDamage, int newMaxDamage)
+    {
+        minDamage = Mathf.Max(0, newMinDamage);
+        maxDamage = Mathf.Max(minDamage, newMaxDamage);
+    }
 
     public void ClearEffects()
     {
@@ -81,6 +103,8 @@ public class AttackDefinition
 
         if (range < 0f)
             range = 0f;
+
+        powerScaling = Mathf.Clamp(powerScaling, 0f, 3f);
 
         if (effects == null)
             effects = new List<SkillEffectData>();

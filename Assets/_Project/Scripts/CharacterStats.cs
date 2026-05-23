@@ -451,6 +451,53 @@ public class CharacterStats : MonoBehaviour
             NotifyStatsChanged();
     }
 
+    public void AddRuntimePrimaryAttributeBonuses(
+    int strBonus,
+    int conBonus,
+    int dexBonus,
+    int intBonus,
+    bool notify = true)
+    {
+        runtimeStrengthBonus += strBonus;
+        runtimeConstitutionBonus += conBonus;
+        runtimeDexterityBonus += dexBonus;
+        runtimeIntelligenceBonus += intBonus;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void AddRuntimeBaseValueBonuses(
+        int maxHpBonus,
+        int armorBonus,
+        bool notify = true)
+    {
+        runtimeBaseMaxHPBonus += maxHpBonus;
+        runtimeBaseArmorBonus += armorBonus;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
+
+    public void AddRuntimeResistanceBonuses(
+        float physicalBonus,
+        float fireBonus,
+        float earthBonus,
+        float windBonus,
+        float lightningBonus,
+        float iceBonus,
+        bool notify = true)
+    {
+        runtimePhysicalResistanceBonus += physicalBonus;
+        runtimeFireResistanceBonus += fireBonus;
+        runtimeEarthResistanceBonus += earthBonus;
+        runtimeWindResistanceBonus += windBonus;
+        runtimeLightningResistanceBonus += lightningBonus;
+        runtimeIceResistanceBonus += iceBonus;
+
+        if (notify)
+            NotifyStatsChanged();
+    }
     public string GetStatsDisplayText()
     {
         StringBuilder sb = new StringBuilder();

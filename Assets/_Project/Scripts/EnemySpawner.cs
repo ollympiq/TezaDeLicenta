@@ -6,6 +6,12 @@ using UnityEngine.AI;
 
 public class EnemySpawner : MonoBehaviour
 {
+    [Header("Runtime Adaptation")]
+    [SerializeField] private bool applyRuntimeAdaptation = true;
+    [SerializeField] private bool preferGameSessionAdaptation = true;
+    [SerializeField] private EnemyAdaptationEffectLibrary adaptationEffectLibrary;
+    [SerializeField] private bool debugAdaptationLogs = true;
+
     [Header("Pools")]
     [SerializeField] private List<GameObject> normalEnemies = new List<GameObject>();
     [SerializeField] private List<GameObject> miniBossEnemies = new List<GameObject>();
@@ -48,6 +54,7 @@ public class EnemySpawner : MonoBehaviour
     private void Reset()
     {
         spawnVolume = GetComponent<BoxCollider>();
+
         if (spawnVolume != null)
             spawnVolume.isTrigger = true;
     }
@@ -84,6 +91,7 @@ public class EnemySpawner : MonoBehaviour
     private IEnumerator SpawnAfterOneFrame()
     {
         yield return null;
+
         delayedStartRoutine = null;
         SpawnForCurrentLevel();
     }
@@ -95,6 +103,7 @@ public class EnemySpawner : MonoBehaviour
         {
             if (debugLogs)
                 Debug.Log("EnemySpawner: spawn ignorat, a fost deja facut pentru scena curenta.");
+
             return;
         }
 
@@ -184,7 +193,8 @@ public class EnemySpawner : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            GameObject prefab = pool[UnityEngine.Random.Range(0, pool.Count)];
+            GameObject prefab = pool[Random.Range(0, pool.Count)];
+
             if (prefab == null)
                 continue;
 
@@ -195,7 +205,7 @@ public class EnemySpawner : MonoBehaviour
             }
 
             Vector3 spawnPos = GetAdjustedSpawnPosition(navSpawnPos, prefab);
-            Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
+            Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
 
             Transform parent = spawnParent != null ? spawnParent : null;
 
@@ -224,12 +234,15 @@ public class EnemySpawner : MonoBehaviour
             return;
 
         EnemyTurnController enemyTurn = instance.GetComponent<EnemyTurnController>();
+
         if (enemyTurn != null && playerStats != null)
             enemyTurn.SetTarget(playerStats);
 
         EnemyLevelScaler scaler = instance.GetComponent<EnemyLevelScaler>();
         if (scaler != null)
             scaler.ApplyScaling();
+
+        ApplyRuntimeAdaptationToSpawnedEnemy(instance);
 
         TurnAgentLock turnLock = instance.GetComponent<TurnAgentLock>();
         if (turnLock != null)
@@ -238,6 +251,41 @@ public class EnemySpawner : MonoBehaviour
         CharacterHealth health = instance.GetComponent<CharacterHealth>();
         if (health != null && health.IsDead)
             health.ResetToFull();
+    }
+
+    private void ApplyRuntimeAdaptationToSpawnedEnemy(GameObject instance)
+    {
+        if (instance == null)
+            return;
+
+        if (!applyRuntimeAdaptation)
+            return;
+
+        if (!preferGameSessionAdaptation)
+            return;
+
+        if (GameSession.Instance == null)
+        {
+            if (debugAdaptationLogs)
+                Debug.Log("EnemySpawner: GameSession lipseste, adaptarea runtime nu se aplica.");
+
+            return;
+        }
+
+        EnemyAdaptationRuntimeConfig runtimeConfig = GameSession.Instance.GetNextEnemyAdaptationConfig();
+
+        if (runtimeConfig == null || !runtimeConfig.enabled)
+        {
+            if (debugAdaptationLogs)
+                Debug.Log($"EnemySpawner: nu exista config runtime activ pentru {instance.name}.");
+
+            return;
+        }
+
+        EnemyAdaptationApplier.Apply(instance, runtimeConfig, adaptationEffectLibrary);
+
+        if (debugAdaptationLogs)
+            Debug.Log($"EnemySpawner: adaptare runtime aplicata pe {instance.name}.");
     }
 
     private bool TryFindSpawnPosition(out Vector3 position)
@@ -249,9 +297,9 @@ public class EnemySpawner : MonoBehaviour
         for (int attempt = 0; attempt < maxAttemptsPerEnemy; attempt++)
         {
             Vector3 candidate = new Vector3(
-                UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
+                Random.Range(bounds.min.x, bounds.max.x),
                 bounds.center.y,
-                UnityEngine.Random.Range(bounds.min.z, bounds.max.z)
+                Random.Range(bounds.min.z, bounds.max.z)
             );
 
             if (!NavMesh.SamplePosition(candidate, out NavMeshHit navHit, navMeshSampleDistance, NavMesh.AllAreas))
@@ -265,6 +313,7 @@ public class EnemySpawner : MonoBehaviour
             if (playerStats != null)
             {
                 float distToPlayer = GetPlanarDistance(sampled, playerStats.transform.position);
+
                 if (distToPlayer < minDistanceFromPlayer)
                     continue;
             }
@@ -287,6 +336,7 @@ public class EnemySpawner : MonoBehaviour
             return result;
 
         NavMeshAgent prefabAgent = prefabForOffsetCheck.GetComponent<NavMeshAgent>();
+
         if (prefabAgent != null)
             result.y += prefabAgent.baseOffset;
 
@@ -306,6 +356,7 @@ public class EnemySpawner : MonoBehaviour
         for (int i = 0; i < usedPositions.Count; i++)
         {
             float distance = GetPlanarDistance(candidate, usedPositions[i]);
+
             if (distance < minDistanceBetweenEnemies)
                 return true;
         }
@@ -317,6 +368,7 @@ public class EnemySpawner : MonoBehaviour
     {
         a.y = 0f;
         b.y = 0f;
+
         return Vector3.Distance(a, b);
     }
 
@@ -337,14 +389,17 @@ public class EnemySpawner : MonoBehaviour
             return;
 
         PlayerTurnController playerTurn = FindFirstObjectByType<PlayerTurnController>();
+
         if (playerTurn != null)
         {
             playerStats = playerTurn.GetComponent<CharacterStats>();
+
             if (playerStats != null)
                 return;
         }
 
         GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
+
         if (playerObject != null)
             playerStats = playerObject.GetComponent<CharacterStats>();
 
@@ -364,6 +419,7 @@ public class EnemySpawner : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         BoxCollider box = spawnVolume != null ? spawnVolume : GetComponent<BoxCollider>();
+
         if (box == null)
             return;
 

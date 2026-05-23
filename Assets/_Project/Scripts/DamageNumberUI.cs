@@ -5,12 +5,22 @@ using UnityEngine;
 [RequireComponent(typeof(CanvasGroup))]
 public class DamageNumberUI : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private TextMeshProUGUI textLabel;
+
+    [Header("Animation")]
     [SerializeField] private float lifetime = 0.9f;
     [SerializeField] private float riseDistance = 45f;
     [SerializeField] private Vector3 worldOffset = new Vector3(0f, 2.2f, 0f);
 
+    [Header("Text Layout")]
+    [SerializeField] private float minWidth = 420f;
+    [SerializeField] private float maxWidth = 900f;
+    [SerializeField] private float height = 90f;
+    [SerializeField] private float horizontalPadding = 60f;
+
     private RectTransform rectTransform;
+    private RectTransform textRectTransform;
     private CanvasGroup canvasGroup;
     private Canvas rootCanvas;
     private RectTransform canvasRect;
@@ -27,7 +37,12 @@ public class DamageNumberUI : MonoBehaviour
         canvasGroup = GetComponent<CanvasGroup>();
 
         if (textLabel == null)
-            textLabel = GetComponent<TextMeshProUGUI>();
+            textLabel = GetComponentInChildren<TextMeshProUGUI>();
+
+        if (textLabel != null)
+            textRectTransform = textLabel.rectTransform;
+
+        ConfigureTextLabel();
     }
 
     public void Initialize(
@@ -48,11 +63,18 @@ public class DamageNumberUI : MonoBehaviour
         if (rootCanvas != null)
             canvasRect = rootCanvas.transform as RectTransform;
 
+        ConfigureTextLabel();
+
+        string cleanText = NormalizeOneLine(displayText);
+
         if (textLabel != null)
         {
-            textLabel.text = displayText;
+            textLabel.text = cleanText;
             textLabel.color = color;
+            textLabel.ForceMeshUpdate();
         }
+
+        ResizeToFitText();
 
         transform.localScale = Vector3.one * scaleMultiplier;
         canvasGroup.alpha = 1f;
@@ -71,6 +93,57 @@ public class DamageNumberUI : MonoBehaviour
 
         if (elapsed >= lifetime)
             Destroy(gameObject);
+    }
+
+    private void ConfigureTextLabel()
+    {
+        if (textLabel == null)
+            return;
+
+        textLabel.enableWordWrapping = false;
+        textLabel.overflowMode = TextOverflowModes.Overflow;
+        textLabel.alignment = TextAlignmentOptions.Center;
+        textLabel.raycastTarget = false;
+    }
+
+    private string NormalizeOneLine(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        string result = value.Replace("\r", " ");
+        result = result.Replace("\n", " ");
+
+        while (result.Contains("  "))
+            result = result.Replace("  ", " ");
+
+        return result.Trim();
+    }
+
+    private void ResizeToFitText()
+    {
+        if (rectTransform == null)
+            return;
+
+        float targetWidth = minWidth;
+
+        if (textLabel != null)
+        {
+            textLabel.ForceMeshUpdate();
+            float preferredWidth = textLabel.preferredWidth + horizontalPadding;
+            targetWidth = Mathf.Clamp(preferredWidth, minWidth, maxWidth);
+        }
+
+        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, targetWidth);
+        rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
+
+        if (textRectTransform != null)
+        {
+            textRectTransform.anchorMin = Vector2.zero;
+            textRectTransform.anchorMax = Vector2.one;
+            textRectTransform.offsetMin = Vector2.zero;
+            textRectTransform.offsetMax = Vector2.zero;
+        }
     }
 
     private void UpdatePosition()

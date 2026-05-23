@@ -177,6 +177,9 @@ public class PlayerNavMeshMover : MonoBehaviour
 
         OnMoveStarted?.Invoke();
 
+        if (CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordMovementAction();
+
         if (!unlimitedMovementMode && moveRangeVisualizer != null && moveRangeVisualizer.gameObject.activeInHierarchy)
             moveRangeVisualizer.BeginHideUntilMovementEnds();
 

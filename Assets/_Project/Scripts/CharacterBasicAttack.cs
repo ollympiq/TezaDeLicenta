@@ -133,6 +133,9 @@ public class CharacterBasicAttack : MonoBehaviour
                 return false;
         }
 
+        if (IsPlayerAttacker() && CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordBasicAttackUsed();
+
         turnActionLimiter?.MarkBasicAttackUsed();
 
         if (agent != null && agent.enabled)
@@ -148,6 +151,14 @@ public class CharacterBasicAttack : MonoBehaviour
         if (result.Hit)
         {
             targetHealth.TakeDamage(result.FinalDamage);
+
+            if (IsPlayerAttacker() && CombatTelemetryTracker.Instance != null)
+            {
+                CombatTelemetryTracker.Instance.RecordPlayerDamageDealt(
+                    result.DamageType,
+                    result.FinalDamage
+                );
+            }
 
             if (DamageNumberManager.Instance != null)
             {
@@ -235,6 +246,7 @@ public class CharacterBasicAttack : MonoBehaviour
 
         Vector3 a = transform.position;
         Vector3 b = target.position;
+
         a.y = 0f;
         b.y = 0f;
 
@@ -268,5 +280,12 @@ public class CharacterBasicAttack : MonoBehaviour
             return Mathf.Max(col.bounds.extents.x, col.bounds.extents.z);
 
         return 0.5f;
+    }
+
+    private bool IsPlayerAttacker()
+    {
+        return GetComponent<PlayerTurnController>() != null ||
+               GetComponent<PlayerCombatController>() != null ||
+               CompareTag("Player");
     }
 }

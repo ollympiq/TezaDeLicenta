@@ -72,6 +72,10 @@ public class CharacterHealth : MonoBehaviour
         bool wasAlive = !IsDead;
 
         currentHP = Mathf.Clamp(currentHP - amount, 0, MaxHP);
+
+        if (IsPlayerHealth() && CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordPlayerDamageTaken(amount);
+
         NotifyChanged();
 
         if (wasAlive && currentHP <= 0)
@@ -83,6 +87,13 @@ public class CharacterHealth : MonoBehaviour
         {
             combatAudio?.PlayHitSound();
         }
+    }
+
+    private bool IsPlayerHealth()
+    {
+        return GetComponent<PlayerTurnController>() != null ||
+               GetComponent<PlayerCombatController>() != null ||
+               CompareTag("Player");
     }
 
     public void SetCurrentHP(int value)

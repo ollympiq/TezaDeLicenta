@@ -62,6 +62,9 @@ public class CharacterSkillCaster : MonoBehaviour
         if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
 
+        if (IsPlayerCaster() && CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordSkillUsed();
+
         turnActionLimiter?.MarkSkillUsed(skill);
         skillCooldowns?.StartCooldown(skill);
 
@@ -122,6 +125,9 @@ public class CharacterSkillCaster : MonoBehaviour
         if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
 
+        if (IsPlayerCaster() && CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordSkillUsed();
+
         turnActionLimiter?.MarkSkillUsed(skill);
         skillCooldowns?.StartCooldown(skill);
 
@@ -174,6 +180,9 @@ public class CharacterSkillCaster : MonoBehaviour
 
         if (!TrySpendAP(skill.ApCost, skill.DisplayName))
             return false;
+
+        if (IsPlayerCaster() && CombatTelemetryTracker.Instance != null)
+            CombatTelemetryTracker.Instance.RecordSkillUsed();
 
         turnActionLimiter?.MarkSkillUsed(skill);
         skillCooldowns?.StartCooldown(skill);
@@ -336,6 +345,14 @@ public class CharacterSkillCaster : MonoBehaviour
                     dealtDamage = true;
                     canApplyEffects = true;
 
+                    if (IsPlayerCaster() && CombatTelemetryTracker.Instance != null)
+                    {
+                        CombatTelemetryTracker.Instance.RecordPlayerDamageDealt(
+                            result.DamageType,
+                            result.FinalDamage
+                        );
+                    }
+
                     if (DamageNumberManager.Instance != null)
                     {
                         DamageNumberManager.Instance.ShowDamage(
@@ -382,6 +399,12 @@ public class CharacterSkillCaster : MonoBehaviour
         return statusEffects;
     }
 
+    private bool IsPlayerCaster()
+    {
+        return GetComponent<PlayerTurnController>() != null ||
+               GetComponent<PlayerCombatController>() != null ||
+               CompareTag("Player");
+    }
     private string BuildCombatLog(
         SkillDefinition skill,
         string targetName,

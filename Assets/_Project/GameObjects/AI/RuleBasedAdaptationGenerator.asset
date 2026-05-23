@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 672df2369a1fc1c4c9ae7fe9faeef350, type: 3}
+  m_Name: RuleBasedAdaptationGenerator
+  m_EditorClassIdentifier: Assembly-CSharp::RuleBasedAdaptationGenerator
+  maxDominantResistanceBonus: 20
+  maxSecondaryResistanceBonus: 8
+  dominantDamageRatioThreshold: 0.45
+  easyMaxHpBonus: 25
+  easyArmorBonus: 3
+  easyPhysicalOrMagicBonus: 4
+  hardMaxHpBonus: 0
+  hardArmorBonus: 0
+  kitingDistanceThreshold: 7
+  closeCombatDistanceThreshold: 3
+  maxMediumSlowChance: 0.3
+  maxHeavySlowChance: 0.4
+  maxMediumDotChance: 0.25
+  maxHeavyDotChance: 0.35
+  maxMediumKnockChance: 0.1
+  maxHeavyKnockChance: 0.2

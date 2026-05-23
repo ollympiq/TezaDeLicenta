@@ -47,6 +47,14 @@ public class GameSession : MonoBehaviour
 
     public static GameSession Instance { get; private set; }
 
+    [Header("Enemy Adaptation")]
+    [SerializeField] private EnemyAdaptationRuntimeConfig nextEnemyAdaptationConfig = new EnemyAdaptationRuntimeConfig();
+
+    public bool HasNextEnemyAdaptationConfig =>
+        nextEnemyAdaptationConfig != null && nextEnemyAdaptationConfig.enabled;
+
+    public EnemyAdaptationRuntimeConfig NextEnemyAdaptationConfig => nextEnemyAdaptationConfig;
+
     [Header("Run State")]
     [SerializeField] private int currentCombatLevel = 1;
     [SerializeField] private bool pendingLobbyLevelUp = false;
@@ -120,6 +128,8 @@ public class GameSession : MonoBehaviour
         hasRestorablePlayerState = false;
         selectedPlayerClass = CharacterClass.Unassigned;
         pendingClassSelection = false;
+
+        nextEnemyAdaptationConfig = EnemyAdaptationRuntimeConfig.Default();
     }
 
     public void BeginNewRun(int startingCombatLevel = 1)
@@ -181,6 +191,34 @@ public class GameSession : MonoBehaviour
         SaveSkills(skillLoadout);
 
         hasRestorablePlayerState = true;
+    }
+
+    public void SetNextEnemyAdaptationConfig(EnemyAdaptationRuntimeConfig config)
+    {
+        if (config == null)
+        {
+            nextEnemyAdaptationConfig = EnemyAdaptationRuntimeConfig.Default();
+            return;
+        }
+
+        config.Clamp();
+        nextEnemyAdaptationConfig = config;
+
+        Debug.Log("GameSession: configuratia de adaptare pentru urmatorul nivel a fost salvata.");
+    }
+
+    public EnemyAdaptationRuntimeConfig GetNextEnemyAdaptationConfig()
+    {
+        if (nextEnemyAdaptationConfig == null)
+            nextEnemyAdaptationConfig = EnemyAdaptationRuntimeConfig.Default();
+
+        nextEnemyAdaptationConfig.Clamp();
+        return nextEnemyAdaptationConfig;
+    }
+
+    public void ClearNextEnemyAdaptationConfig()
+    {
+        nextEnemyAdaptationConfig = EnemyAdaptationRuntimeConfig.Default();
     }
 
     public void LoadIntoPlayer(

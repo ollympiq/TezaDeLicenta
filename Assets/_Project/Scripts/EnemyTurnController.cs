@@ -83,6 +83,19 @@ public class EnemyTurnController : MonoBehaviour
         targetStats = newTarget;
     }
 
+    public void ApplyAdaptiveAttackDamageTypes(
+    bool overrideMediumAttack,
+    DamageType mediumDamageType,
+    bool overrideHeavyAttack,
+    DamageType heavyDamageType)
+    {
+        if (overrideMediumAttack && mediumAttack != null)
+            mediumAttack.SetDamageType(mediumDamageType);
+
+        if (overrideHeavyAttack && heavyAttack != null)
+            heavyAttack.SetDamageType(heavyDamageType);
+    }
+
     public void StartTurn(Action onTurnFinished = null)
     {
         if (turnRoutine != null)

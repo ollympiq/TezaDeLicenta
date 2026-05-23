@@ -29,6 +29,8 @@ public class EnemyLevelScaler : MonoBehaviour
     private CharacterStats stats;
     private CharacterHealth health;
     private EnemyLootContainer lootContainer;
+    private bool hasAppliedScaling;
+
 
     private void Awake()
     {
@@ -39,7 +41,7 @@ public class EnemyLevelScaler : MonoBehaviour
 
     private void Start()
     {
-        if (autoApplyOnStart)
+        if (autoApplyOnStart && !hasAppliedScaling)
             ApplyScaling();
     }
 
@@ -48,6 +50,8 @@ public class EnemyLevelScaler : MonoBehaviour
     {
         if (stats == null)
             return;
+
+        hasAppliedScaling = true;
 
         int sceneLevel = ResolveSceneLevel();
         int levelSteps = Mathf.Max(0, sceneLevel - stats.BaseLevel);
