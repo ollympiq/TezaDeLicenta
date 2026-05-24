@@ -46,6 +46,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < skill.Effects.Count; i++)
         {
             SkillEffectData effect = skill.Effects[i];
+
             if (effect == null)
                 continue;
 
@@ -122,6 +123,7 @@ public class CharacterStatusEffects : MonoBehaviour
         activeEffects.Add(instance);
 
         ActivateKnockImmunityIfNeeded(effect);
+        RecordTelemetryIfAppliedByPlayer(effect, casterStats);
         ShowAppliedEffectText(effect, attack.AttackName);
 
         GameLog.Info($"{gameObject.name} primeste efectul {attack.AttackName} pentru {instance.RemainingTurns} ture.");
@@ -138,6 +140,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null)
                 continue;
 
@@ -145,6 +148,7 @@ public class CharacterStatusEffects : MonoBehaviour
                 continue;
 
             int dotDamage = effect.RollDotDamage();
+
             if (dotDamage <= 0)
                 continue;
 
@@ -156,12 +160,14 @@ public class CharacterStatusEffects : MonoBehaviour
                     dotDamage,
                     transform,
                     effect.DotDamageType,
-                    false);
+                    false
+                );
             }
 
             GameLog.Info(
                 $"{gameObject.name} primeste {dotDamage} damage over time de tip {effect.DotDamageType} " +
-                $"de la efectul {effect.SourceSkillName}. HP ramas: {ownerHealth.CurrentHP}/{ownerHealth.MaxHP}");
+                $"de la efectul {effect.SourceSkillName}. HP ramas: {ownerHealth.CurrentHP}/{ownerHealth.MaxHP}"
+            );
 
             if (ownerHealth.IsDead)
             {
@@ -192,6 +198,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = activeEffects.Count - 1; i >= 0; i--)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null)
             {
                 activeEffects.RemoveAt(i);
@@ -220,6 +227,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null)
                 continue;
 
@@ -311,12 +319,26 @@ public class CharacterStatusEffects : MonoBehaviour
         activeEffects.Add(instance);
 
         ActivateKnockImmunityIfNeeded(effect);
+        RecordTelemetryIfAppliedByPlayer(effect, casterStats);
         ShowAppliedEffectText(effect, skill.DisplayName);
 
         GameLog.Info($"{gameObject.name} primeste efectul {skill.DisplayName} pentru {instance.RemainingTurns} ture.");
         return true;
     }
 
+    private void RecordTelemetryIfAppliedByPlayer(SkillEffectData effect, CharacterStats casterStats)
+    {
+        if (effect == null || casterStats == null)
+            return;
+
+        if (CombatTelemetryTracker.Instance == null)
+            return;
+
+        if (!IsPlayerCaster(casterStats))
+            return;
+
+        CombatTelemetryTracker.Instance.RecordEffectApplied(effect.EffectType);
+    }
 
     private bool IsPlayerCaster(CharacterStats casterStats)
     {
@@ -422,6 +444,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null)
                 continue;
 
@@ -439,6 +462,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null)
                 continue;
 
@@ -459,6 +483,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null || effect.EffectType != SkillEffectType.BuffPrimaryAttributes)
                 continue;
 
@@ -475,6 +500,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null || effect.EffectType != SkillEffectType.BuffPrimaryAttributes)
                 continue;
 
@@ -491,6 +517,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null || effect.EffectType != SkillEffectType.BuffPrimaryAttributes)
                 continue;
 
@@ -507,6 +534,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null || effect.EffectType != SkillEffectType.BuffPrimaryAttributes)
                 continue;
 
@@ -523,6 +551,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null || effect.EffectType != SkillEffectType.BuffCritChance)
                 continue;
 
@@ -539,6 +568,7 @@ public class CharacterStatusEffects : MonoBehaviour
         for (int i = 0; i < activeEffects.Count; i++)
         {
             ActiveStatusEffect effect = activeEffects[i];
+
             if (effect == null || effect.EffectType != SkillEffectType.BuffElementalDamage)
                 continue;
 

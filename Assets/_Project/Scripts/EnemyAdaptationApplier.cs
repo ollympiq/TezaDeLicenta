@@ -1,35 +1,41 @@
+using System.Text;
 using UnityEngine;
 
 public static class EnemyAdaptationApplier
 {
-    public static void Apply(
+    public static EnemyAdaptationApplyReport Apply(
         GameObject enemy,
         EnemyAdaptationRuntimeConfig config,
         EnemyAdaptationEffectLibrary effectLibrary = null)
     {
+        EnemyAdaptationApplyReport report = new EnemyAdaptationApplyReport();
+
         if (enemy == null || config == null || !config.enabled)
-            return;
+            return report;
 
         config.Clamp();
 
         ApplyRuntimeStats(enemy, config);
         ApplyAttackDamageTypes(enemy, config);
-        ApplyAttackEffects(enemy, config, effectLibrary);
+
+        ApplyAttackEffects(enemy, config, effectLibrary, report);
 
         CharacterHealth health = enemy.GetComponent<CharacterHealth>();
         if (health != null)
             health.ResetToFull();
 
-        GameLog.Info($"Runtime adaptation applied to {enemy.name}.");
+        report.Applied = true;
+
+        return report;
     }
 
-    public static void Apply(GameObject enemy, EnemyAdaptationConfig config)
+    public static EnemyAdaptationApplyReport Apply(GameObject enemy, EnemyAdaptationConfig config)
     {
         if (enemy == null || config == null || !config.Enabled)
-            return;
+            return new EnemyAdaptationApplyReport();
 
         EnemyAdaptationRuntimeConfig runtimeConfig = ConvertPrototypeConfig(config);
-        Apply(enemy, runtimeConfig, null);
+        return Apply(enemy, runtimeConfig, null);
     }
 
     private static EnemyAdaptationRuntimeConfig ConvertPrototypeConfig(EnemyAdaptationConfig config)
@@ -113,8 +119,15 @@ public static class EnemyAdaptationApplier
     private static void ApplyAttackEffects(
         GameObject enemy,
         EnemyAdaptationRuntimeConfig config,
-        EnemyAdaptationEffectLibrary effectLibrary)
+        EnemyAdaptationEffectLibrary effectLibrary,
+        EnemyAdaptationApplyReport report)
     {
+        if (report == null)
+            return;
+
+        report.MediumEffectText = "None";
+        report.HeavyEffectText = "None";
+
         if (effectLibrary == null)
             return;
 
@@ -126,22 +139,32 @@ public static class EnemyAdaptationApplier
         EnemyAttackEffectProfile heavyProfile = RollHeavyProfile(config, effectLibrary);
 
         if (mediumProfile != null)
+        {
             enemyTurn.SetMediumAttackEffects(mediumProfile);
+            report.MediumEffectText = BuildEffectProfileText(mediumProfile);
+        }
         else
+        {
             enemyTurn.ClearMediumAttackEffects();
+            report.MediumEffectText = "None";
+        }
 
         if (heavyProfile != null)
+        {
             enemyTurn.SetHeavyAttackEffects(heavyProfile);
+            report.HeavyEffectText = BuildEffectProfileText(heavyProfile);
+        }
         else
+        {
             enemyTurn.ClearHeavyAttackEffects();
+            report.HeavyEffectText = "None";
+        }
     }
 
     private static EnemyAttackEffectProfile RollMediumProfile(
         EnemyAdaptationRuntimeConfig config,
         EnemyAdaptationEffectLibrary effectLibrary)
     {
-        // Prioritate: Knock > DOT > Slow, ca sa nu punem trei efecte pe acelasi atac.
-        // Nu vrem inamici care apasa toate butoanele ca un copil lasat singur cu telecomanda.
         if (Random.value <= config.mediumKnockChance && effectLibrary.MediumKnockProfile != null)
             return effectLibrary.MediumKnockProfile;
 
@@ -168,5 +191,64 @@ public static class EnemyAdaptationApplier
             return effectLibrary.HeavySlowProfile;
 
         return null;
+    }
+
+    private static string BuildEffectProfileText(EnemyAttackEffectProfile profile)
+    {
+        if (profile == null || profile.Effects == null || profile.Effects.Count == 0)
+            return "None";
+
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < profile.Effects.Count; i++)
+        {
+            SkillEffectData effect = profile.Effects[i];
+
+            if (effect == null)
+                continue;
+
+            if (sb.Length > 0)
+                sb.Append(" + ");
+
+            sb.Append(BuildSingleEffectText(effect));
+        }
+
+        if (sb.Length <= 0)
+            return "None";
+
+        return sb.ToString();
+    }
+
+    private static string BuildSingleEffectText(SkillEffectData effect)
+    {
+        if (effect == null)
+            return "None";
+
+        switch (effect.EffectType)
+        {
+            case SkillEffectType.DamageOverTime:
+                return $"DOT({effect.DotDamageType})";
+
+            case SkillEffectType.SlowMovement:
+                return "Slow";
+
+            case SkillEffectType.SkipTurn:
+                return "Knock";
+
+            case SkillEffectType.HealInstant:
+                return "Heal";
+
+            case SkillEffectType.BuffPrimaryAttributes:
+                return "Attribute Buff";
+
+            case SkillEffectType.BuffCritChance:
+                return "Crit Buff";
+
+            case SkillEffectType.BuffElementalDamage:
+                return "Elemental Buff";
+
+            default:
+                return effect.EffectType.ToString();
+        }
     }
 }

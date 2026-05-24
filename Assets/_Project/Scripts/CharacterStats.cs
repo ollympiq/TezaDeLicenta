@@ -132,8 +132,8 @@ public class CharacterStats : MonoBehaviour
         Mathf.Max(1, baseMaxAP + Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.MaxAP)));
 
     public int PhysicalPower =>
-        Strength * physicalPowerPerStrength +
-        Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.PhysicalPower));
+    GetPhysicalPowerAttributeValue() * physicalPowerPerStrength +
+    Mathf.RoundToInt(GetEquipmentBonus(ItemBonusType.PhysicalPower));
 
     public int MagicPower =>
         Intelligence * magicPowerPerIntelligence +
@@ -291,6 +291,21 @@ public class CharacterStats : MonoBehaviour
     {
         ClampValues();
         NotifyStatsChanged();
+    }
+
+    private int GetPhysicalPowerAttributeValue()
+    {
+        switch (characterClass)
+        {
+            case CharacterClass.Ranger:
+                return Dexterity;
+
+            case CharacterClass.Melee:
+            case CharacterClass.Mage:
+            case CharacterClass.Unassigned:
+            default:
+                return Strength;
+        }
     }
 
     [ContextMenu("Apply Level 1 Defaults")]

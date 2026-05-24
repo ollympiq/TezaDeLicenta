@@ -8172,6 +8172,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2527799574597044465, guid: 7b9d9510f0f3b214fbde7834c2e50c4d, type: 3}
     - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
+      propertyPath: normalEnemyAdaptationChance
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 5714832957835871062, guid: d8eba2548b6032542aa10842c302b49a, type: 3}
       propertyPath: 'miniBossEnemies.Array.data[0]'
       value: 
       objectReference: {fileID: 5744935501401096892, guid: 6f69cbec1f2aadb429bf4cf577876fd8, type: 3}

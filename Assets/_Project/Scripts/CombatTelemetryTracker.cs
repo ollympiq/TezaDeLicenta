@@ -218,6 +218,8 @@ public class CombatTelemetryTracker : MonoBehaviour
         GameLog.Info(
             "=== Generated Enemy Adaptation Config ===\n" +
             $"Enabled: {config.enabled}\n" +
+            $"Source Completed Level: {config.sourceCompletedLevel}\n" +
+            $"Target Level: {config.targetLevel}\n" +
             $"Medium Damage Type: {(config.overrideMediumAttackDamageType ? config.mediumAttackDamageType.ToString() : "Default")}\n" +
             $"Heavy Damage Type: {(config.overrideHeavyAttackDamageType ? config.heavyAttackDamageType.ToString() : "Default")}\n" +
             $"STR: +{config.strengthBonus}, CON: +{config.constitutionBonus}, DEX: +{config.dexterityBonus}, INT: +{config.intelligenceBonus}\n" +

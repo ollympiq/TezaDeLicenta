@@ -1,8 +1,17 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+
+public enum EnemyResistanceDistributionMode
+{
+    None,
+    DominantOnly,
+    SecondaryOnly,
+    DominantAndSecondary
+}
 
 public class EnemySpawner : MonoBehaviour
 {
@@ -11,6 +20,36 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private bool preferGameSessionAdaptation = true;
     [SerializeField] private EnemyAdaptationEffectLibrary adaptationEffectLibrary;
     [SerializeField] private bool debugAdaptationLogs = true;
+    [SerializeField] private bool sendAdaptationLogsToGameLog = true;
+
+    [Header("Damage Type Distribution")]
+    [SerializeField] private bool rollDamageTypesPerEnemy = true;
+    [SerializeField] private bool avoidSameMediumAndHeavyDamageTypePerEnemy = true;
+
+    [Header("Adaptation Distribution")]
+    [SerializeField, Range(0f, 1f)] private float normalEnemyAdaptationChance = 0.65f;
+    [SerializeField, Range(0f, 1f)] private float miniBossAdaptationChance = 1f;
+    [SerializeField, Range(0f, 1f)] private float bossAdaptationChance = 1f;
+
+    [SerializeField] private Vector2 normalEnemyIntensityRange = new Vector2(0.45f, 0.85f);
+    [SerializeField] private Vector2 miniBossIntensityRange = new Vector2(0.85f, 1.10f);
+    [SerializeField] private Vector2 bossIntensityRange = new Vector2(1.00f, 1.25f);
+
+    [SerializeField] private bool keepFirstNormalEnemyNeutral = true;
+    [SerializeField] private bool forceAtLeastOneNormalAdapted = true;
+
+    [Header("Resistance Distribution")]
+    [SerializeField, Range(0f, 1f)] private float normalBothResistanceChance = 0.25f;
+    [SerializeField, Range(0f, 1f)] private float normalDominantOnlyChance = 0.45f;
+    [SerializeField, Range(0f, 1f)] private float normalSecondaryOnlyChance = 0.20f;
+
+    [SerializeField, Range(0f, 1f)] private float miniBossBothResistanceChance = 0.70f;
+    [SerializeField, Range(0f, 1f)] private float miniBossDominantOnlyChance = 0.20f;
+    [SerializeField, Range(0f, 1f)] private float miniBossSecondaryOnlyChance = 0.10f;
+
+    [SerializeField, Range(0f, 1f)] private float bossBothResistanceChance = 0.85f;
+    [SerializeField, Range(0f, 1f)] private float bossDominantOnlyChance = 0.10f;
+    [SerializeField, Range(0f, 1f)] private float bossSecondaryOnlyChance = 0.05f;
 
     [Header("Pools")]
     [SerializeField] private List<GameObject> normalEnemies = new List<GameObject>();
@@ -49,6 +88,7 @@ public class EnemySpawner : MonoBehaviour
     private readonly List<EnemyTurnController> spawnedEnemyTurns = new List<EnemyTurnController>();
 
     private bool hasSpawnedThisScene;
+    private int normalAdaptedThisSpawn;
     private Coroutine delayedStartRoutine;
 
     private void Reset()
@@ -121,6 +161,7 @@ public class EnemySpawner : MonoBehaviour
         usedPositions.Clear();
         spawnedEnemies.Clear();
         spawnedEnemyTurns.Clear();
+        normalAdaptedThisSpawn = 0;
 
         int currentLevel = ResolveCurrentLevel();
         bool isBossLevel = bossLevels != null && bossLevels.Contains(currentLevel);
@@ -160,6 +201,7 @@ public class EnemySpawner : MonoBehaviour
     public void ClearSpawnedEnemies()
     {
         hasSpawnedThisScene = false;
+        normalAdaptedThisSpawn = 0;
         spawnedEnemies.Clear();
         spawnedEnemyTurns.Clear();
         usedPositions.Clear();
@@ -193,7 +235,7 @@ public class EnemySpawner : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            GameObject prefab = pool[Random.Range(0, pool.Count)];
+            GameObject prefab = pool[UnityEngine.Random.Range(0, pool.Count)];
 
             if (prefab == null)
                 continue;
@@ -205,10 +247,9 @@ public class EnemySpawner : MonoBehaviour
             }
 
             Vector3 spawnPos = GetAdjustedSpawnPosition(navSpawnPos, prefab);
-            Quaternion rotation = Quaternion.Euler(0f, Random.Range(0f, 360f), 0f);
+            Quaternion rotation = Quaternion.Euler(0f, UnityEngine.Random.Range(0f, 360f), 0f);
 
             Transform parent = spawnParent != null ? spawnParent : null;
-
             GameObject instance = Instantiate(prefab, spawnPos, rotation);
 
             if (parent != null)
@@ -217,7 +258,7 @@ public class EnemySpawner : MonoBehaviour
             if (renameSpawnedEnemies)
                 instance.name = $"{categoryLabel}_{i + 1}_{prefab.name}";
 
-            ConfigureSpawnedEnemy(instance);
+            ConfigureSpawnedEnemy(instance, categoryLabel, i, count);
 
             EnemyTurnController enemyTurn = instance.GetComponent<EnemyTurnController>();
             if (enemyTurn != null)
@@ -228,7 +269,7 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    private void ConfigureSpawnedEnemy(GameObject instance)
+    private void ConfigureSpawnedEnemy(GameObject instance, string categoryLabel, int categoryIndex, int categoryCount)
     {
         if (instance == null)
             return;
@@ -242,7 +283,7 @@ public class EnemySpawner : MonoBehaviour
         if (scaler != null)
             scaler.ApplyScaling();
 
-        ApplyRuntimeAdaptationToSpawnedEnemy(instance);
+        ApplyRuntimeAdaptationToSpawnedEnemy(instance, categoryLabel, categoryIndex, categoryCount);
 
         TurnAgentLock turnLock = instance.GetComponent<TurnAgentLock>();
         if (turnLock != null)
@@ -253,22 +294,21 @@ public class EnemySpawner : MonoBehaviour
             health.ResetToFull();
     }
 
-    private void ApplyRuntimeAdaptationToSpawnedEnemy(GameObject instance)
+    private void ApplyRuntimeAdaptationToSpawnedEnemy(
+        GameObject instance,
+        string categoryLabel,
+        int categoryIndex,
+        int categoryCount)
     {
         if (instance == null)
             return;
 
-        if (!applyRuntimeAdaptation)
-            return;
-
-        if (!preferGameSessionAdaptation)
+        if (!applyRuntimeAdaptation || !preferGameSessionAdaptation)
             return;
 
         if (GameSession.Instance == null)
         {
-            if (debugAdaptationLogs)
-                Debug.Log("EnemySpawner: GameSession lipseste, adaptarea runtime nu se aplica.");
-
+            LogAdaptation("EnemySpawner: GameSession lipseste, adaptarea runtime nu se aplica.");
             return;
         }
 
@@ -276,30 +316,321 @@ public class EnemySpawner : MonoBehaviour
 
         if (runtimeConfig == null || !runtimeConfig.enabled)
         {
-            if (debugAdaptationLogs)
-                Debug.Log($"EnemySpawner: nu exista config runtime activ pentru {instance.name}.");
-
+            LogAdaptation($"EnemySpawner: nu exista config runtime activ pentru {instance.name}.");
             return;
         }
 
-        EnemyAdaptationApplier.Apply(instance, runtimeConfig, adaptationEffectLibrary);
+        int currentLevel = ResolveCurrentLevel();
 
-        if (debugAdaptationLogs)
-            Debug.Log($"EnemySpawner: adaptare runtime aplicata pe {instance.name}.");
+        if (runtimeConfig.targetLevel <= 0)
+        {
+            LogAdaptation(
+                $"EnemySpawner: config runtime ignorat pentru {instance.name}. " +
+                $"TargetLevel invalid: {runtimeConfig.targetLevel}."
+            );
+            return;
+        }
+
+        if (runtimeConfig.targetLevel != currentLevel)
+        {
+            LogAdaptation(
+                $"EnemySpawner: adaptare ignorata pentru {instance.name}. " +
+                $"CurrentLevel={currentLevel}, TargetLevel={runtimeConfig.targetLevel}, " +
+                $"SourceCompletedLevel={runtimeConfig.sourceCompletedLevel}."
+            );
+            return;
+        }
+
+        if (!ShouldApplyAdaptationToEnemy(categoryLabel, categoryIndex, categoryCount))
+        {
+            LogAdaptation(
+                $"EnemySpawner: {instance.name} ramane neutru. " +
+                $"Category={categoryLabel}, Index={categoryIndex + 1}/{categoryCount}."
+            );
+            return;
+        }
+
+        float intensity = RollAdaptationIntensity(categoryLabel);
+        EnemyAdaptationRuntimeConfig scaledConfig = runtimeConfig.CreateScaledCopy(intensity);
+
+        EnemyResistanceDistributionMode resistanceMode = ApplyResistanceDistribution(scaledConfig, categoryLabel);
+        ApplyDamageTypeDistribution(scaledConfig);
+
+        EnemyAdaptationApplyReport report = EnemyAdaptationApplier.Apply(
+            instance,
+            scaledConfig,
+            adaptationEffectLibrary
+        );
+
+        if (IsNormalCategory(categoryLabel))
+            normalAdaptedThisSpawn++;
+
+        LogAdaptation(
+            $"EnemySpawner: adaptare runtime aplicata pe {instance.name}. " +
+            $"Category={categoryLabel}, Intensity={intensity:0.00}, ResistanceMode={resistanceMode}, " +
+            $"Resistances=[{scaledConfig.BuildResistanceDebugText()}], " +
+            $"MediumDamage={scaledConfig.mediumAttackDamageType}, HeavyDamage={scaledConfig.heavyAttackDamageType}, " +
+            $"MediumEffect={report.MediumEffectText}, HeavyEffect={report.HeavyEffectText}, " +
+            $"{scaledConfig.BuildDamageWeightDebugText()}, " +
+            $"CurrentLevel={currentLevel}, SourceCompletedLevel={runtimeConfig.sourceCompletedLevel}, " +
+            $"TargetLevel={runtimeConfig.targetLevel}."
+        );
+    }
+
+    private void ApplyDamageTypeDistribution(EnemyAdaptationRuntimeConfig config)
+    {
+        if (config == null || !rollDamageTypesPerEnemy)
+            return;
+
+        if (config.HasMediumDamageWeights())
+        {
+            config.mediumAttackDamageType = config.RollMediumDamageType(config.mediumAttackDamageType);
+            config.overrideMediumAttackDamageType = true;
+        }
+
+        if (config.HasHeavyDamageWeights())
+        {
+            DamageType discouragedType = avoidSameMediumAndHeavyDamageTypePerEnemy
+                ? config.mediumAttackDamageType
+                : DamageType.Physical;
+
+            float discouragedMultiplier = avoidSameMediumAndHeavyDamageTypePerEnemy ? 0.25f : 1f;
+
+            config.heavyAttackDamageType = config.RollHeavyDamageType(
+                config.heavyAttackDamageType,
+                discouragedType,
+                discouragedMultiplier
+            );
+
+            config.overrideHeavyAttackDamageType = true;
+        }
+    }
+
+    private bool ShouldApplyAdaptationToEnemy(string categoryLabel, int categoryIndex, int categoryCount)
+    {
+        if (IsNormalCategory(categoryLabel))
+        {
+            if (keepFirstNormalEnemyNeutral && categoryCount > 1 && categoryIndex == 0)
+                return false;
+
+            bool isLastNormal = categoryIndex == categoryCount - 1;
+            if (forceAtLeastOneNormalAdapted && isLastNormal && normalAdaptedThisSpawn == 0)
+                return true;
+
+            return UnityEngine.Random.value <= normalEnemyAdaptationChance;
+        }
+
+        if (IsMiniBossCategory(categoryLabel))
+            return UnityEngine.Random.value <= miniBossAdaptationChance;
+
+        if (IsBossCategory(categoryLabel))
+            return UnityEngine.Random.value <= bossAdaptationChance;
+
+        return UnityEngine.Random.value <= normalEnemyAdaptationChance;
+    }
+
+    private float RollAdaptationIntensity(string categoryLabel)
+    {
+        Vector2 range = normalEnemyIntensityRange;
+
+        if (IsMiniBossCategory(categoryLabel))
+            range = miniBossIntensityRange;
+        else if (IsBossCategory(categoryLabel))
+            range = bossIntensityRange;
+
+        float min = Mathf.Min(range.x, range.y);
+        float max = Mathf.Max(range.x, range.y);
+
+        return UnityEngine.Random.Range(min, max);
+    }
+
+    private EnemyResistanceDistributionMode ApplyResistanceDistribution(
+        EnemyAdaptationRuntimeConfig config,
+        string categoryLabel)
+    {
+        if (config == null)
+            return EnemyResistanceDistributionMode.None;
+
+        FindTopTwoResistanceTypes(
+            config,
+            out DamageType dominantType,
+            out float dominantValue,
+            out DamageType secondaryType,
+            out float secondaryValue
+        );
+
+        if (dominantValue <= 0.001f)
+        {
+            config.ClearAllResistanceBonuses();
+            return EnemyResistanceDistributionMode.None;
+        }
+
+        EnemyResistanceDistributionMode mode = RollResistanceDistributionMode(
+            categoryLabel,
+            secondaryValue > 0.001f
+        );
+
+        config.ClearAllResistanceBonuses();
+
+        switch (mode)
+        {
+            case EnemyResistanceDistributionMode.DominantOnly:
+                config.SetResistanceBonus(dominantType, dominantValue);
+                break;
+
+            case EnemyResistanceDistributionMode.SecondaryOnly:
+                if (secondaryValue > 0.001f)
+                    config.SetResistanceBonus(secondaryType, secondaryValue);
+                else
+                    mode = EnemyResistanceDistributionMode.None;
+                break;
+
+            case EnemyResistanceDistributionMode.DominantAndSecondary:
+                config.SetResistanceBonus(dominantType, dominantValue);
+
+                if (secondaryValue > 0.001f)
+                    config.SetResistanceBonus(secondaryType, secondaryValue);
+                break;
+
+            case EnemyResistanceDistributionMode.None:
+            default:
+                break;
+        }
+
+        config.Clamp();
+        return mode;
+    }
+
+    private EnemyResistanceDistributionMode RollResistanceDistributionMode(string categoryLabel, bool hasSecondaryResistance)
+    {
+        float bothChance;
+        float dominantChance;
+        float secondaryChance;
+
+        if (IsBossCategory(categoryLabel))
+        {
+            bothChance = bossBothResistanceChance;
+            dominantChance = bossDominantOnlyChance;
+            secondaryChance = bossSecondaryOnlyChance;
+        }
+        else if (IsMiniBossCategory(categoryLabel))
+        {
+            bothChance = miniBossBothResistanceChance;
+            dominantChance = miniBossDominantOnlyChance;
+            secondaryChance = miniBossSecondaryOnlyChance;
+        }
+        else
+        {
+            bothChance = normalBothResistanceChance;
+            dominantChance = normalDominantOnlyChance;
+            secondaryChance = normalSecondaryOnlyChance;
+        }
+
+        if (!hasSecondaryResistance)
+        {
+            bothChance = 0f;
+            secondaryChance = 0f;
+            dominantChance = Mathf.Max(dominantChance, 0.75f);
+        }
+
+        float roll = UnityEngine.Random.value;
+
+        if (roll < bothChance)
+            return EnemyResistanceDistributionMode.DominantAndSecondary;
+
+        roll -= bothChance;
+
+        if (roll < dominantChance)
+            return EnemyResistanceDistributionMode.DominantOnly;
+
+        roll -= dominantChance;
+
+        if (roll < secondaryChance)
+            return EnemyResistanceDistributionMode.SecondaryOnly;
+
+        return EnemyResistanceDistributionMode.None;
+    }
+
+    private void FindTopTwoResistanceTypes(
+        EnemyAdaptationRuntimeConfig config,
+        out DamageType dominantType,
+        out float dominantValue,
+        out DamageType secondaryType,
+        out float secondaryValue)
+    {
+        dominantType = DamageType.Physical;
+        dominantValue = -1f;
+
+        secondaryType = DamageType.Physical;
+        secondaryValue = -1f;
+
+        CheckResistanceCandidate(config, DamageType.Physical, ref dominantType, ref dominantValue, ref secondaryType, ref secondaryValue);
+        CheckResistanceCandidate(config, DamageType.Fire, ref dominantType, ref dominantValue, ref secondaryType, ref secondaryValue);
+        CheckResistanceCandidate(config, DamageType.Earth, ref dominantType, ref dominantValue, ref secondaryType, ref secondaryValue);
+        CheckResistanceCandidate(config, DamageType.Wind, ref dominantType, ref dominantValue, ref secondaryType, ref secondaryValue);
+        CheckResistanceCandidate(config, DamageType.Lightning, ref dominantType, ref dominantValue, ref secondaryType, ref secondaryValue);
+        CheckResistanceCandidate(config, DamageType.Ice, ref dominantType, ref dominantValue, ref secondaryType, ref secondaryValue);
+
+        if (dominantValue < 0f)
+            dominantValue = 0f;
+
+        if (secondaryValue < 0f)
+            secondaryValue = 0f;
+    }
+
+    private void CheckResistanceCandidate(
+        EnemyAdaptationRuntimeConfig config,
+        DamageType damageType,
+        ref DamageType dominantType,
+        ref float dominantValue,
+        ref DamageType secondaryType,
+        ref float secondaryValue)
+    {
+        float value = config.GetResistanceBonus(damageType);
+
+        if (value > dominantValue)
+        {
+            secondaryType = dominantType;
+            secondaryValue = dominantValue;
+
+            dominantType = damageType;
+            dominantValue = value;
+            return;
+        }
+
+        if (value > secondaryValue)
+        {
+            secondaryType = damageType;
+            secondaryValue = value;
+        }
+    }
+
+    private bool IsNormalCategory(string categoryLabel)
+    {
+        return string.Equals(categoryLabel, "Normal", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsMiniBossCategory(string categoryLabel)
+    {
+        return string.Equals(categoryLabel, "MiniBoss", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private bool IsBossCategory(string categoryLabel)
+    {
+        return string.Equals(categoryLabel, "Boss", StringComparison.OrdinalIgnoreCase);
     }
 
     private bool TryFindSpawnPosition(out Vector3 position)
     {
         position = Vector3.zero;
-
         Bounds bounds = spawnVolume.bounds;
 
         for (int attempt = 0; attempt < maxAttemptsPerEnemy; attempt++)
         {
             Vector3 candidate = new Vector3(
-                Random.Range(bounds.min.x, bounds.max.x),
+                UnityEngine.Random.Range(bounds.min.x, bounds.max.x),
                 bounds.center.y,
-                Random.Range(bounds.min.z, bounds.max.z)
+                UnityEngine.Random.Range(bounds.min.z, bounds.max.z)
             );
 
             if (!NavMesh.SamplePosition(candidate, out NavMeshHit navHit, navMeshSampleDistance, NavMesh.AllAreas))
@@ -405,6 +736,15 @@ public class EnemySpawner : MonoBehaviour
 
         if (playerStats == null)
             playerStats = FindFirstObjectByType<CharacterStats>();
+    }
+
+    private void LogAdaptation(string message)
+    {
+        if (debugAdaptationLogs)
+            Debug.Log(message);
+
+        if (sendAdaptationLogsToGameLog)
+            GameLog.Info(message);
     }
 
     private void OnDisable()
