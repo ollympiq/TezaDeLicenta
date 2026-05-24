@@ -443,7 +443,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatTelemetryTracker
   generateAdaptationOnFinalize: 1
+  generatorMode: 1
   adaptationGenerator: {fileID: 11400000, guid: 34212761373f978469d1dd5df13b7dc6, type: 2}
+  neuralAdaptationGenerator: {fileID: 11400000, guid: 09952b1718d71ed4aa4563efa2deb4a1, type: 2}
+  fallbackToRuleBasedIfNeuralFails: 1
   saveAdaptationToGameSession: 1
   logGeneratedAdaptation: 1
   saveTelemetryToJsonLines: 1
@@ -7934,9 +7937,17 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5585355855952164265, guid: 6a603f531bfdb9d4aaa6a422e9d07c71, type: 3}
+      propertyPath: presets.Array.data[2].startingSkill1
+      value: 
+      objectReference: {fileID: 11400000, guid: b01acdab44fa4fd4a8ef3122f7cb9a8a, type: 2}
+    - target: {fileID: 5585355855952164265, guid: 6a603f531bfdb9d4aaa6a422e9d07c71, type: 3}
       propertyPath: presets.Array.data[2].startingSkill2
       value: 
       objectReference: {fileID: 11400000, guid: a09bef5ecf6cc2f418aaa963a6c32b6c, type: 2}
+    - target: {fileID: 5585355855952164265, guid: 6a603f531bfdb9d4aaa6a422e9d07c71, type: 3}
+      propertyPath: presets.Array.data[2].startingWeapon
+      value: 
+      objectReference: {fileID: 11400000, guid: 946a07bc5b1b6ac449b100b840a64e98, type: 2}
     - target: {fileID: 7872313449419232777, guid: 6a603f531bfdb9d4aaa6a422e9d07c71, type: 3}
       propertyPath: m_Name
       value: PlayerClassInitializer

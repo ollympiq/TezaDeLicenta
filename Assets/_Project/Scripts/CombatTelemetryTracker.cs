@@ -1,13 +1,22 @@
 using UnityEngine;
 using System.IO;
 
+public enum AdaptationGeneratorMode
+{
+    RuleBased,
+    Neural
+}
+
 public class CombatTelemetryTracker : MonoBehaviour
 {
     public static CombatTelemetryTracker Instance { get; private set; }
 
     [Header("Adaptation Generation")]
     [SerializeField] private bool generateAdaptationOnFinalize = true;
+    [SerializeField] private AdaptationGeneratorMode generatorMode = AdaptationGeneratorMode.RuleBased;
     [SerializeField] private RuleBasedAdaptationGenerator adaptationGenerator;
+    [SerializeField] private NeuralAdaptationGenerator neuralAdaptationGenerator;
+    [SerializeField] private bool fallbackToRuleBasedIfNeuralFails = true;
     [SerializeField] private bool saveAdaptationToGameSession = true;
     [SerializeField] private bool logGeneratedAdaptation = true;
 
@@ -178,13 +187,7 @@ public class CombatTelemetryTracker : MonoBehaviour
         if (data == null)
             return;
 
-        if (adaptationGenerator == null)
-        {
-            GameLog.Warning("CombatTelemetryTracker: lipseste RuleBasedAdaptationGenerator.");
-            return;
-        }
-
-        EnemyAdaptationRuntimeConfig config = adaptationGenerator.Generate(data);
+        EnemyAdaptationRuntimeConfig config = GenerateAdaptationConfig(data, out string generatorLabel);
 
         if (config == null)
         {
@@ -192,6 +195,14 @@ public class CombatTelemetryTracker : MonoBehaviour
             return;
         }
 
+        if (!config.enabled)
+        {
+            GameLog.Warning($"CombatTelemetryTracker: configuratia generata de {generatorLabel} nu este activa.");
+            return;
+        }
+
+        config.sourceCompletedLevel = Mathf.Max(1, data.completedLevel);
+        config.targetLevel = config.sourceCompletedLevel + 1;
         config.Clamp();
 
         if (saveAdaptationToGameSession)
@@ -199,6 +210,7 @@ public class CombatTelemetryTracker : MonoBehaviour
             if (GameSession.Instance != null)
             {
                 GameSession.Instance.SetNextEnemyAdaptationConfig(config);
+                GameLog.Info($"CombatTelemetryTracker: configuratia de adaptare generata de {generatorLabel} a fost salvata in GameSession.");
             }
             else
             {
@@ -207,16 +219,87 @@ public class CombatTelemetryTracker : MonoBehaviour
         }
 
         if (logGeneratedAdaptation)
-            LogGeneratedAdaptation(config);
+            LogGeneratedAdaptation(config, generatorLabel);
     }
 
-    private void LogGeneratedAdaptation(EnemyAdaptationRuntimeConfig config)
+    private EnemyAdaptationRuntimeConfig GenerateAdaptationConfig(CombatTelemetryData data, out string generatorLabel)
+    {
+        generatorLabel = "None";
+
+        if (generatorMode == AdaptationGeneratorMode.Neural)
+        {
+            EnemyAdaptationRuntimeConfig neuralConfig = TryGenerateNeuralAdaptation(data);
+
+            if (neuralConfig != null && neuralConfig.enabled)
+            {
+                generatorLabel = "Neural";
+                return neuralConfig;
+            }
+
+            if (!fallbackToRuleBasedIfNeuralFails)
+            {
+                generatorLabel = "Neural Failed";
+                return neuralConfig;
+            }
+
+            GameLog.Warning("CombatTelemetryTracker: NeuralAdaptationGenerator a esuat sau a produs config inactiv. Se foloseste RuleBased fallback.");
+        }
+
+        EnemyAdaptationRuntimeConfig ruleBasedConfig = TryGenerateRuleBasedAdaptation(data);
+
+        if (ruleBasedConfig != null && ruleBasedConfig.enabled)
+            generatorLabel = generatorMode == AdaptationGeneratorMode.Neural ? "RuleBased Fallback" : "RuleBased";
+        else
+            generatorLabel = "RuleBased Failed";
+
+        return ruleBasedConfig;
+    }
+
+    private EnemyAdaptationRuntimeConfig TryGenerateNeuralAdaptation(CombatTelemetryData data)
+    {
+        if (neuralAdaptationGenerator == null)
+        {
+            GameLog.Warning("CombatTelemetryTracker: lipseste NeuralAdaptationGenerator.");
+            return null;
+        }
+
+        try
+        {
+            return neuralAdaptationGenerator.Generate(data);
+        }
+        catch (System.Exception ex)
+        {
+            GameLog.Warning($"CombatTelemetryTracker: eroare la generarea neurala. {ex.Message}");
+            return null;
+        }
+    }
+
+    private EnemyAdaptationRuntimeConfig TryGenerateRuleBasedAdaptation(CombatTelemetryData data)
+    {
+        if (adaptationGenerator == null)
+        {
+            GameLog.Warning("CombatTelemetryTracker: lipseste RuleBasedAdaptationGenerator.");
+            return null;
+        }
+
+        try
+        {
+            return adaptationGenerator.Generate(data);
+        }
+        catch (System.Exception ex)
+        {
+            GameLog.Warning($"CombatTelemetryTracker: eroare la generarea rule-based. {ex.Message}");
+            return null;
+        }
+    }
+
+    private void LogGeneratedAdaptation(EnemyAdaptationRuntimeConfig config, string generatorLabel)
     {
         if (config == null)
             return;
 
         GameLog.Info(
-            "=== Generated Enemy Adaptation Config ===\n" +
+            $"=== {generatorLabel} Enemy Adaptation Config ===\n" +
             $"Enabled: {config.enabled}\n" +
             $"Source Completed Level: {config.sourceCompletedLevel}\n" +
             $"Target Level: {config.targetLevel}\n" +
@@ -228,7 +311,8 @@ public class CombatTelemetryTracker : MonoBehaviour
             $"Wind: +{config.windResistanceBonus:0.#}%, Lightning: +{config.lightningResistanceBonus:0.#}%, Ice: +{config.iceResistanceBonus:0.#}%\n" +
             $"Effects | Medium Slow: {config.mediumSlowChance:0.##}, Medium DOT: {config.mediumDotChance:0.##}, Medium Knock: {config.mediumKnockChance:0.##}\n" +
             $"Effects | Heavy Slow: {config.heavySlowChance:0.##}, Heavy DOT: {config.heavyDotChance:0.##}, Heavy Knock: {config.heavyKnockChance:0.##}\n" +
-            $"Spawn Weights | Normal: {config.normalEnemyWeight:0.##}, MiniBoss: {config.miniBossWeight:0.##}, Boss: {config.bossWeight:0.##}"
+            $"Spawn Weights | Normal: {config.normalEnemyWeight:0.##}, MiniBoss: {config.miniBossWeight:0.##}, Boss: {config.bossWeight:0.##}\n" +
+            config.BuildDamageWeightDebugText()
         );
     }
 

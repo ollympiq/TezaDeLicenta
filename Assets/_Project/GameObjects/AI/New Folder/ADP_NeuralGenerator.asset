@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1f6c7cef4956e4b43a33d1f57a8107eb, type: 3}
+  m_Name: ADP_NeuralGenerator
+  m_EditorClassIdentifier: Assembly-CSharp::NeuralAdaptationGenerator
+  modelAsset: {fileID: 5022602860645237092, guid: 40debb71ea27c0c46a83ae968dde760a, type: 3}
+  backendType: 512
+  resistanceMaxPercent: 35
+  primaryAttributeMaxBonus: 30
+  maxHpMaxBonus: 120
+  armorMaxBonus: 20
+  maskUnusedResistanceOutputs: 1
+  minDamageRatioToKeepResistance: 0.12
+  logNeuralOutput: 0
