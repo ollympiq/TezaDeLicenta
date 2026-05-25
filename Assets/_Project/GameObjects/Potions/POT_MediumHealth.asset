@@ -22,5 +22,5 @@ MonoBehaviour:
   stackable: 1
   maxStack: 99
   statModifiers: []
-  healAmount: 150
+  healAmount: 200
   restoreAP: 0

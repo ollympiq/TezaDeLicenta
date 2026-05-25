@@ -10,32 +10,32 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
-  m_Name: SK_FlameInfusion
+  m_Name: SK_FireBurn
   m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
-  skillId: flameinfusion
-  displayName: Flame Infusion
+  skillId: fireburn
+  displayName: Fire Burn
   skillType: 1
-  targetingMode: 3
+  targetingMode: 1
   areaMode: 0
   keepSelectedAfterUse: 0
   animationType: 3
   requiredWeapon: 3
-  icon: {fileID: 21300000, guid: b00564e353aca3e4a853c66d5568c6ca, type: 3}
-  cursorTexture: {fileID: 2800000, guid: a81d248bdb1ce974aac77fec689c96ca, type: 3}
+  icon: {fileID: 21300000, guid: 157eb96413830e04793d0fc68a6b8695, type: 3}
+  cursorTexture: {fileID: 2800000, guid: 0b37e54a2875ed14db484658360b77af, type: 3}
   cursorHotspot: {x: 0, y: 0}
-  dealsDamage: 0
-  damageType: 0
-  minDamage: 10
-  maxDamage: 16
+  dealsDamage: 1
+  damageType: 1
+  minDamage: 15
+  maxDamage: 20
   powerScaling: 0.35
   bonusAccuracy: 0
   canCrit: 1
   apCost: 2
   cooldownTurns: 3
-  range: 0
+  range: 6
   areaRadius: 2.5
   effects:
-  - effectType: 4
+  - effectType: 5
     durationTurns: 2
     flatMinValue: 0
     flatMaxValue: 0
@@ -46,12 +46,12 @@ MonoBehaviour:
     bonusDexterity: 0
     bonusIntelligence: 0
     critChanceBonusPercent: 0
-    elementalDamageBonusPercent: 25
+    elementalDamageBonusPercent: 0
     affectAllElements: 0
-    elementalDamageType: 1
-    dotMinDamage: 0
-    dotMaxDamage: 0
-    dotPowerScaling: 0
+    elementalDamageType: 0
+    dotMinDamage: 6
+    dotMaxDamage: 10
+    dotPowerScaling: 0.2
     dotUsesMagicPower: 1
     dotDamageType: 1
-    movementCostMultiplier: 2
+    movementCostMultiplier: 1

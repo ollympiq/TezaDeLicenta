@@ -6135,6 +6135,15 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d3c648a2ff33f32468490acdb5b55084, type: 2}
   - {fileID: 11400000, guid: 3b21152819c464243ac8dbe637eeff2b, type: 2}
   - {fileID: 11400000, guid: b01acdab44fa4fd4a8ef3122f7cb9a8a, type: 2}
+  - {fileID: 11400000, guid: 1e3c256b1bb303e44ada2dc45405306e, type: 2}
+  - {fileID: 11400000, guid: 02e4056325ea96e479ee808f636a0faa, type: 2}
+  - {fileID: 11400000, guid: 1a1159dcf79234d438d60f2d07929de7, type: 2}
+  - {fileID: 11400000, guid: 8ab8f4cb280b3244296d483079062ff5, type: 2}
+  - {fileID: 11400000, guid: 1aaa71684284da1418e20fb6360c22a5, type: 2}
+  - {fileID: 11400000, guid: 91562b67176e51e46bf959bdd7b434c2, type: 2}
+  - {fileID: 11400000, guid: f3434747037216b4cabd0bcfb5ccace7, type: 2}
+  - {fileID: 11400000, guid: 38420ed1cb7731c47ba7ad8acf4310d9, type: 2}
+  - {fileID: 11400000, guid: 2d6f16d66ab61b049a4166b14be2d032, type: 2}
   sortSkills: 1
   placeOwnedSkillsFirstInsideGroup: 0
   startVisible: 0
@@ -12866,7 +12875,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
       propertyPath: skillBookPool.Array.size
-      value: 12
+      value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
       propertyPath: 'skillBookPool.Array.data[5]'
@@ -12896,6 +12905,42 @@ PrefabInstance:
       propertyPath: 'skillBookPool.Array.data[11]'
       value: 
       objectReference: {fileID: 11400000, guid: 672ef5846a5811247a2d2b3564f8d416, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[12]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 97c7b83db9ce08045952d86435e83fae, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[13]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 6ca388af0e2cb544b941ee50c4b8b4b9, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[14]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7df63c453a50c884f95e117afacf084b, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[15]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 24d37e3bbebc5694bb23c6f29bac9215, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[16]'
+      value: 
+      objectReference: {fileID: 11400000, guid: c05b68d73405fff4fbe5f404a660002c, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[17]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 3e924d73bbed7d24982a16e11c1f8688, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[18]'
+      value: 
+      objectReference: {fileID: 11400000, guid: af0f4c5236bbcbd4983d24f707172b39, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[19]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 66e74734649dbf34faa403a1354700ba, type: 2}
+    - target: {fileID: 2237022341499764996, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
+      propertyPath: 'skillBookPool.Array.data[20]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 5cb9569778746ca49b7e90c490c745b8, type: 2}
     - target: {fileID: 5912864777754304172, guid: ffaf48de56fb4af4faf90caa5e271598, type: 3}
       propertyPath: m_Name
       value: LootGenerator

@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8b6be339a33028f4698c88e723340973, type: 3}
-  m_Name: PowerStrikeBook
+  m_Name: WhirlwindBook
   m_EditorClassIdentifier: Assembly-CSharp::SkillBookDefinition
-  itemId: powerstrikebook
-  displayName: Power Strike Book
-  description: Learn Power Strike!
-  icon: {fileID: 21300000, guid: 7e029ccd4fa2a9d4c849194f47c7028f, type: 3}
+  itemId: whirlwindbook
+  displayName: Whirlwind Book
+  description: 
+  icon: {fileID: 21300000, guid: 160c18127b3009049a7051246df659f1, type: 3}
   baseRarity: 0
   buyPrice: 45
   sellPrice: 20
   stackable: 0
   maxStack: 1
   statModifiers: []
-  taughtSkill: {fileID: 11400000, guid: 771f21102a4c04c4696d741282d0195c, type: 2}
+  taughtSkill: {fileID: 11400000, guid: 8ab8f4cb280b3244296d483079062ff5, type: 2}

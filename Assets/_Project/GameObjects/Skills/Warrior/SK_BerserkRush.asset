@@ -10,41 +10,41 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
-  m_Name: SK_BattleCry
+  m_Name: SK_BerserkRush
   m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
-  skillId: battlecry
-  displayName: Battle Cry
+  skillId: berserkrush
+  displayName: Berserk Rush
   skillType: 1
-  targetingMode: 3
-  areaMode: 0
+  targetingMode: 1
+  areaMode: 1
   keepSelectedAfterUse: 0
-  animationType: 3
-  requiredWeapon: 0
-  icon: {fileID: 21300000, guid: dbf0cb6749821b44389d232c60d9f711, type: 3}
-  cursorTexture: {fileID: 2800000, guid: 18a51141aaaf12c4bae41c12b2bc5940, type: 3}
+  animationType: 1
+  requiredWeapon: 1
+  icon: {fileID: 21300000, guid: 34e6f6c3392496b43ac53611bdd9b593, type: 3}
+  cursorTexture: {fileID: 2800000, guid: d523bdf6b43f94a4680bf27f68345053, type: 3}
   cursorHotspot: {x: 0, y: 0}
-  dealsDamage: 0
+  dealsDamage: 1
   damageType: 0
-  minDamage: 10
-  maxDamage: 16
-  powerScaling: 0.35
-  bonusAccuracy: 0
+  minDamage: 20
+  maxDamage: 42
+  powerScaling: 0.25
+  bonusAccuracy: 10
   canCrit: 1
   apCost: 2
   cooldownTurns: 4
-  range: 0
-  areaRadius: 2.5
+  range: 3
+  areaRadius: 3
   effects:
-  - effectType: 2
-    durationTurns: 3
+  - effectType: 6
+    durationTurns: 0
     flatMinValue: 0
     flatMaxValue: 0
     powerScaling: 0
     useMagicPower: 0
-    bonusStrength: 3
-    bonusConstitution: 3
-    bonusDexterity: 3
-    bonusIntelligence: 3
+    bonusStrength: 0
+    bonusConstitution: 0
+    bonusDexterity: 0
+    bonusIntelligence: 0
     critChanceBonusPercent: 0
     elementalDamageBonusPercent: 0
     affectAllElements: 0
@@ -52,6 +52,6 @@ MonoBehaviour:
     dotMinDamage: 0
     dotMaxDamage: 0
     dotPowerScaling: 0
-    dotUsesMagicPower: 1
-    dotDamageType: 1
+    dotUsesMagicPower: 0
+    dotDamageType: 0
     movementCostMultiplier: 2

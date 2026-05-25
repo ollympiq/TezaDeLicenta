@@ -10,33 +10,33 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
-  m_Name: SK_Focus
+  m_Name: SK_EarthShatter
   m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
-  skillId: focus
-  displayName: Focus
+  skillId: earthshatter
+  displayName: EarthShatter
   skillType: 1
-  targetingMode: 3
+  targetingMode: 1
   areaMode: 0
   keepSelectedAfterUse: 0
-  animationType: 3
-  requiredWeapon: 0
-  icon: {fileID: 21300000, guid: 4f8261ad6deaf564a8efcde0d564741d, type: 3}
-  cursorTexture: {fileID: 2800000, guid: 09ab91e4ff23ba44a9c6adbccfd7cae8, type: 3}
+  animationType: 1
+  requiredWeapon: 1
+  icon: {fileID: 21300000, guid: 7a2181c228f80644b8029357fb1209fe, type: 3}
+  cursorTexture: {fileID: 2800000, guid: f8940313fdd0a4e44934886ac07b5555, type: 3}
   cursorHotspot: {x: 0, y: 0}
-  dealsDamage: 0
+  dealsDamage: 1
   damageType: 0
-  minDamage: 10
-  maxDamage: 16
+  minDamage: 40
+  maxDamage: 65
   powerScaling: 0.35
   bonusAccuracy: 0
   canCrit: 1
-  apCost: 2
-  cooldownTurns: 2
-  range: 0
-  areaRadius: 2.5
+  apCost: 3
+  cooldownTurns: 5
+  range: 3
+  areaRadius: 0
   effects:
-  - effectType: 3
-    durationTurns: 1
+  - effectType: 7
+    durationTurns: 2
     flatMinValue: 0
     flatMaxValue: 0
     powerScaling: 0
@@ -45,13 +45,13 @@ MonoBehaviour:
     bonusConstitution: 0
     bonusDexterity: 0
     bonusIntelligence: 0
-    critChanceBonusPercent: 20
+    critChanceBonusPercent: 0
     elementalDamageBonusPercent: 0
     affectAllElements: 0
     elementalDamageType: 0
     dotMinDamage: 0
     dotMaxDamage: 0
     dotPowerScaling: 0
-    dotUsesMagicPower: 1
-    dotDamageType: 1
-    movementCostMultiplier: 2
+    dotUsesMagicPower: 0
+    dotDamageType: 0
+    movementCostMultiplier: 1

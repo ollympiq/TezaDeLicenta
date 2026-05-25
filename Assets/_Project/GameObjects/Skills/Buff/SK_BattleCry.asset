@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
-  m_Name: SK_Regeneration
+  m_Name: SK_BattleCry
   m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
-  skillId: regeneration
-  displayName: Regeneration
+  skillId: battlecry
+  displayName: Battle Cry
   skillType: 1
   targetingMode: 3
   areaMode: 0
   keepSelectedAfterUse: 0
   animationType: 3
   requiredWeapon: 0
-  icon: {fileID: 21300000, guid: dde95c48d6f4b274db497047b1ac9745, type: 3}
-  cursorTexture: {fileID: 2800000, guid: 71259ca063a98774d85e738d5cd448f8, type: 3}
+  icon: {fileID: 21300000, guid: dbf0cb6749821b44389d232c60d9f711, type: 3}
+  cursorTexture: {fileID: 2800000, guid: 18a51141aaaf12c4bae41c12b2bc5940, type: 3}
   cursorHotspot: {x: 0, y: 0}
   dealsDamage: 0
   damageType: 0
@@ -31,20 +31,20 @@ MonoBehaviour:
   bonusAccuracy: 0
   canCrit: 1
   apCost: 2
-  cooldownTurns: 2
+  cooldownTurns: 4
   range: 0
   areaRadius: 2.5
   effects:
-  - effectType: 1
-    durationTurns: 0
-    flatMinValue: 18
-    flatMaxValue: 30
-    powerScaling: 0.25
-    useMagicPower: 1
-    bonusStrength: 0
-    bonusConstitution: 0
-    bonusDexterity: 0
-    bonusIntelligence: 0
+  - effectType: 2
+    durationTurns: 3
+    flatMinValue: 0
+    flatMaxValue: 0
+    powerScaling: 0
+    useMagicPower: 0
+    bonusStrength: 3
+    bonusConstitution: 3
+    bonusDexterity: 3
+    bonusIntelligence: 3
     critChanceBonusPercent: 0
     elementalDamageBonusPercent: 0
     affectAllElements: 0
@@ -54,4 +54,4 @@ MonoBehaviour:
     dotPowerScaling: 0
     dotUsesMagicPower: 1
     dotDamageType: 1
-    movementCostMultiplier: 2
+    movementCostMultiplier: 1

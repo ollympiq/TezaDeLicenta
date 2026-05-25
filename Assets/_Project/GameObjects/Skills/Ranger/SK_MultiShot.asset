@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 54d2a7936cd4e7f418021f03630c5e1f, type: 3}
+  m_Name: SK_MultiShot
+  m_EditorClassIdentifier: Assembly-CSharp::SkillDefinition
+  skillId: multishot
+  displayName: Multi Shot
+  skillType: 1
+  targetingMode: 1
+  areaMode: 1
+  keepSelectedAfterUse: 0
+  animationType: 2
+  requiredWeapon: 2
+  icon: {fileID: 21300000, guid: 94f6fa35c3a6a264484aecdda53c5ed3, type: 3}
+  cursorTexture: {fileID: 2800000, guid: 7f34a6410a9b177408c2f5a21a068fc8, type: 3}
+  cursorHotspot: {x: 0, y: 0}
+  dealsDamage: 1
+  damageType: 0
+  minDamage: 25
+  maxDamage: 37
+  powerScaling: 0.3
+  bonusAccuracy: 5
+  canCrit: 1
+  apCost: 2
+  cooldownTurns: 2
+  range: 12
+  areaRadius: 4
+  effects: []

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b6be339a33028f4698c88e723340973, type: 3}
+  m_Name: BloodStrikeBook
+  m_EditorClassIdentifier: Assembly-CSharp::SkillBookDefinition
+  itemId: bloodstrikebook
+  displayName: Blood Strike Book
+  description: 
+  icon: {fileID: 21300000, guid: 192f730f1816cf6489b00d19438814a8, type: 3}
+  baseRarity: 0
+  buyPrice: 45
+  sellPrice: 20
+  stackable: 0
+  maxStack: 1
+  statModifiers: []
+  taughtSkill: {fileID: 11400000, guid: 02e4056325ea96e479ee808f636a0faa, type: 2}
