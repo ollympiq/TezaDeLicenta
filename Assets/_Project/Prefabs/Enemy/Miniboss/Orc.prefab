@@ -539,14 +539,14 @@ MonoBehaviour:
   fallbackTier: 1
   autoApplyOnStart: 1
   refillHealthAfterScaling: 1
-  strengthPerLevel: 3
-  constitutionPerLevel: 4
-  dexterityPerLevel: 3
-  intelligencePerLevel: 3
+  strengthPerLevel: 2
+  constitutionPerLevel: 3
+  dexterityPerLevel: 2
+  intelligencePerLevel: 2
   maxHpPerLevel: 15
-  armorPerLevel: 5
-  allResistancePerLevel: 3
-  extraPhysicalResistancePerLevel: 1.5
+  armorPerLevel: 2
+  allResistancePerLevel: 1
+  extraPhysicalResistancePerLevel: 1
   normalMultiplier: 1
   miniBossMultiplier: 1.5
   bossMultiplier: 2
@@ -598,6 +598,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CharacterStatusEffects
   activeEffects: []
+  enablePlayerKnockImmunity: 1
+  playerKnockImmunityTurnsAfterKnock: 2
 --- !u!114 &6883276896967645158
 MonoBehaviour:
   m_ObjectHideFlags: 0
